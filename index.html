@@ -123,9 +123,7 @@
 
         /* CSS สำหรับการปรินต์ (Print Report) */
         @media print {
-            /* ลดขอบกระดาษลงเพื่อให้เนื้อหาพอดี 1 หน้า */
             @page { size: A4 portrait; margin: 5mm; } 
-            /* 🟢 แก้ปัญหาแผ่นเปล่า: สั่งซ่อน element อื่นแบบถอนรากถอนโคน เพื่อไม่ให้กินพื้นที่ความสูง */
             body > *:not(#printArea) { display: none !important; }
             #printArea { display: block !important; position: static !important; width: 100%; background: white !important; z-index: 9999; }
         }
@@ -371,7 +369,8 @@
                             <option value="Production Engineering (PE)">PE</option>
                             <option value="Production Forging (PF)">PF</option>
                             <option value="Production Machine (PM)">PM</option>
-                            <option value="Engineering (EN)">EN</option>
+                            <option value="Planning (PL)">Planning (PL)</option>
+                            <option value="Engineering (EN)">Engineering (EN)</option>
                             <option value="Quality Control (QC)">QC</option>
                             <option value="Quality Assurance (QA)">QA</option>
                             <option value="Maintenance (MT)">MT</option>
@@ -1353,10 +1352,19 @@
                 return;
             }
 
-            const sortedRequests = [...filteredRequests].reverse();
+            let sortedRequests = [...filteredRequests].reverse();
+
+            // เรียงลำดับให้ "งานเร่งด่วน" ดันขึ้นมาอยู่บนสุดเสมอ
+            sortedRequests.sort((a, b) => {
+                const priorityA = safeText(a.priority || a.Priority, '-');
+                const priorityB = safeText(b.priority || b.Priority, '-');
+                
+                if (priorityA === 'งานเร่งด่วน' && priorityB !== 'งานเร่งด่วน') return -1;
+                if (priorityA !== 'งานเร่งด่วน' && priorityB === 'งานเร่งด่วน') return 1;
+                return 0;
+            });
 
             sortedRequests.forEach(req => {
-                // เพิ่มระบบ กรอง Null บนการ์ดแสดงผลด้วย
                 const reqId = req.id || req.jobId || req['Job ID'];
                 const title = safeText(req.title || req.Title, '-');
                 const department = safeText(req.department || req.Department, '-');
