@@ -123,18 +123,18 @@
 
         /* CSS สำหรับการปรินต์ (Print Report) */
         @media print {
-            body * { visibility: hidden; }
-            #printArea, #printArea * { visibility: visible; }
-            #printArea { position: absolute; left: 0; top: 0; width: 100%; min-height: 100vh; background: white !important; z-index: 9999; }
-            .glass-card, .btn-3d-blue, .btn-3d-green, .input-3d { box-shadow: none !important; border: 1px solid #ddd !important; background: white !important; color: black !important; }
-            .ambient-orb, #toastContainer, #themeIcon { display: none !important; }
+            /* ลดขอบกระดาษลงเพื่อให้เนื้อหาพอดี 1 หน้า */
+            @page { size: A4 portrait; margin: 5mm; } 
+            /* 🟢 แก้ปัญหาแผ่นเปล่า: สั่งซ่อน element อื่นแบบถอนรากถอนโคน เพื่อไม่ให้กินพื้นที่ความสูง */
+            body > *:not(#printArea) { display: none !important; }
+            #printArea { display: block !important; position: static !important; width: 100%; background: white !important; z-index: 9999; }
         }
     </style>
 </head>
 <body class="text-slate-800 antialiased relative">
 
     <!-- Container สำหรับการ Print รายงาน -->
-    <div id="printArea" class="hidden print:block bg-white text-black p-8 font-sans"></div>
+    <div id="printArea" class="hidden print:block bg-white text-black font-sans"></div>
 
     <!-- Container สำหรับ Toast Notification (มุมขวาบน) -->
     <div id="toastContainer" class="fixed top-6 right-6 z-[100] flex flex-col gap-3 pointer-events-none"></div>
@@ -457,6 +457,7 @@
                 <h3 class="text-2xl font-extrabold text-slate-800"><i class="fa-solid fa-chart-column text-indigo-500 mr-2"></i>รายงานสถิติงาน Kaizen</h3>
             </div>
             
+            <!-- เพิ่มตัวเลือกโหมดกราฟและตัวเลือกเดือน -->
             <div class="flex flex-col sm:flex-row justify-between gap-3 mb-4">
                 <select id="chartModeSelect" onchange="updateChart()" class="input-3d px-4 py-2 rounded-xl text-base font-bold text-slate-700 outline-none cursor-pointer w-full sm:w-auto">
                     <option value="overview">📊 ภาพรวม (รับเข้า/เสร็จสิ้น)</option>
@@ -542,7 +543,7 @@
             setupDragAndDrop('uploadContainerAfter', 'afterImageInput', 'modalUploadUI', 'modalPreviewUI', 'modalFileName');
         });
 
-        // ================= 3. ระบบ Print Report PDF (อัปเดตเทมเพลต Kaizen Shop แก้หน้ากระดาษ) =================
+        // ================= 3. ระบบ Print Report PDF (อัปเดตเทมเพลต Kaizen Shop พอดี A4 1 หน้า) =================
         function printReport(id) {
             const req = requests.find(r => String(r.id || r.jobId || r['Job ID']) === String(id));
             if(!req) return;
@@ -578,15 +579,25 @@
             printArea.innerHTML = `
                 <style>
                     @media print {
-                        /* ลดขอบกระดาษลงเพื่อให้เนื้อหาพอดี 1 หน้า */
                         @page { size: A4 portrait; margin: 5mm; } 
-                        body * { visibility: hidden; }
-                        #printArea, #printArea * { visibility: visible; }
-                        /* เอา min-height: 100vh ออก เพื่อไม่ให้เกิดหน้าว่าง */
-                        #printArea { position: absolute; left: 0; top: 0; width: 100%; background: white !important; z-index: 9999; }
+                        /* 🟢 แก้ปัญหาแผ่นเปล่า: สั่งซ่อน element อื่นแบบถอนรากถอนโคน เพื่อไม่ให้กินพื้นที่ความสูง */
+                        body > *:not(#printArea) { display: none !important; }
+                        #printArea { display: block !important; position: static !important; width: 100%; background: white !important; z-index: 9999; }
                     }
-                    /* ปรับฟอนต์โดยรวมเป็น 12px และบีบช่องไฟให้แคบลง */
-                    .kz-form { width: 100%; max-width: 100%; color: black; font-family: 'Sarabun', 'Prompt', sans-serif; font-size: 12px; border: 2px solid black; box-sizing: border-box; margin: 0; }
+                    /* 🟢 ตั้งค่าฟอร์มให้เต็มความสูง A4 พอดีเป๊ะ (A4 = 297mm, หักขอบบนล่างเหลือ 285mm) */
+                    .kz-form { 
+                        width: 100%; 
+                        max-width: 100%; 
+                        height: 285mm; /* บังคับความสูงตายตัว 1 หน้ากระดาษ */
+                        color: black; 
+                        font-family: 'Sarabun', 'Prompt', sans-serif; 
+                        font-size: 12px; 
+                        border: 2px solid black; 
+                        box-sizing: border-box; 
+                        margin: 0;
+                        display: flex;
+                        flex-direction: column; /* ให้เนื้อหาเรียงจากบนลงล่าง */
+                    }
                     .kz-form * { box-sizing: border-box; }
                     .kz-border-b { border-bottom: 1px solid black; }
                     .kz-border-r { border-right: 1px solid black; }
@@ -597,12 +608,11 @@
                 </style>
 
                 <div class="kz-form">
-                    <!-- Header -->
+                    <!-- Header (ความสูงคงที่) -->
                     <div class="kz-flex kz-border-b" style="border-width: 2px;">
                         <div class="kz-border-r kz-center" style="width: 12%; padding: 5px;">
                             <img src="https://www.satpcl.co.th/themes/default/assets/static/images/logo.png" style="max-width: 100%; height: auto;">
                         </div>
-                        <!-- ปรับ width เป็น 65% และบังคับ white-space: nowrap ไม่ให้ตกบรรทัด -->
                         <div class="kz-border-r kz-center" style="width: 65%; font-size: 18px; font-weight: bold; white-space: nowrap;">
                             เอกสารแจ้งดำเนินงาน ปรับปรุง แก้ไขปัญหางาน
                         </div>
@@ -612,7 +622,7 @@
                         </div>
                     </div>
 
-                    <!-- Section 1 -->
+                    <!-- Section 1 (ความสูงคงที่) -->
                     <div class="kz-title">ส่วนหน่วยงานผู้ร้องขอ</div>
                     <div class="kz-border-b" style="padding: 6px 10px;">
                         <div class="kz-flex" style="justify-content: space-between; margin-bottom: 4px;">
@@ -635,11 +645,11 @@
                         </div>
                     </div>
 
-                    <!-- Problem & Image Section -->
-                    <div class="kz-flex kz-border-b" style="border-width: 2px;">
+                    <!-- Problem & Image Section (ให้ขยายรับพื้นที่แบบ Flex) -->
+                    <div class="kz-flex kz-border-b" style="border-width: 2px; flex: 1; overflow: hidden;">
                         <!-- Left: Before Image -->
-                        <div class="kz-border-r kz-center" style="width: 40%; min-height: 200px; padding: 5px;">
-                            ${isBeforeValid ? `<img src="${beforeImgSrc}" style="max-width: 100%; max-height: 190px; object-fit: contain;">` : '<span style="color: #999;">ไม่มีรูปภาพประกอบ</span>'}
+                        <div class="kz-border-r kz-center" style="width: 40%; padding: 5px;">
+                            ${isBeforeValid ? `<img src="${beforeImgSrc}" style="max-width: 100%; max-height: 100%; object-fit: contain;">` : '<span style="color: #999;">ไม่มีรูปภาพประกอบ</span>'}
                         </div>
                         <!-- Right: Details -->
                         <div style="width: 60%; display: flex; flex-direction: column;">
@@ -649,10 +659,10 @@
                                 <div><input type="checkbox" ${isEquipment}> EQUIPMENT</div>
                                 <div><input type="checkbox" ${isJig}> JIG FIXTURE</div>
                             </div>
-                            <div class="kz-flex" style="flex-grow: 1;">
+                            <div class="kz-flex" style="flex-grow: 1; overflow: hidden;">
                                 <div class="kz-border-r" style="width: 100%; padding: 4px; display: flex; flex-direction: column;">
                                     <div class="kz-center kz-border-b" style="font-weight: bold; padding-bottom: 4px; margin-bottom: 4px;">ปัญหา / สิ่งที่ต้องการปรับปรุง</div>
-                                    <div style="white-space: pre-wrap; padding: 4px; font-size: 12px; flex-grow: 1;">${desc}</div>
+                                    <div style="white-space: pre-wrap; padding: 4px; font-size: 11px; flex-grow: 1; overflow: hidden;">${desc}</div>
                                 </div>
                             </div>
                             <div style="border-top: 1px solid black;">
@@ -660,8 +670,7 @@
                                     <div style="margin-right: 20px;"><input type="checkbox" ${isApproved}> อนุมัติ</div>
                                     <div><input type="checkbox" ${isRejected}> ไม่อนุมัติ</div>
                                 </div>
-                                <!-- ลด Padding บนช่องลายเซ็น -->
-                                <div class="kz-flex" style="justify-content: space-around; padding: 15px 10px 5px 10px;">
+                                <div class="kz-flex" style="justify-content: space-around; padding: 10px 10px 5px 10px;">
                                     <div class="kz-center" style="flex-direction: column;">
                                         <div>.....................................................</div>
                                         <div style="margin-top: 2px;">(......../......../........)</div>
@@ -678,7 +687,7 @@
                         </div>
                     </div>
 
-                    <!-- Section 2 -->
+                    <!-- Section 2 (ความสูงคงที่) -->
                     <div class="kz-title kz-flex" style="justify-content: space-between;">
                         <span>ส่วนหน่วยงานปรับปรุง</span>
                         <span>รหัสงาน <strong>${id}</strong></span>
@@ -688,22 +697,22 @@
                         <div style="width: 50%;">วันที่ดำเนินการเสร็จ <strong>${completedTime}</strong></div>
                     </div>
 
-                    <!-- After Image & Fix Details -->
-                    <div class="kz-flex kz-border-b" style="border-width: 2px;">
+                    <!-- After Image & Fix Details (ให้ขยายรับพื้นที่แบบ Flex) -->
+                    <div class="kz-flex kz-border-b" style="border-width: 2px; flex: 1; overflow: hidden;">
                         <!-- Left: After Image -->
-                        <div class="kz-border-r kz-center" style="width: 40%; min-height: 200px; padding: 5px;">
-                            ${isAfterValid ? `<img src="${afterImgSrc}" style="max-width: 100%; max-height: 190px; object-fit: contain;">` : '<span style="color: #999;">ยังไม่ได้ดำเนินการ (ไม่มีรูปภาพ After)</span>'}
+                        <div class="kz-border-r kz-center" style="width: 40%; padding: 5px;">
+                            ${isAfterValid ? `<img src="${afterImgSrc}" style="max-width: 100%; max-height: 100%; object-fit: contain;">` : '<span style="color: #999;">ยังไม่ได้ดำเนินการ (ไม่มีรูปภาพ After)</span>'}
                         </div>
                         <!-- Right: Details -->
                         <div style="width: 60%; display: flex; flex-direction: column;">
                             <div class="kz-center kz-border-b" style="font-weight: bold; background-color: #e5e7eb; padding: 4px;">รายละเอียดการแก้ไขปรับปรุง</div>
-                            <div style="flex-grow: 1; padding: 6px;">
+                            <div style="padding: 6px;">
                                 <div class="kz-flex" style="justify-content: space-around; font-size: 11px;">
                                     <div><input type="checkbox"> เริ่มการอบชุบ/ตัดชิ้นส่วน/สั่งซื้อ</div>
                                     <div><input type="checkbox"> ไม่เริ่มการอบชุบ/ตัดชิ้นส่วน/สั่งซื้อ</div>
                                 </div>
                             </div>
-                            <div style="border-top: 1px solid black; padding: 6px;">
+                            <div style="border-top: 1px solid black; padding: 6px; flex-grow: 1;">
                                 <div style="font-weight: bold; font-size: 11px; margin-bottom: 4px;">ประเมินผลหลังการดำเนินการแก้ไขปรับปรุง</div>
                                 <div class="kz-flex" style="flex-wrap: wrap; font-size: 10px; gap: 4px;">
                                     <div style="width: 32%;"><input type="checkbox"> สภาพใช้งาน/ไม่ชำรุด</div>
@@ -718,7 +727,7 @@
                                 </div>
                             </div>
                             <div style="border-top: 1px solid black;">
-                                <div class="kz-flex" style="justify-content: space-around; padding: 15px 10px 5px 10px;">
+                                <div class="kz-flex" style="justify-content: space-around; padding: 10px 10px 5px 10px;">
                                     <div class="kz-center" style="flex-direction: column;">
                                         <div>.....................................................</div>
                                         <div style="margin-top: 2px;">(......../......../........)</div>
@@ -735,7 +744,7 @@
                         </div>
                     </div>
 
-                    <!-- Footer -->
+                    <!-- Footer (ความสูงคงที่) -->
                     <div class="kz-flex" style="font-size: 11px;">
                         <div class="kz-border-r" style="width: 40%; padding: 8px;">
                             <div style="margin-bottom: 15px;">ส่ง KC ก่อนเริ่มงาน .....................................................</div>
