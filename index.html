@@ -457,7 +457,6 @@
                 <h3 class="text-2xl font-extrabold text-slate-800"><i class="fa-solid fa-chart-column text-indigo-500 mr-2"></i>รายงานสถิติงาน Kaizen</h3>
             </div>
             
-            <!-- เพิ่มตัวเลือกโหมดกราฟและตัวเลือกเดือน -->
             <div class="flex flex-col sm:flex-row justify-between gap-3 mb-4">
                 <select id="chartModeSelect" onchange="updateChart()" class="input-3d px-4 py-2 rounded-xl text-base font-bold text-slate-700 outline-none cursor-pointer w-full sm:w-auto">
                     <option value="overview">📊 ภาพรวม (รับเข้า/เสร็จสิ้น)</option>
@@ -543,68 +542,207 @@
             setupDragAndDrop('uploadContainerAfter', 'afterImageInput', 'modalUploadUI', 'modalPreviewUI', 'modalFileName');
         });
 
-        // ================= 3. ระบบ Print Report PDF =================
+        // ================= 3. ระบบ Print Report PDF (อัปเดตเทมเพลต Kaizen Shop) =================
         function printReport(id) {
             const req = requests.find(r => String(r.id || r.jobId || r['Job ID']) === String(id));
             if(!req) return;
 
             const printArea = document.getElementById('printArea');
-            const title = req.title || req.Title || '-';
-            const department = req.department || req.Department || '-';
-            const area = req.area || req.Area || '-';
-            const jobType = req.jobType || req['Job Type'] || req.JobType || '-';
-            const requester = req.requester || req.Requester || '-';
-            const desc = req.desc || req.description || req.Description || '-';
+            const title = req.title || req.Title || '';
+            const department = req.department || req.Department || '';
+            const area = req.area || req.Area || '';
+            const jobType = String(req.jobType || req['Job Type'] || req.JobType || '').toLowerCase();
+            const requester = req.requester || req.Requester || '';
+            const desc = req.desc || req.description || req.Description || '';
+            const status = req.status || req.Status || 'pending';
+            
             const beforeTime = formatThaiDateTime(req.createdAt || req.Timestamp || id);
-            const completedTime = formatThaiDateTime(req.completedAt || req['เวลาที่ปิดงาน']);
+            const completedTime = formatThaiDateTime(req.completedAt || req['เวลาที่ปิดงาน']) === '-' ? '..........................................................' : formatThaiDateTime(req.completedAt || req['เวลาที่ปิดงาน']);
             
-            const beforeImgSrc = req.imageBase64 || req.beforeImage || req['Before Image'] || req.image; 
-            const afterImgSrc = req.afterImageBase64 || req.afterImage || req['After Image'];
+            const beforeImgSrc = req.imageBase64 || req.beforeImage || req['Before Image'] || req.BeforeImage || req.image; 
+            const afterImgSrc = req.afterImageBase64 || req.afterImage || req['After Image'] || req.AfterImage;
             
-            const isBeforeValid = beforeImgSrc && String(beforeImgSrc).length > 100;
-            const isAfterValid = afterImgSrc && String(afterImgSrc).length > 100;
+            const isBeforeValid = beforeImgSrc && beforeImgSrc !== '-' && String(beforeImgSrc).length > 100;
+            const isAfterValid = afterImgSrc && afterImgSrc !== '-' && String(afterImgSrc).length > 100;
+
+            // เช็คประเภทงานสำหรับติ๊ก Checkbox
+            const isProgram = jobType.includes('program') ? 'checked' : '';
+            const isTooling = jobType.includes('tooling') ? 'checked' : '';
+            const isEquipment = jobType.includes('equipment') ? 'checked' : '';
+            const isJig = jobType.includes('jig') ? 'checked' : '';
+
+            // เช็คสถานะการอนุมัติ
+            const isApproved = ['approved', 'inprogress', 'completed'].includes(status) ? 'checked' : '';
+            const isRejected = status === 'rejected' ? 'checked' : '';
 
             printArea.innerHTML = `
-                <div style="max-width: 800px; margin: 0 auto; border: 1px solid #ccc; padding: 40px;">
-                    <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 20px; margin-bottom: 30px;">
-                        <h1 style="font-size: 28px; margin: 0;"><strong>Kaizen Report</strong></h1>
-                        <p style="font-size: 16px; margin-top: 5px; color: #555;">รหัสงาน: ${id}</p>
-                    </div>
-                    
-                    <div style="margin-bottom: 25px;">
-                        <h2 style="font-size: 22px; margin-bottom: 10px;">หัวข้อ: <strong>${title}</strong></h2>
-                        <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
-                            <tr>
-                                <td style="padding: 8px; border: 1px solid #ddd;"><strong>ผู้แจ้ง:</strong> ${requester}</td>
-                                <td style="padding: 8px; border: 1px solid #ddd;"><strong>แผนก:</strong> ${department}</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 8px; border: 1px solid #ddd;"><strong>พื้นที่หน้างาน:</strong> ${area}</td>
-                                <td style="padding: 8px; border: 1px solid #ddd;"><strong>ประเภทงาน:</strong> ${jobType}</td>
-                            </tr>
-                        </table>
-                        <div style="padding: 15px; border: 1px solid #ddd; background: #f9f9f9;">
-                            <strong>รายละเอียดปัญหา/ข้อเสนอแนะ:</strong><br>
-                            <p style="margin-top: 10px; white-space: pre-wrap;">${desc}</p>
+                <style>
+                    @media print {
+                        @page { size: A4; margin: 10mm; }
+                        body * { visibility: hidden; }
+                        #printArea, #printArea * { visibility: visible; }
+                        #printArea { position: absolute; left: 0; top: 0; width: 100%; min-height: 100vh; background: white !important; z-index: 9999; }
+                    }
+                    .kz-form { width: 100%; max-width: 800px; margin: 0 auto; color: black; font-family: 'Sarabun', 'Prompt', sans-serif; font-size: 13px; border: 2px solid black; box-sizing: border-box; }
+                    .kz-form * { box-sizing: border-box; }
+                    .kz-border-b { border-bottom: 1px solid black; }
+                    .kz-border-r { border-right: 1px solid black; }
+                    .kz-flex { display: flex; }
+                    .kz-center { display: flex; align-items: center; justify-content: center; text-align: center; }
+                    .kz-title { font-weight: bold; background-color: #e5e7eb; padding: 2px 8px; border-bottom: 1px solid black; }
+                    input[type="checkbox"] { margin-right: 4px; pointer-events: none; }
+                </style>
+
+                <div class="kz-form">
+                    <!-- Header -->
+                    <div class="kz-flex kz-border-b" style="border-width: 2px;">
+                        <div class="kz-border-r kz-center" style="width: 15%; padding: 10px;">
+                            <img src="https://www.satpcl.co.th/themes/default/assets/static/images/logo.png" style="max-width: 100%; height: auto;">
+                        </div>
+                        <div class="kz-border-r kz-center" style="width: 60%; font-size: 20px; font-weight: bold;">เอกสารแจ้งดำเนินงาน ปรับปรุง แก้ไขปัญหางาน</div>
+                        <div class="kz-center" style="width: 25%; flex-direction: column;">
+                            <div style="font-weight: bold; font-size: 14px;">KAIZEN SHOP</div>
+                            <div style="font-size: 10px;">Production Engineer Department</div>
                         </div>
                     </div>
 
-                    <div style="display: flex; gap: 20px; justify-content: space-between;">
-                        ${isBeforeValid ? `
-                            <div style="flex: 1; border: 1px solid #ddd; padding: 10px; text-align: center;">
-                                <h3 style="margin-bottom: 10px; color: #d9534f;">สภาพก่อนทำ (Before)</h3>
-                                <p style="font-size: 12px; color: #777; margin-bottom: 10px;">${beforeTime}</p>
-                                <img src="${beforeImgSrc}" style="width: 100%; max-height: 250px; object-fit: contain; border: 1px solid #eee;">
-                            </div>
-                        ` : '<div style="flex: 1;">ไม่มีรูปภาพ Before</div>'}
+                    <!-- Section 1 -->
+                    <div class="kz-title">ส่วนหน่วยงานผู้ร้องขอ</div>
+                    <div class="kz-border-b" style="padding: 10px;">
+                        <div class="kz-flex" style="justify-content: space-between; margin-bottom: 8px;">
+                            <div>วันที่ <strong>${beforeTime}</strong></div>
+                            <div>ครั้งที่....................</div>
+                        </div>
+                        <div class="kz-flex" style="margin-bottom: 8px;">
+                            <div style="width: 40%;">ผู้ร้องขอ <strong>${requester}</strong></div>
+                            <div style="width: 60%;">หน่วยงาน <strong>${department} / ${area}</strong></div>
+                        </div>
+                        <div style="margin-bottom: 8px;">
+                            ชื่องาน <strong>${title}</strong>
+                        </div>
+                        <div class="kz-flex" style="gap: 20px; align-items: center;">
+                            <div>เอกสารประกอบ</div>
+                            <div><input type="checkbox"> แบบงาน</div>
+                            <div><input type="checkbox"> รูปวาด</div>
+                            <div><input type="checkbox" checked> รูปภาพ</div>
+                            <div><input type="checkbox"> อื่นๆ</div>
+                        </div>
+                    </div>
 
-                        ${isAfterValid ? `
-                            <div style="flex: 1; border: 1px solid #ddd; padding: 10px; text-align: center;">
-                                <h3 style="margin-bottom: 10px; color: #5cb85c;">ผลการปรับปรุง (After)</h3>
-                                <p style="font-size: 12px; color: #777; margin-bottom: 10px;">${completedTime}</p>
-                                <img src="${afterImgSrc}" style="width: 100%; max-height: 250px; object-fit: contain; border: 1px solid #eee;">
+                    <!-- Problem & Image Section -->
+                    <div class="kz-flex kz-border-b" style="border-width: 2px;">
+                        <!-- Left: Before Image -->
+                        <div class="kz-border-r kz-center" style="width: 40%; min-height: 250px; padding: 10px;">
+                            ${isBeforeValid ? `<img src="${beforeImgSrc}" style="max-width: 100%; max-height: 240px; object-fit: contain;">` : '<span style="color: #999;">ไม่มีรูปภาพประกอบ</span>'}
+                        </div>
+                        <!-- Right: Details -->
+                        <div style="width: 60%; display: flex; flex-direction: column;">
+                            <div class="kz-flex kz-border-b" style="padding: 5px; justify-content: space-around; font-size: 11px;">
+                                <div><input type="checkbox" ${isProgram}> PROGRAM</div>
+                                <div><input type="checkbox" ${isTooling}> TOOLING</div>
+                                <div><input type="checkbox" ${isEquipment}> EQUIPMENT</div>
+                                <div><input type="checkbox" ${isJig}> JIG FIXTURE</div>
                             </div>
-                        ` : '<div style="flex: 1; border: 1px dashed #ddd; display: flex; align-items: center; justify-content: center; color: #999;">ยังไม่มีการปิดงาน</div>'}
+                            <div class="kz-flex" style="flex-grow: 1;">
+                                <div class="kz-border-r" style="width: 100%; padding: 5px; display: flex; flex-direction: column;">
+                                    <div class="kz-center kz-border-b" style="font-weight: bold; padding-bottom: 4px; margin-bottom: 5px;">ปัญหา / สิ่งที่ต้องการปรับปรุง</div>
+                                    <div style="white-space: pre-wrap; padding: 5px; font-size: 12px; flex-grow: 1;">${desc}</div>
+                                </div>
+                            </div>
+                            <div style="border-top: 1px solid black;">
+                                <div class="kz-flex kz-border-b" style="justify-content: flex-end; padding: 5px 10px; background-color: #e5e7eb;">
+                                    <div style="margin-right: 20px;"><input type="checkbox" ${isApproved}> อนุมัติ</div>
+                                    <div><input type="checkbox" ${isRejected}> ไม่อนุมัติ</div>
+                                </div>
+                                <div class="kz-flex" style="justify-content: space-around; padding: 25px 10px 10px 10px;">
+                                    <div class="kz-center" style="flex-direction: column;">
+                                        <div>.....................................................</div>
+                                        <div style="margin-top: 3px;">(......../......../........)</div>
+                                        <div style="margin-top: 3px;">Foreman</div>
+                                    </div>
+                                    <div class="kz-center" style="flex-direction: column;">
+                                        <div>.....................................................</div>
+                                        <div style="margin-top: 3px;">(......../......../........)</div>
+                                        <div style="margin-top: 3px;">Chief/Manager</div>
+                                        <div style="font-size: 10px;">(หน่วยงานที่เกี่ยวข้อง)</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2 -->
+                    <div class="kz-title kz-flex" style="justify-content: space-between;">
+                        <span>ส่วนหน่วยงานปรับปรุง</span>
+                        <span>รหัสงาน <strong>${id}</strong></span>
+                    </div>
+                    <div class="kz-flex kz-border-b" style="padding: 10px; justify-content: space-between;">
+                        <div style="width: 50%;">วันที่รับงาน..............................................................</div>
+                        <div style="width: 50%;">วันที่ดำเนินการเสร็จ <strong>${completedTime}</strong></div>
+                    </div>
+
+                    <!-- After Image & Fix Details -->
+                    <div class="kz-flex kz-border-b" style="border-width: 2px;">
+                        <!-- Left: After Image -->
+                        <div class="kz-border-r kz-center" style="width: 40%; min-height: 250px; padding: 10px;">
+                            ${isAfterValid ? `<img src="${afterImgSrc}" style="max-width: 100%; max-height: 240px; object-fit: contain;">` : '<span style="color: #999;">ยังไม่ได้ดำเนินการ (ไม่มีรูปภาพ After)</span>'}
+                        </div>
+                        <!-- Right: Details -->
+                        <div style="width: 60%; display: flex; flex-direction: column;">
+                            <div class="kz-center kz-border-b" style="font-weight: bold; background-color: #e5e7eb; padding: 4px;">รายละเอียดการแก้ไขปรับปรุง</div>
+                            <div style="flex-grow: 1; padding: 10px;">
+                                <div class="kz-flex" style="justify-content: space-around; font-size: 11px;">
+                                    <div><input type="checkbox"> เริ่มการอบชุบ/ตัดชิ้นส่วน/สั่งซื้อ</div>
+                                    <div><input type="checkbox"> ไม่เริ่มการอบชุบ/ตัดชิ้นส่วน/สั่งซื้อ</div>
+                                </div>
+                            </div>
+                            <div style="border-top: 1px solid black; padding: 8px;">
+                                <div style="font-weight: bold; font-size: 11px; margin-bottom: 5px;">ประเมินผลหลังการดำเนินการแก้ไขปรับปรุง</div>
+                                <div class="kz-flex" style="flex-wrap: wrap; font-size: 10px; gap: 8px;">
+                                    <div style="width: 30%;"><input type="checkbox"> สภาพใช้งาน/ไม่ชำรุด</div>
+                                    <div style="width: 30%;"><input type="checkbox"> ปฏิบัติงานเป็นที่ Shop Kaizen</div>
+                                    <div style="width: 30%;"><input type="checkbox"> ปฏิบัติงานในพื้นที่ Shop Kaizen</div>
+                                    <div style="width: 30%;"><input type="checkbox"> ประหยัดเวลา/เพิ่มผลผลิต</div>
+                                    <div style="width: 30%;"><input type="checkbox"> ลดของเสีย/ลดค่าความเสียหาย</div>
+                                    <div style="width: 30%;"><input type="checkbox"> เพิ่มประสิทธิภาพ/คุณภาพ</div>
+                                    <div style="width: 30%;"><input type="checkbox"> ลดการสูญเสีย/สูญเปล่า</div>
+                                    <div style="width: 30%;"><input type="checkbox"> ลดความยุ่งยาก/ซ้ำซ้อน</div>
+                                    <div style="width: 30%;"><input type="checkbox"> อื่นๆ ระบุ....................</div>
+                                </div>
+                            </div>
+                            <div style="border-top: 1px solid black;">
+                                <div class="kz-flex" style="justify-content: space-around; padding: 25px 10px 10px 10px;">
+                                    <div class="kz-center" style="flex-direction: column;">
+                                        <div>.....................................................</div>
+                                        <div style="margin-top: 3px;">(......../......../........)</div>
+                                        <div style="margin-top: 3px;">Foreman</div>
+                                    </div>
+                                    <div class="kz-center" style="flex-direction: column;">
+                                        <div>.....................................................</div>
+                                        <div style="margin-top: 3px;">(......../......../........)</div>
+                                        <div style="margin-top: 3px;">Chief/Manager</div>
+                                        <div style="font-size: 10px;">(แผนกวิศวกรรมการผลิต)</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="kz-flex" style="font-size: 11px;">
+                        <div class="kz-border-r" style="width: 40%; padding: 10px;">
+                            <div style="margin-bottom: 20px;">ส่ง KC ก่อนเริ่มงาน .....................................................</div>
+                            <div>ผู้รับงาน .....................................................................</div>
+                        </div>
+                        <div style="width: 60%; padding: 10px;">
+                            <strong>Remark</strong>
+                            <div style="background-color: #e5e7eb; padding: 2px 5px; margin-top: 2px;">หน่วยงาน/ฝ่ายที่ขอปฏิบัติหน้าที่</div>
+                            <ol style="margin-top: 4px; padding-left: 20px; line-height: 1.5;">
+                                <li>เขียนรายละเอียดให้ครบถ้วน ครอบคลุมเพื่อง่ายต่อการทำ</li>
+                                <li>ดำเนินการแล้วเสร็จให้ทำการตรวจสอบความเรียบร้อยร่วมกันทุกหน้า ที่ มีมิติ</li>
+                                <li>ในการดำเนินการปรับปรุงระบบ ควบคุมความปลอดภัยและมาตราฐานการปฏิบัติงานในพื้นที่</li>
+                            </ol>
+                        </div>
                     </div>
                 </div>
             `;
