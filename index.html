@@ -542,7 +542,7 @@
             setupDragAndDrop('uploadContainerAfter', 'afterImageInput', 'modalUploadUI', 'modalPreviewUI', 'modalFileName');
         });
 
-        // ================= 3. ระบบ Print Report PDF (อัปเดตเทมเพลต Kaizen Shop) =================
+        // ================= 3. ระบบ Print Report PDF (อัปเดตเทมเพลต Kaizen Shop แก้หน้ากระดาษ) =================
         function printReport(id) {
             const req = requests.find(r => String(r.id || r.jobId || r['Job ID']) === String(id));
             if(!req) return;
@@ -578,12 +578,15 @@
             printArea.innerHTML = `
                 <style>
                     @media print {
-                        @page { size: A4; margin: 10mm; }
+                        /* ลดขอบกระดาษลงเพื่อให้เนื้อหาพอดี 1 หน้า */
+                        @page { size: A4 portrait; margin: 5mm; } 
                         body * { visibility: hidden; }
                         #printArea, #printArea * { visibility: visible; }
-                        #printArea { position: absolute; left: 0; top: 0; width: 100%; min-height: 100vh; background: white !important; z-index: 9999; }
+                        /* เอา min-height: 100vh ออก เพื่อไม่ให้เกิดหน้าว่าง */
+                        #printArea { position: absolute; left: 0; top: 0; width: 100%; background: white !important; z-index: 9999; }
                     }
-                    .kz-form { width: 100%; max-width: 800px; margin: 0 auto; color: black; font-family: 'Sarabun', 'Prompt', sans-serif; font-size: 13px; border: 2px solid black; box-sizing: border-box; }
+                    /* ปรับฟอนต์โดยรวมเป็น 12px และบีบช่องไฟให้แคบลง */
+                    .kz-form { width: 100%; max-width: 100%; color: black; font-family: 'Sarabun', 'Prompt', sans-serif; font-size: 12px; border: 2px solid black; box-sizing: border-box; margin: 0; }
                     .kz-form * { box-sizing: border-box; }
                     .kz-border-b { border-bottom: 1px solid black; }
                     .kz-border-r { border-right: 1px solid black; }
@@ -596,11 +599,14 @@
                 <div class="kz-form">
                     <!-- Header -->
                     <div class="kz-flex kz-border-b" style="border-width: 2px;">
-                        <div class="kz-border-r kz-center" style="width: 15%; padding: 10px;">
+                        <div class="kz-border-r kz-center" style="width: 12%; padding: 5px;">
                             <img src="https://www.satpcl.co.th/themes/default/assets/static/images/logo.png" style="max-width: 100%; height: auto;">
                         </div>
-                        <div class="kz-border-r kz-center" style="width: 60%; font-size: 20px; font-weight: bold;">เอกสารแจ้งดำเนินงาน ปรับปรุง แก้ไขปัญหางาน</div>
-                        <div class="kz-center" style="width: 25%; flex-direction: column;">
+                        <!-- ปรับ width เป็น 65% และบังคับ white-space: nowrap ไม่ให้ตกบรรทัด -->
+                        <div class="kz-border-r kz-center" style="width: 65%; font-size: 18px; font-weight: bold; white-space: nowrap;">
+                            เอกสารแจ้งดำเนินงาน ปรับปรุง แก้ไขปัญหางาน
+                        </div>
+                        <div class="kz-center" style="width: 23%; flex-direction: column;">
                             <div style="font-weight: bold; font-size: 14px;">KAIZEN SHOP</div>
                             <div style="font-size: 10px;">Production Engineer Department</div>
                         </div>
@@ -608,16 +614,16 @@
 
                     <!-- Section 1 -->
                     <div class="kz-title">ส่วนหน่วยงานผู้ร้องขอ</div>
-                    <div class="kz-border-b" style="padding: 10px;">
-                        <div class="kz-flex" style="justify-content: space-between; margin-bottom: 8px;">
+                    <div class="kz-border-b" style="padding: 6px 10px;">
+                        <div class="kz-flex" style="justify-content: space-between; margin-bottom: 4px;">
                             <div>วันที่ <strong>${beforeTime}</strong></div>
                             <div>ครั้งที่....................</div>
                         </div>
-                        <div class="kz-flex" style="margin-bottom: 8px;">
+                        <div class="kz-flex" style="margin-bottom: 4px;">
                             <div style="width: 40%;">ผู้ร้องขอ <strong>${requester}</strong></div>
                             <div style="width: 60%;">หน่วยงาน <strong>${department} / ${area}</strong></div>
                         </div>
-                        <div style="margin-bottom: 8px;">
+                        <div style="margin-bottom: 4px;">
                             ชื่องาน <strong>${title}</strong>
                         </div>
                         <div class="kz-flex" style="gap: 20px; align-items: center;">
@@ -632,38 +638,39 @@
                     <!-- Problem & Image Section -->
                     <div class="kz-flex kz-border-b" style="border-width: 2px;">
                         <!-- Left: Before Image -->
-                        <div class="kz-border-r kz-center" style="width: 40%; min-height: 250px; padding: 10px;">
-                            ${isBeforeValid ? `<img src="${beforeImgSrc}" style="max-width: 100%; max-height: 240px; object-fit: contain;">` : '<span style="color: #999;">ไม่มีรูปภาพประกอบ</span>'}
+                        <div class="kz-border-r kz-center" style="width: 40%; min-height: 200px; padding: 5px;">
+                            ${isBeforeValid ? `<img src="${beforeImgSrc}" style="max-width: 100%; max-height: 190px; object-fit: contain;">` : '<span style="color: #999;">ไม่มีรูปภาพประกอบ</span>'}
                         </div>
                         <!-- Right: Details -->
                         <div style="width: 60%; display: flex; flex-direction: column;">
-                            <div class="kz-flex kz-border-b" style="padding: 5px; justify-content: space-around; font-size: 11px;">
+                            <div class="kz-flex kz-border-b" style="padding: 4px; justify-content: space-around; font-size: 11px;">
                                 <div><input type="checkbox" ${isProgram}> PROGRAM</div>
                                 <div><input type="checkbox" ${isTooling}> TOOLING</div>
                                 <div><input type="checkbox" ${isEquipment}> EQUIPMENT</div>
                                 <div><input type="checkbox" ${isJig}> JIG FIXTURE</div>
                             </div>
                             <div class="kz-flex" style="flex-grow: 1;">
-                                <div class="kz-border-r" style="width: 100%; padding: 5px; display: flex; flex-direction: column;">
-                                    <div class="kz-center kz-border-b" style="font-weight: bold; padding-bottom: 4px; margin-bottom: 5px;">ปัญหา / สิ่งที่ต้องการปรับปรุง</div>
-                                    <div style="white-space: pre-wrap; padding: 5px; font-size: 12px; flex-grow: 1;">${desc}</div>
+                                <div class="kz-border-r" style="width: 100%; padding: 4px; display: flex; flex-direction: column;">
+                                    <div class="kz-center kz-border-b" style="font-weight: bold; padding-bottom: 4px; margin-bottom: 4px;">ปัญหา / สิ่งที่ต้องการปรับปรุง</div>
+                                    <div style="white-space: pre-wrap; padding: 4px; font-size: 12px; flex-grow: 1;">${desc}</div>
                                 </div>
                             </div>
                             <div style="border-top: 1px solid black;">
-                                <div class="kz-flex kz-border-b" style="justify-content: flex-end; padding: 5px 10px; background-color: #e5e7eb;">
+                                <div class="kz-flex kz-border-b" style="justify-content: flex-end; padding: 4px 10px; background-color: #e5e7eb;">
                                     <div style="margin-right: 20px;"><input type="checkbox" ${isApproved}> อนุมัติ</div>
                                     <div><input type="checkbox" ${isRejected}> ไม่อนุมัติ</div>
                                 </div>
-                                <div class="kz-flex" style="justify-content: space-around; padding: 25px 10px 10px 10px;">
+                                <!-- ลด Padding บนช่องลายเซ็น -->
+                                <div class="kz-flex" style="justify-content: space-around; padding: 15px 10px 5px 10px;">
                                     <div class="kz-center" style="flex-direction: column;">
                                         <div>.....................................................</div>
-                                        <div style="margin-top: 3px;">(......../......../........)</div>
-                                        <div style="margin-top: 3px;">Foreman</div>
+                                        <div style="margin-top: 2px;">(......../......../........)</div>
+                                        <div style="margin-top: 2px;">Foreman</div>
                                     </div>
                                     <div class="kz-center" style="flex-direction: column;">
                                         <div>.....................................................</div>
-                                        <div style="margin-top: 3px;">(......../......../........)</div>
-                                        <div style="margin-top: 3px;">Chief/Manager</div>
+                                        <div style="margin-top: 2px;">(......../......../........)</div>
+                                        <div style="margin-top: 2px;">Chief/Manager</div>
                                         <div style="font-size: 10px;">(หน่วยงานที่เกี่ยวข้อง)</div>
                                     </div>
                                 </div>
@@ -676,7 +683,7 @@
                         <span>ส่วนหน่วยงานปรับปรุง</span>
                         <span>รหัสงาน <strong>${id}</strong></span>
                     </div>
-                    <div class="kz-flex kz-border-b" style="padding: 10px; justify-content: space-between;">
+                    <div class="kz-flex kz-border-b" style="padding: 6px 10px; justify-content: space-between;">
                         <div style="width: 50%;">วันที่รับงาน..............................................................</div>
                         <div style="width: 50%;">วันที่ดำเนินการเสร็จ <strong>${completedTime}</strong></div>
                     </div>
@@ -684,43 +691,43 @@
                     <!-- After Image & Fix Details -->
                     <div class="kz-flex kz-border-b" style="border-width: 2px;">
                         <!-- Left: After Image -->
-                        <div class="kz-border-r kz-center" style="width: 40%; min-height: 250px; padding: 10px;">
-                            ${isAfterValid ? `<img src="${afterImgSrc}" style="max-width: 100%; max-height: 240px; object-fit: contain;">` : '<span style="color: #999;">ยังไม่ได้ดำเนินการ (ไม่มีรูปภาพ After)</span>'}
+                        <div class="kz-border-r kz-center" style="width: 40%; min-height: 200px; padding: 5px;">
+                            ${isAfterValid ? `<img src="${afterImgSrc}" style="max-width: 100%; max-height: 190px; object-fit: contain;">` : '<span style="color: #999;">ยังไม่ได้ดำเนินการ (ไม่มีรูปภาพ After)</span>'}
                         </div>
                         <!-- Right: Details -->
                         <div style="width: 60%; display: flex; flex-direction: column;">
                             <div class="kz-center kz-border-b" style="font-weight: bold; background-color: #e5e7eb; padding: 4px;">รายละเอียดการแก้ไขปรับปรุง</div>
-                            <div style="flex-grow: 1; padding: 10px;">
+                            <div style="flex-grow: 1; padding: 6px;">
                                 <div class="kz-flex" style="justify-content: space-around; font-size: 11px;">
                                     <div><input type="checkbox"> เริ่มการอบชุบ/ตัดชิ้นส่วน/สั่งซื้อ</div>
                                     <div><input type="checkbox"> ไม่เริ่มการอบชุบ/ตัดชิ้นส่วน/สั่งซื้อ</div>
                                 </div>
                             </div>
-                            <div style="border-top: 1px solid black; padding: 8px;">
-                                <div style="font-weight: bold; font-size: 11px; margin-bottom: 5px;">ประเมินผลหลังการดำเนินการแก้ไขปรับปรุง</div>
-                                <div class="kz-flex" style="flex-wrap: wrap; font-size: 10px; gap: 8px;">
-                                    <div style="width: 30%;"><input type="checkbox"> สภาพใช้งาน/ไม่ชำรุด</div>
-                                    <div style="width: 30%;"><input type="checkbox"> ปฏิบัติงานเป็นที่ Shop Kaizen</div>
-                                    <div style="width: 30%;"><input type="checkbox"> ปฏิบัติงานในพื้นที่ Shop Kaizen</div>
-                                    <div style="width: 30%;"><input type="checkbox"> ประหยัดเวลา/เพิ่มผลผลิต</div>
-                                    <div style="width: 30%;"><input type="checkbox"> ลดของเสีย/ลดค่าความเสียหาย</div>
-                                    <div style="width: 30%;"><input type="checkbox"> เพิ่มประสิทธิภาพ/คุณภาพ</div>
-                                    <div style="width: 30%;"><input type="checkbox"> ลดการสูญเสีย/สูญเปล่า</div>
-                                    <div style="width: 30%;"><input type="checkbox"> ลดความยุ่งยาก/ซ้ำซ้อน</div>
-                                    <div style="width: 30%;"><input type="checkbox"> อื่นๆ ระบุ....................</div>
+                            <div style="border-top: 1px solid black; padding: 6px;">
+                                <div style="font-weight: bold; font-size: 11px; margin-bottom: 4px;">ประเมินผลหลังการดำเนินการแก้ไขปรับปรุง</div>
+                                <div class="kz-flex" style="flex-wrap: wrap; font-size: 10px; gap: 4px;">
+                                    <div style="width: 32%;"><input type="checkbox"> สภาพใช้งาน/ไม่ชำรุด</div>
+                                    <div style="width: 32%;"><input type="checkbox"> ปฏิบัติงานเป็นที่ Shop Kaizen</div>
+                                    <div style="width: 32%;"><input type="checkbox"> ปฏิบัติงานในพื้นที่ Shop Kaizen</div>
+                                    <div style="width: 32%;"><input type="checkbox"> ประหยัดเวลา/เพิ่มผลผลิต</div>
+                                    <div style="width: 32%;"><input type="checkbox"> ลดของเสีย/ลดค่าความเสียหาย</div>
+                                    <div style="width: 32%;"><input type="checkbox"> เพิ่มประสิทธิภาพ/คุณภาพ</div>
+                                    <div style="width: 32%;"><input type="checkbox"> ลดการสูญเสีย/สูญเปล่า</div>
+                                    <div style="width: 32%;"><input type="checkbox"> ลดความยุ่งยาก/ซ้ำซ้อน</div>
+                                    <div style="width: 32%;"><input type="checkbox"> อื่นๆ ระบุ....................</div>
                                 </div>
                             </div>
                             <div style="border-top: 1px solid black;">
-                                <div class="kz-flex" style="justify-content: space-around; padding: 25px 10px 10px 10px;">
+                                <div class="kz-flex" style="justify-content: space-around; padding: 15px 10px 5px 10px;">
                                     <div class="kz-center" style="flex-direction: column;">
                                         <div>.....................................................</div>
-                                        <div style="margin-top: 3px;">(......../......../........)</div>
-                                        <div style="margin-top: 3px;">Foreman</div>
+                                        <div style="margin-top: 2px;">(......../......../........)</div>
+                                        <div style="margin-top: 2px;">Foreman</div>
                                     </div>
                                     <div class="kz-center" style="flex-direction: column;">
                                         <div>.....................................................</div>
-                                        <div style="margin-top: 3px;">(......../......../........)</div>
-                                        <div style="margin-top: 3px;">Chief/Manager</div>
+                                        <div style="margin-top: 2px;">(......../......../........)</div>
+                                        <div style="margin-top: 2px;">Chief/Manager</div>
                                         <div style="font-size: 10px;">(แผนกวิศวกรรมการผลิต)</div>
                                     </div>
                                 </div>
@@ -730,16 +737,16 @@
 
                     <!-- Footer -->
                     <div class="kz-flex" style="font-size: 11px;">
-                        <div class="kz-border-r" style="width: 40%; padding: 10px;">
-                            <div style="margin-bottom: 20px;">ส่ง KC ก่อนเริ่มงาน .....................................................</div>
+                        <div class="kz-border-r" style="width: 40%; padding: 8px;">
+                            <div style="margin-bottom: 15px;">ส่ง KC ก่อนเริ่มงาน .....................................................</div>
                             <div>ผู้รับงาน .....................................................................</div>
                         </div>
-                        <div style="width: 60%; padding: 10px;">
+                        <div style="width: 60%; padding: 8px;">
                             <strong>Remark</strong>
                             <div style="background-color: #e5e7eb; padding: 2px 5px; margin-top: 2px;">หน่วยงาน/ฝ่ายที่ขอปฏิบัติหน้าที่</div>
-                            <ol style="margin-top: 4px; padding-left: 20px; line-height: 1.5;">
+                            <ol style="margin-top: 4px; padding-left: 20px; line-height: 1.3;">
                                 <li>เขียนรายละเอียดให้ครบถ้วน ครอบคลุมเพื่อง่ายต่อการทำ</li>
-                                <li>ดำเนินการแล้วเสร็จให้ทำการตรวจสอบความเรียบร้อยร่วมกันทุกหน้า ที่ มีมิติ</li>
+                                <li>ดำเนินการแล้วเสร็จให้ทำการตรวจสอบความเรียบร้อยร่วมกันทุกหน้าที่ ที่มีมิติ</li>
                                 <li>ในการดำเนินการปรับปรุงระบบ ควบคุมความปลอดภัยและมาตราฐานการปฏิบัติงานในพื้นที่</li>
                             </ol>
                         </div>
