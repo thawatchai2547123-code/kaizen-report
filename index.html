@@ -456,11 +456,18 @@
             <div class="text-center mb-6">
                 <h3 class="text-2xl font-extrabold text-slate-800"><i class="fa-solid fa-chart-column text-indigo-500 mr-2"></i>รายงานสถิติงาน Kaizen</h3>
             </div>
-            <div class="flex justify-end mb-4">
-                <select id="chartMonthSelect" onchange="updateChart()" class="input-3d px-4 py-2 rounded-xl text-base font-bold text-slate-700 outline-none cursor-pointer">
+            
+            <!-- เพิ่มตัวเลือกโหมดกราฟและตัวเลือกเดือน -->
+            <div class="flex flex-col sm:flex-row justify-between gap-3 mb-4">
+                <select id="chartModeSelect" onchange="updateChart()" class="input-3d px-4 py-2 rounded-xl text-base font-bold text-slate-700 outline-none cursor-pointer w-full sm:w-auto">
+                    <option value="overview">📊 ภาพรวม (รับเข้า/เสร็จสิ้น)</option>
+                    <option value="jobType">🧩 แยกตามประเภทงาน (Job Type)</option>
+                </select>
+                <select id="chartMonthSelect" onchange="updateChart()" class="input-3d px-4 py-2 rounded-xl text-base font-bold text-slate-700 outline-none cursor-pointer w-full sm:w-auto">
                     <option value="all">ทั้งหมด (All Time)</option>
                 </select>
             </div>
+
             <div class="bg-white/50 p-4 rounded-2xl border border-white shadow-inner relative h-64 sm:h-80 w-full">
                 <canvas id="kaizenChart"></canvas>
             </div>
@@ -778,7 +785,6 @@
 
             fetch(SCRIPT_URL)
                 .then(response => {
-                    // ตรวจสอบว่าเซิร์ฟเวอร์ไม่ได้ส่ง HTML หรือ Error Page กลับมา
                     if (!response.ok) throw new Error('Network response error');
                     return response.json();
                 })
@@ -788,7 +794,6 @@
                         return;
                     }
 
-                    // จัดการโครงสร้างข้อมูลให้แน่ใจว่าเป็น Array เสมอ
                     if (Array.isArray(data)) {
                         requests = data;
                     } else if (data && Array.isArray(data.data)) {
@@ -847,7 +852,6 @@
             const title = document.getElementById('reqTitle').value;
             const desc = document.getElementById('reqDesc').value;
 
-            // แก้ไขการบันทึก ID และเวลา ให้ตรงกับแบบฟอร์ม
             const newId = 'KZ-' + Date.now();
             const nowISO = new Date().toISOString();
             
@@ -862,7 +866,7 @@
             formData.append('area', area);
             formData.append('jobType', jobType);
 
-            // Optimistic Update: นำข้อมูลยัดเข้า Local Array ทันทีเพื่อให้หัวหน้าเห็นได้เลยโดยไม่ต้องรอเซิร์ฟเวอร์
+            // Optimistic Update
             const newTask = {
                 id: newId,
                 jobId: newId,
@@ -881,12 +885,10 @@
                 Timestamp: nowISO
             };
             
-            // นำงานใหม่ไว้ด้านหน้าสุดของกระดาน
             if (!Array.isArray(requests)) requests = [];
             requests.unshift(newTask);
             localStorage.setItem('kaizenRequests', JSON.stringify(requests));
 
-            // ส่งค่าไปที่ Google Sheet แบบ Backgroud (No-Cors)
             fetch(SCRIPT_URL, { method: 'POST', body: formData, mode: 'no-cors' })
             .then(() => {
                 showToast('success', 'ส่งงานสำเร็จ!', 'บันทึกข้อมูลเข้าสู่ระบบเรียบร้อยแล้ว');
@@ -1042,20 +1044,51 @@
 
         function updateChart() {
             const selectedMonth = document.getElementById('chartMonthSelect').value;
-            let totalIncoming = 0; let totalCompleted = 0;
+            const chartMode = document.getElementById('chartModeSelect').value;
+            
+            let totalIncoming = 0; 
+            let totalCompleted = 0;
+
+            let countProgram = 0;
+            let countTooling = 0;
+            let countEquipment = 0;
+            let countJig = 0;
             
             if (!Array.isArray(requests)) return;
 
             requests.forEach(req => {
                 if(!req) return;
-                let dateStr = req.createdAt || req.Timestamp || null; let reqYM = null;
-                if (dateStr && dateStr !== '-') { let d = new Date(dateStr); if (!isNaN(d)) { reqYM = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); } }
-                if (selectedMonth === 'all' || selectedMonth === reqYM) { totalIncoming++; if (req.status === 'completed') { totalCompleted++; } }
+                
+                let dateStr = req.createdAt || req.Timestamp || null; 
+                let reqYM = null;
+                
+                if (dateStr && dateStr !== '-') { 
+                    let d = new Date(dateStr); 
+                    if (!isNaN(d)) { 
+                        reqYM = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); 
+                    } 
+                }
+                
+                if (selectedMonth === 'all' || selectedMonth === reqYM) { 
+                    totalIncoming++; 
+                    if (req.status === 'completed') { totalCompleted++; }
+                    
+                    let jobType = String(req.jobType || req['Job Type'] || req.JobType || '').toLowerCase();
+                    if (jobType.includes('program')) countProgram++;
+                    else if (jobType.includes('tooling')) countTooling++;
+                    else if (jobType.includes('equipment')) countEquipment++;
+                    else if (jobType.includes('jig fixture') || jobType.includes('jig')) countJig++;
+                }
             });
-            renderChart(totalIncoming, totalCompleted);
+            
+            if (chartMode === 'overview') {
+                renderOverviewChart(totalIncoming, totalCompleted);
+            } else {
+                renderJobTypeChart(countProgram, countTooling, countEquipment, countJig);
+            }
         }
 
-        function renderChart(incoming, completed) {
+        function renderOverviewChart(incoming, completed) {
             const ctx = document.getElementById('kaizenChart').getContext('2d');
             if (kaizenChartInstance) kaizenChartInstance.destroy();
             const isDark = document.documentElement.classList.contains('dark');
@@ -1082,11 +1115,54 @@
             });
         }
 
+        function renderJobTypeChart(program, tooling, equipment, jig) {
+            const ctx = document.getElementById('kaizenChart').getContext('2d');
+            if (kaizenChartInstance) kaizenChartInstance.destroy();
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#cbd5e1' : '#475569';
+            const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
+
+            kaizenChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Program', 'Tooling', 'Equipment', 'Jig fixture'],
+                    datasets: [{
+                        label: 'จำนวนงาน (รายการ)',
+                        data: [program, tooling, equipment, jig],
+                        backgroundColor: [
+                            'rgba(168, 85, 247, 0.85)', // ม่วง Program
+                            'rgba(234, 179, 8, 0.85)',  // เหลือง Tooling
+                            'rgba(239, 68, 68, 0.85)',  // แดง Equipment
+                            'rgba(14, 165, 233, 0.85)'  // ฟ้า Jig fixture
+                        ],
+                        borderColor: [
+                            'rgb(168, 85, 247)',
+                            'rgb(234, 179, 8)',
+                            'rgb(239, 68, 68)',
+                            'rgb(14, 165, 233)'
+                        ],
+                        borderWidth: 1,
+                        borderRadius: 8,
+                        barPercentage: 0.55
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { display: false } 
+                    },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { color: textColor, stepSize: 1, font: { family: 'Prompt', size: 13, weight: 'bold' } }, grid: { color: gridColor } },
+                        x: { ticks: { color: textColor, font: { family: 'Prompt', size: 14, weight: 'bold' } }, grid: { display: false } }
+                    }
+                }
+            });
+        }
+
         function renderTasks() {
             const taskList = document.getElementById('taskList');
             taskList.innerHTML = '';
 
-            // ป้องกันฟังก์ชันแครช หากข้อมูลเสียหรือ Local Storage ค้าง
             if (!Array.isArray(requests)) {
                 requests = [];
             }
@@ -1096,10 +1172,8 @@
             const filterDept = document.getElementById('filterDept').value;
 
             let filteredRequests = requests.filter(req => {
-                // ป้องกันแครช หากใน Array มีตัวแปรขยะเช่น null หรือ undefined ปะปนมา
                 if (!req) return false;
 
-                // 🛠️ อัปเดตตรงนี้: ครอบด้วย String() บังคับแปลงเป็นข้อความก่อนเสมอ ป้องกัน Error .toLowerCase() กับข้อมูลตัวเลข
                 const title = String(req.title || req.Title || '').toLowerCase();
                 const requester = String(req.requester || req.Requester || '').toLowerCase();
                 const status = String(req.status || req.Status || 'pending');
