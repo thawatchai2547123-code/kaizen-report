@@ -457,7 +457,6 @@
                 <h3 class="text-2xl font-extrabold text-slate-800"><i class="fa-solid fa-chart-column text-indigo-500 mr-2"></i>รายงานสถิติงาน Kaizen</h3>
             </div>
             
-            <!-- เพิ่มตัวเลือกโหมดกราฟและตัวเลือกเดือน -->
             <div class="flex flex-col sm:flex-row justify-between gap-3 mb-4">
                 <select id="chartModeSelect" onchange="updateChart()" class="input-3d px-4 py-2 rounded-xl text-base font-bold text-slate-700 outline-none cursor-pointer w-full sm:w-auto">
                     <option value="overview">📊 ภาพรวม (รับเข้า/เสร็จสิ้น)</option>
@@ -543,28 +542,52 @@
             setupDragAndDrop('uploadContainerAfter', 'afterImageInput', 'modalUploadUI', 'modalPreviewUI', 'modalFileName');
         });
 
-        // ================= 3. ระบบ Print Report PDF (อัปเดตเทมเพลต Kaizen Shop พอดี A4 1 หน้า) =================
+        // Utility: กรองค่า null/undefined/ว่าง ให้กลายเป็นเส้นประหรือค่าเริ่มต้น
+        function safeText(val, fallback) {
+            if (val === undefined || val === null) return fallback;
+            const s = String(val).trim();
+            if (s === '' || s.toLowerCase() === 'null' || s.toLowerCase() === 'undefined' || s === '-') return fallback;
+            return s;
+        }
+
+        // Utility: แปลงวันที่ พร้อมระบบป้องกัน Null 100%
+        function formatThaiDateTime(isoString) {
+            const s = String(isoString).trim().toLowerCase();
+            if(!isoString || s === '-' || s === 'null' || s === 'undefined' || s === '') return '-';
+            const date = new Date(isoString);
+            if(isNaN(date)) return '-';
+            const months = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+            return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear() + 543} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+        }
+
+        // ================= 3. ระบบ Print Report PDF =================
         function printReport(id) {
             const req = requests.find(r => String(r.id || r.jobId || r['Job ID']) === String(id));
             if(!req) return;
 
             const printArea = document.getElementById('printArea');
-            const title = req.title || req.Title || '';
-            const department = req.department || req.Department || '';
-            const area = req.area || req.Area || '';
-            const jobType = String(req.jobType || req['Job Type'] || req.JobType || '').toLowerCase();
-            const requester = req.requester || req.Requester || '';
-            const desc = req.desc || req.description || req.Description || '';
-            const status = req.status || req.Status || 'pending';
             
-            const beforeTime = formatThaiDateTime(req.createdAt || req.Timestamp || id);
-            const completedTime = formatThaiDateTime(req.completedAt || req['เวลาที่ปิดงาน']) === '-' ? '..........................................................' : formatThaiDateTime(req.completedAt || req['เวลาที่ปิดงาน']);
+            // ดึงข้อมูลพร้อมใส่ตัวกรอง หากข้อมูลว่างหรือเป็น null จะเปลี่ยนเป็นเส้นประให้เขียนเองได้
+            const title = safeText(req.title || req.Title, '....................................................................................');
+            const department = safeText(req.department || req.Department, '................................');
+            const area = safeText(req.area || req.Area, '..................');
+            const requester = safeText(req.requester || req.Requester, '................................');
+            const desc = safeText(req.desc || req.description || req.Description, '');
+            const jobType = String(req.jobType || req['Job Type'] || req.JobType || '').toLowerCase();
+            const status = safeText(req.status || req.Status, 'pending');
+            
+            // จัดการเวลา ถ้าเป็น null จะแสดงเป็นเส้นประ
+            const rawBeforeTime = safeText(req.createdAt || req.Timestamp || id, '-');
+            const beforeTime = formatThaiDateTime(rawBeforeTime) === '-' ? '......../......../........' : formatThaiDateTime(rawBeforeTime);
+            
+            const rawCompletedTime = safeText(req.completedAt || req['เวลาที่ปิดงาน'], '-');
+            const completedTime = formatThaiDateTime(rawCompletedTime) === '-' ? '..........................................................' : formatThaiDateTime(rawCompletedTime);
             
             const beforeImgSrc = req.imageBase64 || req.beforeImage || req['Before Image'] || req.BeforeImage || req.image; 
             const afterImgSrc = req.afterImageBase64 || req.afterImage || req['After Image'] || req.AfterImage;
             
-            const isBeforeValid = beforeImgSrc && beforeImgSrc !== '-' && String(beforeImgSrc).length > 100;
-            const isAfterValid = afterImgSrc && afterImgSrc !== '-' && String(afterImgSrc).length > 100;
+            const isBeforeValid = beforeImgSrc && beforeImgSrc !== '-' && String(beforeImgSrc).length > 100 && String(beforeImgSrc).toLowerCase() !== 'null';
+            const isAfterValid = afterImgSrc && afterImgSrc !== '-' && String(afterImgSrc).length > 100 && String(afterImgSrc).toLowerCase() !== 'null';
 
             // เช็คประเภทงานสำหรับติ๊ก Checkbox
             const isProgram = jobType.includes('program') ? 'checked' : '';
@@ -580,15 +603,13 @@
                 <style>
                     @media print {
                         @page { size: A4 portrait; margin: 5mm; } 
-                        /* 🟢 แก้ปัญหาแผ่นเปล่า: สั่งซ่อน element อื่นแบบถอนรากถอนโคน เพื่อไม่ให้กินพื้นที่ความสูง */
                         body > *:not(#printArea) { display: none !important; }
                         #printArea { display: block !important; position: static !important; width: 100%; background: white !important; z-index: 9999; }
                     }
-                    /* 🟢 ตั้งค่าฟอร์มให้เต็มความสูง A4 พอดีเป๊ะ (A4 = 297mm, หักขอบบนล่างเหลือ 285mm) */
                     .kz-form { 
                         width: 100%; 
                         max-width: 100%; 
-                        height: 285mm; /* บังคับความสูงตายตัว 1 หน้ากระดาษ */
+                        height: 285mm; 
                         color: black; 
                         font-family: 'Sarabun', 'Prompt', sans-serif; 
                         font-size: 12px; 
@@ -596,7 +617,7 @@
                         box-sizing: border-box; 
                         margin: 0;
                         display: flex;
-                        flex-direction: column; /* ให้เนื้อหาเรียงจากบนลงล่าง */
+                        flex-direction: column;
                     }
                     .kz-form * { box-sizing: border-box; }
                     .kz-border-b { border-bottom: 1px solid black; }
@@ -608,7 +629,7 @@
                 </style>
 
                 <div class="kz-form">
-                    <!-- Header (ความสูงคงที่) -->
+                    <!-- Header -->
                     <div class="kz-flex kz-border-b" style="border-width: 2px;">
                         <div class="kz-border-r kz-center" style="width: 12%; padding: 5px;">
                             <img src="https://www.satpcl.co.th/themes/default/assets/static/images/logo.png" style="max-width: 100%; height: auto;">
@@ -622,7 +643,7 @@
                         </div>
                     </div>
 
-                    <!-- Section 1 (ความสูงคงที่) -->
+                    <!-- Section 1 -->
                     <div class="kz-title">ส่วนหน่วยงานผู้ร้องขอ</div>
                     <div class="kz-border-b" style="padding: 6px 10px;">
                         <div class="kz-flex" style="justify-content: space-between; margin-bottom: 4px;">
@@ -645,13 +666,11 @@
                         </div>
                     </div>
 
-                    <!-- Problem & Image Section (ให้ขยายรับพื้นที่แบบ Flex) -->
+                    <!-- Problem & Image Section -->
                     <div class="kz-flex kz-border-b" style="border-width: 2px; flex: 1; overflow: hidden;">
-                        <!-- Left: Before Image -->
                         <div class="kz-border-r kz-center" style="width: 40%; padding: 5px;">
                             ${isBeforeValid ? `<img src="${beforeImgSrc}" style="max-width: 100%; max-height: 100%; object-fit: contain;">` : '<span style="color: #999;">ไม่มีรูปภาพประกอบ</span>'}
                         </div>
-                        <!-- Right: Details -->
                         <div style="width: 60%; display: flex; flex-direction: column;">
                             <div class="kz-flex kz-border-b" style="padding: 4px; justify-content: space-around; font-size: 11px;">
                                 <div><input type="checkbox" ${isProgram}> PROGRAM</div>
@@ -687,7 +706,7 @@
                         </div>
                     </div>
 
-                    <!-- Section 2 (ความสูงคงที่) -->
+                    <!-- Section 2 -->
                     <div class="kz-title kz-flex" style="justify-content: space-between;">
                         <span>ส่วนหน่วยงานปรับปรุง</span>
                         <span>รหัสงาน <strong>${id}</strong></span>
@@ -697,13 +716,11 @@
                         <div style="width: 50%;">วันที่ดำเนินการเสร็จ <strong>${completedTime}</strong></div>
                     </div>
 
-                    <!-- After Image & Fix Details (ให้ขยายรับพื้นที่แบบ Flex) -->
+                    <!-- After Image & Fix Details -->
                     <div class="kz-flex kz-border-b" style="border-width: 2px; flex: 1; overflow: hidden;">
-                        <!-- Left: After Image -->
                         <div class="kz-border-r kz-center" style="width: 40%; padding: 5px;">
                             ${isAfterValid ? `<img src="${afterImgSrc}" style="max-width: 100%; max-height: 100%; object-fit: contain;">` : '<span style="color: #999;">ยังไม่ได้ดำเนินการ (ไม่มีรูปภาพ After)</span>'}
                         </div>
-                        <!-- Right: Details -->
                         <div style="width: 60%; display: flex; flex-direction: column;">
                             <div class="kz-center kz-border-b" style="font-weight: bold; background-color: #e5e7eb; padding: 4px;">รายละเอียดการแก้ไขปรับปรุง</div>
                             <div style="padding: 6px;">
@@ -744,7 +761,7 @@
                         </div>
                     </div>
 
-                    <!-- Footer (ความสูงคงที่) -->
+                    <!-- Footer -->
                     <div class="kz-flex" style="font-size: 11px;">
                         <div class="kz-border-r" style="width: 40%; padding: 8px;">
                             <div style="margin-bottom: 15px;">ส่ง KC ก่อนเริ่มงาน .....................................................</div>
@@ -802,22 +819,13 @@
             setTimeout(() => { modal.classList.add('hidden'); img.src = ''; }, 300);
         }
 
-        // Utility: แปลงวันที่
-        function formatThaiDateTime(isoString) {
-            if(!isoString || isoString === '-') return '-';
-            const date = new Date(isoString);
-            if(isNaN(date)) return isoString;
-            const months = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
-            return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear() + 543} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
-        }
-
         // ================= KAIZEN APP LOGIC =================
         const PASSWORDS = { manager: '1234', shop: '5678' };
         let requests = [];
         let currentRole = '';
         let kaizenChartInstance = null;
 
-        // ดึงและทำความสะอาดข้อมูลจาก Local Storage ทันทีเมื่อเริ่มต้น เพื่อป้องกันข้อมูลค้าง
+        // ดึงและทำความสะอาดข้อมูลจาก Local Storage ทันทีเมื่อเริ่มต้น
         try {
             let savedRequests = localStorage.getItem('kaizenRequests');
             if (savedRequests) {
@@ -1348,18 +1356,19 @@
             const sortedRequests = [...filteredRequests].reverse();
 
             sortedRequests.forEach(req => {
+                // เพิ่มระบบ กรอง Null บนการ์ดแสดงผลด้วย
                 const reqId = req.id || req.jobId || req['Job ID'];
-                const title = req.title || req.Title || '-';
-                const department = req.department || req.Department || '-';
-                const area = req.area || req.Area || '-';
-                const jobType = req.jobType || req['Job Type'] || req.JobType || '-';
-                const requester = req.requester || req.Requester || '-';
-                const desc = req.desc || req.description || req.Description || '-';
-                const priority = req.priority || req.Priority || '-';
-                const status = req.status || req.Status || 'pending';
+                const title = safeText(req.title || req.Title, '-');
+                const department = safeText(req.department || req.Department, '-');
+                const area = safeText(req.area || req.Area, '-');
+                const jobType = safeText(req.jobType || req['Job Type'] || req.JobType, '-');
+                const requester = safeText(req.requester || req.Requester, '-');
+                const desc = safeText(req.desc || req.description || req.Description, '-');
+                const priority = safeText(req.priority || req.Priority, '-');
+                const status = safeText(req.status || req.Status, 'pending');
                 
-                const beforeTime = req.createdAt || req.Timestamp || reqId || '-'; 
-                const completedTime = req.completedAt || req['เวลาที่ปิดงาน'] || '-';
+                const beforeTime = safeText(req.createdAt || req.Timestamp || reqId, '-'); 
+                const completedTime = safeText(req.completedAt || req['เวลาที่ปิดงาน'], '-');
                 
                 let step = 1; let accentColor = 'bg-blue-500';
                 if(status === 'pending') { step = 1; accentColor = 'bg-yellow-400'; }
@@ -1405,8 +1414,8 @@
                 const beforeImgSrc = req.imageBase64 || req.beforeImage || req['Before Image'] || req.BeforeImage || req.image; 
                 const afterImgSrc = req.afterImageBase64 || req.afterImage || req['After Image'] || req.AfterImage;
                 
-                const isBeforeValid = beforeImgSrc && beforeImgSrc !== '-' && String(beforeImgSrc).length > 100;
-                const isAfterValid = afterImgSrc && afterImgSrc !== '-' && String(afterImgSrc).length > 100;
+                const isBeforeValid = beforeImgSrc && beforeImgSrc !== '-' && String(beforeImgSrc).length > 100 && String(beforeImgSrc).toLowerCase() !== 'null';
+                const isAfterValid = afterImgSrc && afterImgSrc !== '-' && String(afterImgSrc).length > 100 && String(afterImgSrc).toLowerCase() !== 'null';
 
                 let cardHTML = `
                     <div class="glass-card p-6 md:p-8 rounded-[2rem] card-3d-hover relative overflow-hidden group">
