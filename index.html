@@ -89,6 +89,7 @@
         .toast-enter { animation: slideInRight 0.4s cubic-bezier(0.25, 1, 0.3, 1) forwards; }
         .drag-over { border-color: #3b82f6 !important; background-color: rgba(59, 130, 246, 0.1) !important; transform: scale(1.02); }
 
+        /* การสั่นเวลาใส่ PIN ผิด */
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
             20%, 60% { transform: translateX(-6px); }
@@ -479,6 +480,7 @@
 
     <!-- ================= SCRIPT การทำงานทั้งหมด ================= -->
     <script>
+        // อัปเดตลิงก์ SCRIPT_URL ล่าสุด
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwQy2ijVr2iQXlh0USlHfgS5ppYTFgpPHGs2KuhTO_DFcAGpNYAUXCsJgJiv1V_CkQR/exec'; 
 
         let currentPage = 1;
@@ -488,6 +490,9 @@
         let kaizenChartInstance = null;
         let expandedJobId = null; 
         let currentPin = ''; 
+        
+        // รหัสล็อกอินฉบับ Offline เพื่อความไวทะลุจอ
+        const FAST_PINS = { manager: '1234', shop: '5678' }; 
 
         document.addEventListener('DOMContentLoaded', () => {
             const savedRole = localStorage.getItem('kzRole');
@@ -498,6 +503,19 @@
                 showMainApp();
             } else {
                 selectRole('employee'); 
+            }
+        });
+
+        // ⌨️ รองรับการกดตัวเลขจากคีย์บอร์ด (Numpad)
+        document.addEventListener('keydown', (e) => {
+            const pinArea = document.getElementById('pinLoginArea');
+            // เช็คว่าหน้า PIN แสดงอยู่ และไม่ได้กำลังพิมพ์ข้อความในช่องอื่น
+            if (pinArea && !pinArea.classList.contains('hidden') && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                if (e.key >= '0' && e.key <= '9') {
+                    pressPin(e.key);
+                } else if (e.key === 'Backspace' || e.key === 'Delete') {
+                    deletePin();
+                }
             }
         });
 
@@ -826,6 +844,7 @@
             }
         }
 
+        // ================= Login 0 วิ =================
         function pressPin(digit) {
             const errorMsg = document.getElementById('loginError');
             errorMsg.classList.add('hidden'); 
@@ -837,11 +856,9 @@
                 if (currentPin.length === 4) {
                     const numpadBtns = document.querySelectorAll('#numpad button');
                     numpadBtns.forEach(b => b.disabled = true);
-                    document.getElementById('pinDotsContainer').classList.add('animate-pulse');
                     
-                    setTimeout(() => {
-                        loginWithPin();
-                    }, 10);
+                    // เรียก Login ทันทีแบบ 0 วินาที
+                    loginWithPin();
                 }
             }
         }
@@ -876,45 +893,45 @@
             const role = document.getElementById('loginRole').value;
             const errorMsg = document.getElementById('loginError');
 
-            const formData = new URLSearchParams();
-            formData.append('action', 'login');
-            formData.append('role', role);
-            formData.append('password', currentPin);
+            // ⚡ Optimistic Login: ตรวจรหัสท้องถิ่น เข้าได้เลย 0 วินาที
+            if (FAST_PINS[role] && FAST_PINS[role] === currentPin) {
+                currentRole = role;
+                localStorage.setItem('kzRole', role); 
+                showMainApp(); 
+                
+                // แอบขอ Token ด้านหลังบ้านแบบเงียบๆ ไม่ต้องรอ
+                const formData = new URLSearchParams();
+                formData.append('action', 'login');
+                formData.append('role', role);
+                formData.append('password', currentPin);
 
-            fetch(SCRIPT_URL, { method: 'POST', body: formData })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    currentRole = role;
-                    localStorage.setItem('kzRole', role); 
-                    localStorage.setItem('kzToken', data.token);
-                    showMainApp();
-                } else {
-                    errorMsg.classList.remove('hidden');
-                    triggerShake();
-                }
-            })
-            .catch(err => {
-                showToast('error', 'ข้อผิดพลาด', 'เชื่อมต่อระบบ Login ไม่ได้');
-                console.error(err);
-                triggerShake();
-            })
-            .finally(() => {
-                document.getElementById('pinDotsContainer').classList.remove('animate-pulse');
+                fetch(SCRIPT_URL, { method: 'POST', body: formData })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        localStorage.setItem('kzToken', data.token);
+                    }
+                }).catch(err => console.error(err));
+
+                // เคลียร์ปุ่มเผื่อรอบหน้า
                 const numpadBtns = document.querySelectorAll('#numpad button');
                 numpadBtns.forEach(b => b.disabled = false);
-            });
+            } else {
+                errorMsg.classList.remove('hidden');
+                triggerShake();
+            }
         }
 
         function triggerShake() {
             const dotsContainer = document.getElementById('pinDotsContainer');
-            dotsContainer.classList.remove('animate-pulse');
             dotsContainer.classList.add('animate-shake');
             setTimeout(() => {
                 dotsContainer.classList.remove('animate-shake');
                 currentPin = ''; 
                 updatePinDisplay();
-            }, 400);
+                const numpadBtns = document.querySelectorAll('#numpad button');
+                numpadBtns.forEach(b => b.disabled = false);
+            }, 300);
         }
 
         function showMainApp() {
@@ -1522,7 +1539,6 @@
                         `;
                     }
 
-                    // ใช้คอมเมนต์จาก API (ที่ถูกเซฟใน Sheets) แทน LocalStorage
                     let taskComments = req.comments || [];
                     let commentsHTML = taskComments.map(c => `
                         <div class="bg-white/80 p-3 rounded-xl border border-slate-100 shadow-xs mb-2">
