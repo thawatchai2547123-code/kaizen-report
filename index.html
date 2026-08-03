@@ -132,7 +132,6 @@
             </div>
             
             <div class="space-y-6">
-                <!-- แถบเลือกสิทธิ์การเข้าใช้งาน -->
                 <div class="flex justify-center">
                     <div class="flex p-1 bg-slate-100/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl w-full border border-white/50 dark:border-slate-700">
                         <button onclick="selectRole('employee')" id="tab-employee" class="flex-1 py-3 rounded-xl text-[13px] font-extrabold bg-white dark:bg-slate-600 shadow-sm text-blue-600 dark:text-white transition-all">พนักงาน</button>
@@ -142,7 +141,6 @@
                 </div>
                 <input type="hidden" id="loginRole" value="employee">
 
-                <!-- โซนพนักงาน -->
                 <div id="employeeLoginArea" class="animate-[fadeIn_0.3s_ease-out]">
                     <p class="text-center text-xs font-bold text-slate-500 dark:text-slate-400 mb-6 px-2 leading-relaxed">เข้าใช้งานเพื่อแจ้งงานและติดตามสถานะงานของคุณ โดยไม่ต้องใช้รหัสผ่าน</p>
                     <button onclick="loginEmployee()" class="btn-3d-blue w-full text-white font-extrabold text-lg py-4 px-4 rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-95">
@@ -150,7 +148,6 @@
                     </button>
                 </div>
 
-                <!-- โซนแป้นพิมพ์ PIN -->
                 <div id="pinLoginArea" class="hidden flex flex-col items-center animate-[fadeIn_0.3s_ease-out]">
                     <p class="text-slate-500 dark:text-slate-400 font-extrabold mb-4 text-[13px] tracking-wide">กรุณากดรหัส PIN 4 หลัก</p>
                     
@@ -540,8 +537,6 @@
         let kaizenChartInstance = null;
         let expandedJobId = null; 
         let currentPin = ''; 
-        
-        const FAST_PINS = { manager: '1234', shop: '5678' }; 
 
         document.addEventListener('DOMContentLoaded', () => {
             const savedRole = localStorage.getItem('kzRole');
@@ -1105,8 +1100,11 @@
                 if (currentPin.length === 4) {
                     const numpadBtns = document.querySelectorAll('#numpad button');
                     numpadBtns.forEach(b => b.disabled = true);
+                    document.getElementById('pinDotsContainer').classList.add('animate-pulse');
                     
-                    loginWithPin();
+                    setTimeout(() => {
+                        loginWithPin();
+                    }, 150);
                 }
             }
         }
@@ -1141,30 +1139,34 @@
             const role = document.getElementById('loginRole').value;
             const errorMsg = document.getElementById('loginError');
 
-            if (FAST_PINS[role] && FAST_PINS[role] === currentPin) {
-                currentRole = role;
-                localStorage.setItem('kzRole', role); 
-                showMainApp(); 
-                
-                const formData = new URLSearchParams();
-                formData.append('action', 'login');
-                formData.append('role', role);
-                formData.append('password', currentPin);
+            const formData = new URLSearchParams();
+            formData.append('action', 'login');
+            formData.append('role', role);
+            formData.append('password', currentPin);
 
-                fetch(SCRIPT_URL, { method: 'POST', body: formData })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        localStorage.setItem('kzToken', data.token);
-                    }
-                }).catch(err => console.error(err));
-
+            fetch(SCRIPT_URL, { method: 'POST', body: formData })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    currentRole = role;
+                    localStorage.setItem('kzRole', role); 
+                    localStorage.setItem('kzToken', data.token);
+                    showMainApp();
+                } else {
+                    errorMsg.classList.remove('hidden');
+                    triggerShake();
+                }
+            })
+            .catch(err => {
+                showToast('error', 'ข้อผิดพลาด', 'เชื่อมต่อระบบ Login ไม่ได้');
+                console.error(err);
+                triggerShake();
+            })
+            .finally(() => {
+                document.getElementById('pinDotsContainer').classList.remove('animate-pulse');
                 const numpadBtns = document.querySelectorAll('#numpad button');
                 numpadBtns.forEach(b => b.disabled = false);
-            } else {
-                errorMsg.classList.remove('hidden');
-                triggerShake();
-            }
+            });
         }
 
         function triggerShake() {
@@ -1174,8 +1176,6 @@
                 dotsContainer.classList.remove('animate-shake');
                 currentPin = ''; 
                 updatePinDisplay();
-                const numpadBtns = document.querySelectorAll('#numpad button');
-                numpadBtns.forEach(b => b.disabled = false);
             }, 300);
         }
 
@@ -1202,10 +1202,6 @@
             } else {
                 document.getElementById('employeeView').classList.add('hidden');
                 document.getElementById('boardView').classList.remove('hidden');
-                
-                if (requests && requests.length > 0) {
-                    renderTasks();
-                }
                 fetchTasksFromServer();
             }
         }
@@ -1231,7 +1227,14 @@
 
         function fetchTasksFromServer() {
             const refreshIcon = document.getElementById('refreshIcon');
+            const taskList = document.getElementById('taskList');
             if (refreshIcon) refreshIcon.classList.add('fa-spin');
+
+            if (requests.length === 0) {
+                taskList.innerHTML = getSkeletonHTML() + getSkeletonHTML() + getSkeletonHTML() + getSkeletonHTML();
+            } else {
+                renderTasks(); 
+            }
 
             fetch(SCRIPT_URL)
                 .then(response => {
@@ -1250,6 +1253,12 @@
                 })
                 .catch(error => {
                     console.error("Fetch Error:", error);
+                    try {
+                        let saved = localStorage.getItem('kaizenRequests');
+                        requests = saved ? JSON.parse(saved) : [];
+                        if (!Array.isArray(requests)) requests = [];
+                    } catch(e) { requests = []; }
+                    renderTasks();
                 })
                 .finally(() => {
                     if (refreshIcon) refreshIcon.classList.remove('fa-spin');
@@ -1699,9 +1708,6 @@
                     const beforeImgSrc = req.imageBase64 || req.beforeImage || req['Before Image'] || req.BeforeImage || req.image; 
                     const isBeforeValid = beforeImgSrc && beforeImgSrc !== '-' && String(beforeImgSrc).length > 100 && String(beforeImgSrc).toLowerCase() !== 'null';
                     
-                    const afterImgSrc = req.afterImageBase64 || req.afterImage || req['After Image'] || req.AfterImage;
-                    const isAfterValid = afterImgSrc && afterImgSrc !== '-' && String(afterImgSrc).length > 100 && String(afterImgSrc).toLowerCase() !== 'null';
-
                     let stepNum = 1;
                     let stepText = 'ขั้นตอน 1/4: รออนุมัติ';
                     let badgeColor = 'bg-yellow-100/90 text-yellow-700';
@@ -1715,10 +1721,10 @@
                     let mobileBadge = `<span class="${badgeColor} px-3 py-1 rounded-xl text-xs font-extrabold shadow-sm flex items-center gap-1.5"><i class="fa-solid fa-layer-group text-[10px]"></i> ${stepText}</span>`;
 
                     let thumbnailHtml = '';
-                    if (status === 'completed' && isAfterValid) {
-                        thumbnailHtml = `<img src="${afterImgSrc}" loading="lazy" class="object-cover w-full h-full">`;
+                    if (status === 'completed' && req.afterImageBase64 && req.afterImageBase64 !== '-') {
+                        thumbnailHtml = `<img src="${req.afterImageBase64}" class="object-cover w-full h-full">`;
                     } else if (isBeforeValid) {
-                        thumbnailHtml = `<img src="${beforeImgSrc}" loading="lazy" class="object-cover w-full h-full">`;
+                        thumbnailHtml = `<img src="${beforeImgSrc}" class="object-cover w-full h-full">`;
                     } else {
                         thumbnailHtml = `<i class="fa-solid fa-image text-3xl text-slate-300"></i>`;
                     }
@@ -1753,6 +1759,8 @@
                         const jobType = escapeHTML(safeText(req.jobType || req['Job Type'] || req.JobType, '-'));
                         const desc = escapeHTML(safeText(req.desc || req.description || req.Description, '-'));
                         const completedTime = safeText(req.completedAt || req['เวลาที่ปิดงาน'], '-');
+                        const afterImgSrc = req.afterImageBase64 || req.afterImage || req['After Image'] || req.AfterImage;
+                        const isAfterValid = afterImgSrc && afterImgSrc !== '-' && String(afterImgSrc).length > 100 && String(afterImgSrc).toLowerCase() !== 'null';
 
                         let accentColor = 'bg-blue-500';
                         if(status === 'pending') accentColor = 'bg-yellow-400';
