@@ -338,6 +338,34 @@
                     </div>
                 </div>
 
+                <!-- 📊 สรุปสถานะงาน (Status Counters) -->
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 mb-6 relative z-10">
+                    <div class="glass-card p-3 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors border-b-4 border-slate-300 dark:border-slate-600" onclick="document.getElementById('filterStatus').value='all'; applyFilters();">
+                        <span class="text-slate-500 dark:text-slate-400 text-xs font-bold mb-1">งานทั้งหมด</span>
+                        <span id="count-all" class="text-2xl font-extrabold text-slate-700 dark:text-slate-200">0</span>
+                    </div>
+                    <div class="glass-card p-3 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-colors border-b-4 border-yellow-400" onclick="document.getElementById('filterStatus').value='pending'; applyFilters();">
+                        <span class="text-yellow-600 dark:text-yellow-500 text-xs font-bold mb-1"><i class="fa-regular fa-hourglass-half"></i> รออนุมัติ</span>
+                        <span id="count-pending" class="text-2xl font-extrabold text-yellow-700 dark:text-yellow-400">0</span>
+                    </div>
+                    <div class="glass-card p-3 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors border-b-4 border-blue-400" onclick="document.getElementById('filterStatus').value='approved'; applyFilters();">
+                        <span class="text-blue-600 dark:text-blue-500 text-xs font-bold mb-1"><i class="fa-solid fa-user-gear"></i> รอช่างทำ</span>
+                        <span id="count-approved" class="text-2xl font-extrabold text-blue-700 dark:text-blue-400">0</span>
+                    </div>
+                    <div class="glass-card p-3 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors border-b-4 border-indigo-400" onclick="document.getElementById('filterStatus').value='inprogress'; applyFilters();">
+                        <span class="text-indigo-600 dark:text-indigo-500 text-xs font-bold mb-1"><i class="fa-solid fa-cog"></i> กำลังทำ</span>
+                        <span id="count-inprogress" class="text-2xl font-extrabold text-indigo-700 dark:text-indigo-400">0</span>
+                    </div>
+                    <div class="glass-card p-3 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors border-b-4 border-green-400" onclick="document.getElementById('filterStatus').value='completed'; applyFilters();">
+                        <span class="text-green-600 dark:text-green-500 text-xs font-bold mb-1"><i class="fa-solid fa-check"></i> เสร็จสิ้น</span>
+                        <span id="count-completed" class="text-2xl font-extrabold text-green-700 dark:text-green-400">0</span>
+                    </div>
+                    <div class="glass-card p-3 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors border-b-4 border-red-400" onclick="document.getElementById('filterStatus').value='rejected'; applyFilters();">
+                        <span class="text-red-500 dark:text-red-400 text-xs font-bold mb-1"><i class="fa-solid fa-ban"></i> ไม่อนุมัติ</span>
+                        <span id="count-rejected" class="text-2xl font-extrabold text-red-600 dark:text-red-400">0</span>
+                    </div>
+                </div>
+
                 <!-- 🔍 แถบค้นหาและตัวกรองขั้นสูง -->
                 <div class="glass-card p-4 rounded-[1.5rem] mb-6 flex flex-col md:flex-row gap-3 items-center relative z-10">
                     <div class="relative w-full md:flex-1">
@@ -351,6 +379,7 @@
                             <option value="approved">รอช่างทำ</option>
                             <option value="inprogress">กำลังทำ</option>
                             <option value="completed">ปิดงานแล้ว</option>
+                            <option value="rejected">ไม่อนุมัติ</option>
                         </select>
                         <select id="filterDept" class="input-3d px-3 py-2.5 rounded-xl text-xs font-bold text-slate-700" onchange="applyFilters()">
                             <option value="all">ทุกแผนก</option>
@@ -480,7 +509,6 @@
 
     <!-- ================= SCRIPT การทำงานทั้งหมด ================= -->
     <script>
-        // อัปเดตลิงก์ SCRIPT_URL ล่าสุด
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwQy2ijVr2iQXlh0USlHfgS5ppYTFgpPHGs2KuhTO_DFcAGpNYAUXCsJgJiv1V_CkQR/exec'; 
 
         let currentPage = 1;
@@ -491,7 +519,6 @@
         let expandedJobId = null; 
         let currentPin = ''; 
         
-        // รหัสล็อกอินฉบับ Offline เพื่อความไวทะลุจอ
         const FAST_PINS = { manager: '1234', shop: '5678' }; 
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -506,10 +533,8 @@
             }
         });
 
-        // ⌨️ รองรับการกดตัวเลขจากคีย์บอร์ด (Numpad)
         document.addEventListener('keydown', (e) => {
             const pinArea = document.getElementById('pinLoginArea');
-            // เช็คว่าหน้า PIN แสดงอยู่ และไม่ได้กำลังพิมพ์ข้อความในช่องอื่น
             if (pinArea && !pinArea.classList.contains('hidden') && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
                 if (e.key >= '0' && e.key <= '9') {
                     pressPin(e.key);
@@ -1361,6 +1386,9 @@
             const filterJobType = document.getElementById('filterJobType').value; 
             const filterDate = document.getElementById('filterDate').value;     
 
+            // 1. กรองข้อมูลทั้งหมดก่อนเพื่อให้ได้จำนวน Tasks แต่ละสถานะ (สำหรับอัปเดตตัวเลขในแถบสถานะ)
+            let countAll = 0, countPending = 0, countApproved = 0, countInprogress = 0, countCompleted = 0, countRejected = 0;
+            
             let filteredRequests = requests.filter(req => {
                 if (!req) return false;
                 const title = String(req.title || req.Title || '').toLowerCase();
@@ -1391,8 +1419,27 @@
                     }
                 }
 
+                // นับจำนวนสถานะต่างๆ (จากงานที่ถูกกรองตาม Date, Dept, JobType, Search ยกเว้น Status เพื่อให้เห็นตัวเลขชัดเจน)
+                // หรือจะนับเฉพาะงานที่ถูก filter ทั้งหมดเลยก็ได้ ในที่นี้ขอนับจากงานทั้งหมดที่ผ่านเงื่อนไขอื่นๆ ยกเว้น FilterStatus
+                if (matchSearch && matchDept && matchJobType && matchDate) {
+                    countAll++;
+                    if(status === 'pending') countPending++;
+                    else if(status === 'approved') countApproved++;
+                    else if(status === 'inprogress') countInprogress++;
+                    else if(status === 'completed') countCompleted++;
+                    else if(status === 'rejected') countRejected++;
+                }
+
                 return matchSearch && matchStatus && matchDept && matchJobType && matchDate;
             });
+
+            // อัปเดตตัวเลขบน UI
+            document.getElementById('count-all').innerText = countAll;
+            document.getElementById('count-pending').innerText = countPending;
+            document.getElementById('count-approved').innerText = countApproved;
+            document.getElementById('count-inprogress').innerText = countInprogress;
+            document.getElementById('count-completed').innerText = countCompleted;
+            document.getElementById('count-rejected').innerText = countRejected;
 
             if(filteredRequests.length === 0) {
                 taskList.innerHTML = '<div class="glass-card p-12 rounded-[2rem] text-center text-slate-500 w-full"><div class="w-20 h-20 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-inner"><i class="fa-solid fa-box-open text-5xl text-slate-400"></i></div><p class="text-2xl font-extrabold">ไม่พบข้อมูล</p><p class="text-base mt-2 text-slate-400 font-bold">ลองเปลี่ยนคำค้นหา หรือเงื่อนไขตัวกรองใหม่</p></div>';
