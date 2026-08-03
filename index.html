@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kaizen Report - Premium 3D UI (Full Features)</title>
+    <title>Kaizen Report - Premium 3D UI (Secure Version)</title>
     <!-- Tailwind & Config for Dark Mode -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -12,7 +12,6 @@
         }
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Chart.js สำหรับทำกราฟสถิติ -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&display=swap');
@@ -47,22 +46,10 @@
                 radial-gradient(at 0% 0%, hsla(200, 100%, 10%, 1) 0px, transparent 50%);
             color: #f8fafc;
         }
-        html.dark .glass-card {
-            background: rgba(30, 41, 59, 0.65);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.05);
-        }
-        html.dark .input-3d {
-            background: rgba(15, 23, 42, 0.6);
-            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
-            color: #f8fafc;
-        }
-        html.dark .input-3d:focus {
-            background: rgba(15, 23, 42, 0.9);
-            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5), 0 0 0 4px rgba(59, 130, 246, 0.3);
-        }
+        html.dark .glass-card { background: rgba(30, 41, 59, 0.65); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.05); }
+        html.dark .input-3d { background: rgba(15, 23, 42, 0.6); box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.1); color: #f8fafc; }
+        html.dark .input-3d:focus { background: rgba(15, 23, 42, 0.9); box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5), 0 0 0 4px rgba(59, 130, 246, 0.3); }
         html.dark select option { background-color: #1e293b; color: #f8fafc; }
-        
         html.dark .text-slate-800, html.dark .text-gray-800 { color: #f1f5f9; }
         html.dark .text-slate-700, html.dark .text-gray-700 { color: #e2e8f0; }
         html.dark .text-slate-600, html.dark .text-gray-600 { color: #cbd5e1; }
@@ -79,52 +66,29 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         html.dark ::-webkit-scrollbar-thumb { background: #475569; }
-        
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* Premium Glass Card */
-        .glass-card {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border: 1px solid rgba(255, 255, 255, 0.9);
-            box-shadow: 0 30px 60px -15px rgba(15, 23, 42, 0.08), 0 15px 25px -5px rgba(15, 23, 42, 0.04), inset 0 1px 2px rgba(255, 255, 255, 1);
-            transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
-        }
-        
-        .input-3d {
-            background: rgba(255, 255, 255, 0.9);
-            box-shadow: inset 0 2px 5px rgba(15, 23, 42, 0.04), inset 0 0 0 1px rgba(226, 232, 240, 0.8);
-            border: none;
-            transition: all 0.3s ease;
-        }
+        .glass-card { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(255, 255, 255, 0.9); box-shadow: 0 30px 60px -15px rgba(15, 23, 42, 0.08), 0 15px 25px -5px rgba(15, 23, 42, 0.04), inset 0 1px 2px rgba(255, 255, 255, 1); transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease; }
+        .input-3d { background: rgba(255, 255, 255, 0.9); box-shadow: inset 0 2px 5px rgba(15, 23, 42, 0.04), inset 0 0 0 1px rgba(226, 232, 240, 0.8); border: none; transition: all 0.3s ease; }
         .input-3d:focus { background: #ffffff; box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.02), 0 0 0 4px rgba(59, 130, 246, 0.15), inset 0 0 0 1px #3b82f6; outline: none; }
-
         .btn-3d-blue { background: linear-gradient(135deg, #2563eb, #3b82f6); box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3); border: 1px solid rgba(37, 99, 235, 0.5); transition: all 0.3s ease; }
         .btn-3d-blue:hover { transform: translateY(-2px); box-shadow: 0 15px 25px -5px rgba(37, 99, 235, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4); }
         .btn-3d-blue:active { transform: translateY(1px); box-shadow: 0 5px 10px -5px rgba(37, 99, 235, 0.4); }
-
         .btn-3d-green { background: linear-gradient(135deg, #16a34a, #22c55e); box-shadow: 0 10px 20px -5px rgba(22, 163, 74, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3); border: 1px solid rgba(22, 163, 74, 0.5); transition: all 0.3s ease; }
         .btn-3d-green:hover { transform: translateY(-2px); box-shadow: 0 15px 25px -5px rgba(22, 163, 74, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4); }
-        
         .btn-3d-red { background: linear-gradient(135deg, #dc2626, #ef4444); box-shadow: 0 10px 20px -5px rgba(220, 38, 38, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3); border: 1px solid rgba(220, 38, 38, 0.5); transition: all 0.3s ease; }
         .btn-3d-red:hover { transform: translateY(-2px); box-shadow: 0 15px 25px -5px rgba(220, 38, 38, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4); }
-
         .card-3d-hover { transition: all 0.5s cubic-bezier(0.25, 1, 0.3, 1); }
         .card-3d-hover:hover { transform: translateY(-5px); box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255,255,255,0.5); }
         
         @keyframes moveOrb { 0% { transform: translate(0, 0) scale(1); } 33% { transform: translate(30px, -50px) scale(1.1); } 66% { transform: translate(-20px, 20px) scale(0.9); } 100% { transform: translate(0, 0) scale(1); } }
         .ambient-orb { position: fixed; border-radius: 50%; filter: blur(60px); opacity: 0.4; pointer-events: none; z-index: -1; animation: moveOrb 15s infinite alternate ease-in-out; }
 
-        /* Animation for Toast */
         @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         .toast-enter { animation: slideInRight 0.4s cubic-bezier(0.25, 1, 0.3, 1) forwards; }
-        
-        /* Drag & Drop Overrides */
         .drag-over { border-color: #3b82f6 !important; background-color: rgba(59, 130, 246, 0.1) !important; transform: scale(1.02); }
 
-        /* CSS สำหรับการปรินต์ (Print Report) */
         @media print {
             @page { size: A4 portrait; margin: 5mm; } 
             body > *:not(#printArea) { display: none !important; }
@@ -134,18 +98,13 @@
 </head>
 <body class="text-slate-800 antialiased relative">
 
-    <!-- Container สำหรับการ Print รายงาน -->
     <div id="printArea" class="hidden print:block bg-white text-black font-sans"></div>
-
-    <!-- Container สำหรับ Toast Notification (มุมขวาบน) -->
     <div id="toastContainer" class="fixed top-6 right-6 z-[100] flex flex-col gap-3 pointer-events-none"></div>
 
-    <!-- Premium Ambient Orbs -->
     <div class="ambient-orb bg-blue-300 w-96 h-96 top-0 left-0 mix-blend-multiply"></div>
     <div class="ambient-orb bg-purple-300 w-[30rem] h-[30rem] bottom-0 right-0 mix-blend-multiply" style="animation-delay: -5s;"></div>
     <div class="ambient-orb bg-indigo-200 w-80 h-80 top-1/2 left-1/3 mix-blend-multiply" style="animation-delay: -10s;"></div>
 
-    <!-- Dark Mode Toggle Button -->
     <button onclick="toggleTheme()" class="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-white dark:bg-slate-800 text-slate-800 dark:text-white shadow-[0_10px_25px_rgba(0,0,0,0.1)] dark:shadow-[0_10px_25px_rgba(0,0,0,0.5)] border border-slate-200 dark:border-slate-700 flex items-center justify-center z-50 hover:scale-110 transition-transform duration-300 group print:hidden">
         <i id="themeIcon" class="fa-solid fa-moon text-2xl group-hover:rotate-12 transition-transform"></i>
     </button>
@@ -161,7 +120,7 @@
                 <h2 class="text-3xl font-extrabold mb-1 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
                     <i class="fa-solid fa-layer-group text-blue-600 dark:text-blue-400 mr-2"></i>Kaizen System
                 </h2>
-                <p class="text-xs text-slate-400 font-bold tracking-[0.2em] mt-2">PREMIUM 3D WORKFLOW</p>
+                <p class="text-xs text-slate-400 font-bold tracking-[0.2em] mt-2">SECURE 3D WORKFLOW</p>
             </div>
             
             <div class="space-y-6">
@@ -186,11 +145,11 @@
                     </div>
                 </div>
 
-                <button onclick="login()" class="btn-3d-blue w-full text-white font-extrabold text-lg py-4 px-4 rounded-2xl flex items-center justify-center gap-3 mt-8">
+                <button onclick="login()" class="btn-3d-blue w-full text-white font-extrabold text-lg py-4 px-4 rounded-2xl flex items-center justify-center gap-3 mt-8 transition-all">
                     เข้าสู่ระบบ <i class="fa-solid fa-arrow-right-to-bracket text-lg"></i>
                 </button>
                 <p id="loginError" class="text-red-500 text-sm mt-4 text-center hidden bg-red-50/80 backdrop-blur-md p-3 rounded-xl font-bold border border-red-100 shadow-sm">
-                    <i class="fa-solid fa-circle-exclamation mr-1"></i> รหัสผ่านไม่ถูกต้อง
+                    <i class="fa-solid fa-circle-exclamation mr-1"></i> รหัสผ่านไม่ถูกต้อง หรือระบบขัดข้อง
                 </p>
             </div>
         </div>
@@ -217,7 +176,6 @@
         </nav>
 
         <main class="max-w-6xl mx-auto mt-6 p-4 mb-20 relative z-10">
-            
             <!-- ================= 1. มุมมองพนักงาน ================= -->
             <div id="employeeView" class="hidden animate-[fadeIn_0.5s_ease-out] max-w-4xl mx-auto">
                 <div class="glass-card p-8 md:p-12 rounded-[2.5rem] relative overflow-hidden">
@@ -336,13 +294,11 @@
 
             <!-- ================= 2. มุมมองกระดานงาน (Grid View) ================= -->
             <div id="boardView" class="hidden animate-[fadeIn_0.5s_ease-out]">
-                
                 <div class="glass-card p-5 px-6 rounded-[2rem] mb-6 flex flex-col sm:flex-row justify-between items-center gap-4 relative overflow-hidden">
                     <h2 class="text-2xl font-extrabold text-slate-800 flex items-center gap-3 relative z-10">
                         <div class="bg-gradient-to-br from-indigo-500 to-blue-600 w-12 h-12 rounded-xl text-white flex items-center justify-center shadow-md"><i class="fa-solid fa-layer-group text-xl"></i></div>
                         กระดานงาน (Workflow)
                     </h2>
-                    
                     <div class="flex items-center gap-2 relative z-10 w-full sm:w-auto">
                         <button id="managerChartBtn" onclick="openChartModal()" class="hidden w-full sm:w-auto text-base bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-5 py-2.5 rounded-xl font-extrabold transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group active:scale-95">
                             <i class="fa-solid fa-chart-pie"></i> สถิติ
@@ -353,7 +309,6 @@
                     </div>
                 </div>
 
-                <!-- แถบค้นหาและตัวกรอง (Search & Filter) -->
                 <div class="glass-card p-4 rounded-[1.5rem] mb-6 flex flex-col md:flex-row gap-3 items-center relative z-10">
                     <div class="relative w-full md:flex-1">
                         <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
@@ -381,18 +336,13 @@
                     </div>
                 </div>
 
-                <!-- กระดานแสดงการ์ดงาน (Grid) -->
                 <div id="taskList" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 relative z-10"></div>
-                
-                <!-- ปุ่มแบ่งหน้า (Pagination) -->
                 <div id="pagination" class="flex justify-center gap-2 mt-8 mb-4 relative z-10"></div>
             </div>
         </main>
     </div>
 
     <!-- ================= Modals ================= -->
-
-    <!-- Modal รายละเอียดงาน (Task Detail) - หน้าต่างใหญ่ตอนกดเข้าไปดูการ์ด -->
     <div id="taskDetailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[60] transition-opacity opacity-0" onclick="closeTaskDetail()">
         <div class="max-w-4xl w-full max-h-[90vh] overflow-y-auto hide-scrollbar rounded-[2.5rem] relative shadow-2xl" onclick="event.stopPropagation()">
             <button onclick="closeTaskDetail()" class="absolute top-6 right-6 w-10 h-10 flex items-center justify-center bg-slate-900/20 hover:bg-slate-900/40 backdrop-blur-md rounded-full text-white transition-colors z-50 shadow-md border border-white/10"><i class="fa-solid fa-xmark text-xl"></i></button>
@@ -400,7 +350,6 @@
         </div>
     </div>
 
-    <!-- Modal อนุมัติ -->
     <div id="approveModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4 hidden z-[70] transition-opacity">
         <div class="glass-card rounded-[2rem] max-w-sm w-full p-8 shadow-[0_30px_60px_rgba(0,0,0,0.2)] border border-white relative">
             <button onclick="closeApproveModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-slate-100/50 rounded-full text-slate-500 hover:bg-slate-200 transition-colors"><i class="fa-solid fa-xmark"></i></button>
@@ -433,7 +382,6 @@
         </div>
     </div>
 
-    <!-- Modal ส่งงาน พร้อมรองรับ Drag & Drop -->
     <div id="completeModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4 hidden z-[70] transition-opacity">
         <div class="glass-card rounded-[2rem] max-w-md w-full p-8 shadow-[0_30px_60px_rgba(0,0,0,0.2)] border border-white relative">
             <button onclick="closeCompleteModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-slate-100/50 rounded-full text-slate-500 hover:bg-slate-200 transition-colors"><i class="fa-solid fa-xmark"></i></button>
@@ -462,14 +410,12 @@
         </div>
     </div>
 
-    <!-- Modal กราฟสถิติ -->
     <div id="chartModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4 hidden z-[70] transition-opacity">
         <div class="glass-card rounded-[2rem] max-w-2xl w-full p-6 sm:p-8 shadow-[0_30px_60px_rgba(0,0,0,0.2)] border border-white relative">
             <button onclick="closeChartModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-slate-100/50 rounded-full text-slate-500 hover:bg-slate-200 transition-colors"><i class="fa-solid fa-xmark"></i></button>
             <div class="text-center mb-6">
                 <h3 class="text-2xl font-extrabold text-slate-800"><i class="fa-solid fa-chart-column text-indigo-500 mr-2"></i>รายงานสถิติงาน Kaizen</h3>
             </div>
-            
             <div class="flex flex-col sm:flex-row justify-between gap-3 mb-4">
                 <select id="chartModeSelect" onchange="updateChart()" class="input-3d px-4 py-2 rounded-xl text-base font-bold text-slate-700 outline-none cursor-pointer w-full sm:w-auto">
                     <option value="overview">📊 ภาพรวม (รับเข้า/เสร็จสิ้น)</option>
@@ -479,14 +425,12 @@
                     <option value="all">ทั้งหมด (All Time)</option>
                 </select>
             </div>
-
             <div class="bg-white/50 p-4 rounded-2xl border border-white shadow-inner relative h-64 sm:h-80 w-full">
                 <canvas id="kaizenChart"></canvas>
             </div>
         </div>
     </div>
 
-    <!-- Modal ดูรูปใหญ่ (Image Viewer) -->
     <div id="imageModal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[80] transition-opacity duration-300 opacity-0" onclick="closeImageModal()">
         <button onclick="closeImageModal()" class="absolute top-6 right-6 w-12 h-12 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors z-[80] backdrop-blur-md border border-white/20">
             <i class="fa-solid fa-xmark text-2xl"></i>
@@ -498,19 +442,33 @@
 
     <!-- ================= SCRIPT การทำงานทั้งหมด ================= -->
     <script>
-        // 🔴 เปลี่ยน SCRIPT_URL ตรงนี้เป็นลิงก์ของคุณ 🔴
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyuJwZkJsjriXwDoUnaBRapGAoQUgs4CJcD4zcV-iH-4OOmI7BRkXn0gmUQWNrtcSaU/exec'; 
+        // 🔴 เชื่อมต่อกับ SCRIPT_URL ที่คุณให้มาแล้ว 🔴
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzmkGjmaIPcHaHY7_ebORP19JEilVOPbWGrPw_rABRKlQ9x7AuBGl9CGbaRFd6n9cva/exec'; 
 
-        // ระบบ Pagination
         let currentPage = 1;
         const itemsPerPage = 10;
+        let requests = [];
+        let currentRole = '';
+        let kaizenChartInstance = null;
 
-        // ================= 1. ระบบ Toast Notifications =================
+        // ================= ความปลอดภัย: ฟังก์ชันป้องกัน XSS =================
+        function escapeHTML(str) {
+            if (str === null || str === undefined) return '';
+            return String(str).replace(/[&<>'"]/g, function(match) {
+                return {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    "'": '&#39;',
+                    '"': '&quot;'
+                }[match];
+            });
+        }
+
         function showToast(type, title, message) {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
-            
-            let colors = ''; let icon = '';
+            let colors = '', icon = '';
             if(type === 'success') {
                 colors = 'bg-green-50 border-green-200 text-green-800 dark:bg-green-900/40 dark:border-green-700 dark:text-green-100';
                 icon = '<div class="w-10 h-10 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center text-green-500 dark:text-green-300 shrink-0"><i class="fa-solid fa-check"></i></div>';
@@ -521,29 +479,16 @@
                 colors = 'bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-900/40 dark:border-yellow-700 dark:text-yellow-100';
                 icon = '<div class="w-10 h-10 bg-yellow-100 dark:bg-yellow-800 rounded-full flex items-center justify-center text-yellow-500 dark:text-yellow-300 shrink-0"><i class="fa-solid fa-info"></i></div>';
             }
-
             toast.className = `toast-enter flex items-start p-4 mb-2 rounded-2xl shadow-lg border ${colors} backdrop-blur-md max-w-sm w-full transition-all duration-300`;
-            toast.innerHTML = `
-                ${icon}
-                <div class="ml-3">
-                    <h4 class="font-extrabold text-sm">${title}</h4>
-                    <p class="text-xs mt-0.5 opacity-80 font-bold">${message}</p>
-                </div>
-            `;
+            toast.innerHTML = `${icon}<div class="ml-3"><h4 class="font-extrabold text-sm">${title}</h4><p class="text-xs mt-0.5 opacity-80 font-bold">${message}</p></div>`;
             container.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.classList.add('opacity-0', 'translate-x-full');
-                setTimeout(() => toast.remove(), 300);
-            }, 3500);
+            setTimeout(() => { toast.classList.add('opacity-0', 'translate-x-full'); setTimeout(() => toast.remove(), 300); }, 3500);
         }
 
-        // ================= 2. ระบบ Drag & Drop รูปภาพ =================
         function setupDragAndDrop(containerId, inputId, uploadUI, previewUI, nameDisplayId) {
             const dropZone = document.getElementById(containerId);
             const input = document.getElementById(inputId);
             if(!dropZone || !input) return;
-
             dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
             dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('drag-over'); });
             dropZone.addEventListener('drop', (e) => {
@@ -554,12 +499,12 @@
                 }
             });
         }
+        
         document.addEventListener('DOMContentLoaded', () => {
             setupDragAndDrop('uploadContainerBefore', 'reqImage', 'uploadUI', 'previewUI', 'fileNameDisplay');
             setupDragAndDrop('uploadContainerAfter', 'afterImageInput', 'modalUploadUI', 'modalPreviewUI', 'modalFileName');
         });
 
-        // Utility: กรองค่า null/undefined/ว่าง ให้กลายเป็นเส้นประหรือค่าเริ่มต้น
         function safeText(val, fallback) {
             if (val === undefined || val === null) return fallback;
             const s = String(val).trim();
@@ -576,18 +521,17 @@
             return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear() + 543} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
         }
 
-        // ================= 3. ระบบ Print Report PDF =================
         function printReport(id) {
             const req = requests.find(r => String(r.id || r.jobId || r['Job ID']) === String(id));
             if(!req) return;
-
             const printArea = document.getElementById('printArea');
             
-            const title = safeText(req.title || req.Title, '....................................................................................');
-            const department = safeText(req.department || req.Department, '................................');
-            const area = safeText(req.area || req.Area, '..................');
-            const requester = safeText(req.requester || req.Requester, '................................');
-            const desc = safeText(req.desc || req.description || req.Description, '');
+            // XSS Prevention for Print
+            const title = escapeHTML(safeText(req.title || req.Title, '....................................................................................'));
+            const department = escapeHTML(safeText(req.department || req.Department, '................................'));
+            const area = escapeHTML(safeText(req.area || req.Area, '..................'));
+            const requester = escapeHTML(safeText(req.requester || req.Requester, '................................'));
+            const desc = escapeHTML(safeText(req.desc || req.description || req.Description, ''));
             const jobType = String(req.jobType || req['Job Type'] || req.JobType || '').toLowerCase();
             const status = safeText(req.status || req.Status, 'pending');
             
@@ -602,12 +546,10 @@
             
             const isBeforeValid = beforeImgSrc && beforeImgSrc !== '-' && String(beforeImgSrc).length > 100 && String(beforeImgSrc).toLowerCase() !== 'null';
             const isAfterValid = afterImgSrc && afterImgSrc !== '-' && String(afterImgSrc).length > 100 && String(afterImgSrc).toLowerCase() !== 'null';
-
             const isProgram = jobType.includes('program') ? 'checked' : '';
             const isTooling = jobType.includes('tooling') ? 'checked' : '';
             const isEquipment = jobType.includes('equipment') ? 'checked' : '';
             const isJig = jobType.includes('jig') ? 'checked' : '';
-
             const isApproved = ['approved', 'inprogress', 'completed'].includes(status) ? 'checked' : '';
             const isRejected = status === 'rejected' ? 'checked' : '';
 
@@ -627,23 +569,17 @@
                     .kz-title { font-weight: bold; background-color: #e5e7eb; padding: 2px 8px; border-bottom: 1px solid black; }
                     input[type="checkbox"] { margin-right: 4px; pointer-events: none; }
                 </style>
-
                 <div class="kz-form">
-                    <!-- Header -->
                     <div class="kz-flex kz-border-b" style="border-width: 2px;">
                         <div class="kz-border-r kz-center" style="width: 12%; padding: 5px;">
                             <img src="https://www.satpcl.co.th/themes/default/assets/static/images/logo.png" style="max-width: 100%; height: auto;">
                         </div>
-                        <div class="kz-border-r kz-center" style="width: 65%; font-size: 18px; font-weight: bold; white-space: nowrap;">
-                            เอกสารแจ้งดำเนินงาน ปรับปรุง แก้ไขปัญหางาน
-                        </div>
+                        <div class="kz-border-r kz-center" style="width: 65%; font-size: 18px; font-weight: bold; white-space: nowrap;">เอกสารแจ้งดำเนินงาน ปรับปรุง แก้ไขปัญหางาน</div>
                         <div class="kz-center" style="width: 23%; flex-direction: column;">
                             <div style="font-weight: bold; font-size: 14px;">KAIZEN SHOP</div>
                             <div style="font-size: 10px;">Production Engineer Department</div>
                         </div>
                     </div>
-
-                    <!-- Section 1 -->
                     <div class="kz-title">ส่วนหน่วยงานผู้ร้องขอ</div>
                     <div class="kz-border-b" style="padding: 6px 10px;">
                         <div class="kz-flex" style="justify-content: space-between; margin-bottom: 4px;">
@@ -654,29 +590,21 @@
                             <div style="width: 40%;">ผู้ร้องขอ <strong>${requester}</strong></div>
                             <div style="width: 60%;">หน่วยงาน <strong>${department} / ${area}</strong></div>
                         </div>
-                        <div style="margin-bottom: 4px;">
-                            ชื่องาน <strong>${title}</strong>
-                        </div>
+                        <div style="margin-bottom: 4px;">ชื่องาน <strong>${title}</strong></div>
                         <div class="kz-flex" style="gap: 20px; align-items: center;">
                             <div>เอกสารประกอบ</div>
-                            <div><input type="checkbox"> แบบงาน</div>
-                            <div><input type="checkbox"> รูปวาด</div>
-                            <div><input type="checkbox" checked> รูปภาพ</div>
-                            <div><input type="checkbox"> อื่นๆ</div>
+                            <div><input type="checkbox"> แบบงาน</div><div><input type="checkbox"> รูปวาด</div>
+                            <div><input type="checkbox" checked> รูปภาพ</div><div><input type="checkbox"> อื่นๆ</div>
                         </div>
                     </div>
-
-                    <!-- Problem & Image Section -->
                     <div class="kz-flex kz-border-b" style="border-width: 2px; flex: 1; overflow: hidden;">
                         <div class="kz-border-r kz-center" style="width: 40%; padding: 5px;">
                             ${isBeforeValid ? `<img src="${beforeImgSrc}" style="max-width: 100%; max-height: 100%; object-fit: contain;">` : '<span style="color: #999;">ไม่มีรูปภาพประกอบ</span>'}
                         </div>
                         <div style="width: 60%; display: flex; flex-direction: column;">
                             <div class="kz-flex kz-border-b" style="padding: 4px; justify-content: space-around; font-size: 11px;">
-                                <div><input type="checkbox" ${isProgram}> PROGRAM</div>
-                                <div><input type="checkbox" ${isTooling}> TOOLING</div>
-                                <div><input type="checkbox" ${isEquipment}> EQUIPMENT</div>
-                                <div><input type="checkbox" ${isJig}> JIG FIXTURE</div>
+                                <div><input type="checkbox" ${isProgram}> PROGRAM</div><div><input type="checkbox" ${isTooling}> TOOLING</div>
+                                <div><input type="checkbox" ${isEquipment}> EQUIPMENT</div><div><input type="checkbox" ${isJig}> JIG FIXTURE</div>
                             </div>
                             <div class="kz-flex" style="flex-grow: 1; overflow: hidden;">
                                 <div class="kz-border-r" style="width: 100%; padding: 4px; display: flex; flex-direction: column;">
@@ -690,33 +618,19 @@
                                     <div><input type="checkbox" ${isRejected}> ไม่อนุมัติ</div>
                                 </div>
                                 <div class="kz-flex" style="justify-content: space-around; padding: 10px 10px 5px 10px;">
-                                    <div class="kz-center" style="flex-direction: column;">
-                                        <div>.....................................................</div>
-                                        <div style="margin-top: 2px;">(......../......../........)</div>
-                                        <div style="margin-top: 2px;">Foreman</div>
-                                    </div>
-                                    <div class="kz-center" style="flex-direction: column;">
-                                        <div>.....................................................</div>
-                                        <div style="margin-top: 2px;">(......../......../........)</div>
-                                        <div style="margin-top: 2px;">Chief/Manager</div>
-                                        <div style="font-size: 10px;">(หน่วยงานที่เกี่ยวข้อง)</div>
-                                    </div>
+                                    <div class="kz-center" style="flex-direction: column;"><div>.....................................................</div><div style="margin-top: 2px;">(......../......../........)</div><div style="margin-top: 2px;">Foreman</div></div>
+                                    <div class="kz-center" style="flex-direction: column;"><div>.....................................................</div><div style="margin-top: 2px;">(......../......../........)</div><div style="margin-top: 2px;">Chief/Manager</div><div style="font-size: 10px;">(หน่วยงานที่เกี่ยวข้อง)</div></div>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Section 2 -->
                     <div class="kz-title kz-flex" style="justify-content: space-between;">
-                        <span>ส่วนหน่วยงานปรับปรุง</span>
-                        <span>รหัสงาน <strong>${id}</strong></span>
+                        <span>ส่วนหน่วยงานปรับปรุง</span><span>รหัสงาน <strong>${id}</strong></span>
                     </div>
                     <div class="kz-flex kz-border-b" style="padding: 6px 10px; justify-content: space-between;">
                         <div style="width: 50%;">วันที่รับงาน..............................................................</div>
                         <div style="width: 50%;">วันที่ดำเนินการเสร็จ <strong>${completedTime}</strong></div>
                     </div>
-
-                    <!-- After Image & Fix Details -->
                     <div class="kz-flex kz-border-b" style="border-width: 2px; flex: 1; overflow: hidden;">
                         <div class="kz-border-r kz-center" style="width: 40%; padding: 5px;">
                             ${isAfterValid ? `<img src="${afterImgSrc}" style="max-width: 100%; max-height: 100%; object-fit: contain;">` : '<span style="color: #999;">ยังไม่ได้ดำเนินการ (ไม่มีรูปภาพ After)</span>'}
@@ -732,36 +646,21 @@
                             <div style="border-top: 1px solid black; padding: 6px; flex-grow: 1;">
                                 <div style="font-weight: bold; font-size: 11px; margin-bottom: 4px;">ประเมินผลหลังการดำเนินการแก้ไขปรับปรุง</div>
                                 <div class="kz-flex" style="flex-wrap: wrap; font-size: 10px; gap: 4px;">
-                                    <div style="width: 32%;"><input type="checkbox"> สภาพใช้งาน/ไม่ชำรุด</div>
-                                    <div style="width: 32%;"><input type="checkbox"> ปฏิบัติงานเป็นที่ Shop Kaizen</div>
-                                    <div style="width: 32%;"><input type="checkbox"> ปฏิบัติงานในพื้นที่ Shop Kaizen</div>
-                                    <div style="width: 32%;"><input type="checkbox"> ประหยัดเวลา/เพิ่มผลผลิต</div>
-                                    <div style="width: 32%;"><input type="checkbox"> ลดของเสีย/ลดค่าความเสียหาย</div>
-                                    <div style="width: 32%;"><input type="checkbox"> เพิ่มประสิทธิภาพ/คุณภาพ</div>
-                                    <div style="width: 32%;"><input type="checkbox"> ลดการสูญเสีย/สูญเปล่า</div>
-                                    <div style="width: 32%;"><input type="checkbox"> ลดความยุ่งยาก/ซ้ำซ้อน</div>
+                                    <div style="width: 32%;"><input type="checkbox"> สภาพใช้งาน/ไม่ชำรุด</div><div style="width: 32%;"><input type="checkbox"> ปฏิบัติงานเป็นที่ Shop Kaizen</div>
+                                    <div style="width: 32%;"><input type="checkbox"> ปฏิบัติงานในพื้นที่ Shop Kaizen</div><div style="width: 32%;"><input type="checkbox"> ประหยัดเวลา/เพิ่มผลผลิต</div>
+                                    <div style="width: 32%;"><input type="checkbox"> ลดของเสีย/ลดค่าความเสียหาย</div><div style="width: 32%;"><input type="checkbox"> เพิ่มประสิทธิภาพ/คุณภาพ</div>
+                                    <div style="width: 32%;"><input type="checkbox"> ลดการสูญเสีย/สูญเปล่า</div><div style="width: 32%;"><input type="checkbox"> ลดความยุ่งยาก/ซ้ำซ้อน</div>
                                     <div style="width: 32%;"><input type="checkbox"> อื่นๆ ระบุ....................</div>
                                 </div>
                             </div>
                             <div style="border-top: 1px solid black;">
                                 <div class="kz-flex" style="justify-content: space-around; padding: 10px 10px 5px 10px;">
-                                    <div class="kz-center" style="flex-direction: column;">
-                                        <div>.....................................................</div>
-                                        <div style="margin-top: 2px;">(......../......../........)</div>
-                                        <div style="margin-top: 2px;">Foreman</div>
-                                    </div>
-                                    <div class="kz-center" style="flex-direction: column;">
-                                        <div>.....................................................</div>
-                                        <div style="margin-top: 2px;">(......../......../........)</div>
-                                        <div style="margin-top: 2px;">Chief/Manager</div>
-                                        <div style="font-size: 10px;">(แผนกวิศวกรรมการผลิต)</div>
-                                    </div>
+                                    <div class="kz-center" style="flex-direction: column;"><div>.....................................................</div><div style="margin-top: 2px;">(......../......../........)</div><div style="margin-top: 2px;">Foreman</div></div>
+                                    <div class="kz-center" style="flex-direction: column;"><div>.....................................................</div><div style="margin-top: 2px;">(......../......../........)</div><div style="margin-top: 2px;">Chief/Manager</div><div style="font-size: 10px;">(แผนกวิศวกรรมการผลิต)</div></div>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Footer -->
                     <div class="kz-flex" style="font-size: 11px;">
                         <div class="kz-border-r" style="width: 40%; padding: 8px;">
                             <div style="margin-bottom: 15px;">ส่ง KC ก่อนเริ่มงาน .....................................................</div>
@@ -779,12 +678,10 @@
                     </div>
                 </div>
             `;
-
             window.print();
             setTimeout(() => { printArea.innerHTML = ''; }, 1000);
         }
 
-        // ================= Theme & Modals =================
         function toggleTheme() {
             document.documentElement.classList.toggle('dark');
             const isDark = document.documentElement.classList.contains('dark');
@@ -819,20 +716,10 @@
             setTimeout(() => { modal.classList.add('hidden'); img.src = ''; }, 300);
         }
 
-        // ================= KAIZEN APP LOGIC =================
-        const PASSWORDS = { manager: '1234', shop: '5678' };
-        let requests = [];
-        let currentRole = '';
-        let kaizenChartInstance = null;
-
         try {
             let savedRequests = localStorage.getItem('kaizenRequests');
-            if (savedRequests) {
-                requests = JSON.parse(savedRequests);
-            }
-            if (!Array.isArray(requests)) {
-                requests = [];
-            }
+            if (savedRequests) requests = JSON.parse(savedRequests);
+            if (!Array.isArray(requests)) requests = [];
         } catch (e) {
             console.error("Local Storage Error:", e);
             requests = [];
@@ -872,23 +759,54 @@
             const role = document.getElementById('loginRole').value;
             const pwField = document.getElementById('passwordField');
             document.getElementById('loginError').classList.add('hidden');
-            
-            if (role === 'manager' || role === 'shop') {
-                pwField.classList.remove('hidden');
-            } else {
-                pwField.classList.add('hidden');
-            }
+            if (role === 'manager' || role === 'shop') pwField.classList.remove('hidden');
+            else pwField.classList.add('hidden');
         }
 
+        // ================= Login API =================
         function login() {
             const role = document.getElementById('loginRole').value;
             const password = document.getElementById('loginPassword').value;
             const errorMsg = document.getElementById('loginError');
+            const btn = document.querySelector('button[onclick="login()"]');
 
-            if (role === 'manager' && password !== PASSWORDS.manager) { errorMsg.classList.remove('hidden'); return; }
-            if (role === 'shop' && password !== PASSWORDS.shop) { errorMsg.classList.remove('hidden'); return; }
+            if (role === 'employee') {
+                currentRole = role;
+                showMainApp();
+                return;
+            }
 
-            currentRole = role;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-lg"></i> กำลังตรวจสอบ...';
+            btn.disabled = true;
+            errorMsg.classList.add('hidden');
+
+            const formData = new URLSearchParams();
+            formData.append('action', 'login');
+            formData.append('role', role);
+            formData.append('password', password);
+
+            fetch(SCRIPT_URL, { method: 'POST', body: formData })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    currentRole = role;
+                    localStorage.setItem('kzToken', data.token);
+                    showMainApp();
+                } else {
+                    errorMsg.classList.remove('hidden');
+                }
+            })
+            .catch(err => {
+                showToast('error', 'ข้อผิดพลาด', 'เชื่อมต่อระบบ Login ไม่ได้');
+                console.error(err);
+            })
+            .finally(() => {
+                btn.innerHTML = 'เข้าสู่ระบบ <i class="fa-solid fa-arrow-right-to-bracket text-lg"></i>';
+                btn.disabled = false;
+            });
+        }
+
+        function showMainApp() {
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
             
@@ -910,9 +828,9 @@
 
         function logout() {
             currentRole = '';
+            localStorage.removeItem('kzToken');
             document.getElementById('mainApp').classList.add('hidden');
             document.getElementById('loginScreen').classList.remove('hidden');
-            
             document.getElementById('loginRole').value = 'employee';
             document.getElementById('loginPassword').value = '';
             togglePasswordInput(); 
@@ -931,7 +849,6 @@
         function fetchTasksFromServer() {
             const refreshIcon = document.getElementById('refreshIcon');
             const taskList = document.getElementById('taskList');
-            
             if (refreshIcon) refreshIcon.classList.add('fa-spin');
 
             if (requests.length === 0) {
@@ -950,14 +867,9 @@
                         showToast('error', 'ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
                         return;
                     }
-
-                    if (Array.isArray(data)) {
-                        requests = data;
-                    } else if (data && Array.isArray(data.data)) {
-                        requests = data.data;
-                    } else {
-                        requests = [];
-                    }
+                    if (Array.isArray(data)) requests = data;
+                    else if (data && Array.isArray(data.data)) requests = data.data;
+                    else requests = [];
 
                     localStorage.setItem('kaizenRequests', JSON.stringify(requests)); 
                     renderTasks();
@@ -966,14 +878,11 @@
                 .catch(error => {
                     console.error("Fetch Error:", error);
                     showToast('error', 'ข้อผิดพลาด', 'ไม่สามารถดึงข้อมูลได้ โหลดข้อมูลสำรองแทน');
-                    
                     try {
                         let saved = localStorage.getItem('kaizenRequests');
                         requests = saved ? JSON.parse(saved) : [];
                         if (!Array.isArray(requests)) requests = [];
-                    } catch(e) {
-                        requests = [];
-                    }
+                    } catch(e) { requests = []; }
                     renderTasks();
                 })
                 .finally(() => {
@@ -1022,31 +931,20 @@
             formData.append('image', imageBase64); 
             formData.append('area', area);
             formData.append('jobType', jobType);
+            // พนักงานแจ้งงานไม่ต้องใช้ Token
 
-            // Optimistic Update
             const newTask = {
-                id: newId,
-                jobId: newId,
-                department: dept,
-                requester: name,
-                title: title,
-                description: desc,
-                desc: desc,
-                beforeImage: imageBase64,
-                imageBase64: imageBase64,
-                area: area,
-                jobType: jobType,
-                status: 'pending',
-                priority: 'งานปกติ',
-                createdAt: nowISO,
-                Timestamp: nowISO
+                id: newId, jobId: newId, department: dept, requester: name, title: title,
+                description: desc, desc: desc, beforeImage: imageBase64, imageBase64: imageBase64,
+                area: area, jobType: jobType, status: 'pending', priority: 'งานปกติ',
+                createdAt: nowISO, Timestamp: nowISO
             };
             
             if (!Array.isArray(requests)) requests = [];
             requests.unshift(newTask);
             localStorage.setItem('kaizenRequests', JSON.stringify(requests));
 
-            fetch(SCRIPT_URL, { method: 'POST', body: formData, mode: 'no-cors' })
+            fetch(SCRIPT_URL, { method: 'POST', body: formData })
             .then(() => {
                 showToast('success', 'ส่งงานสำเร็จ!', 'บันทึกข้อมูลเข้าสู่ระบบเรียบร้อยแล้ว');
                 document.getElementById('kaizenForm').reset();
@@ -1054,16 +952,13 @@
                 document.getElementById('previewUI').classList.add('hidden');
                 document.getElementById('fileNameDisplay').innerText = '';
             })
-            .catch(() => {
-                showToast('error', 'ล้มเหลว', 'เกิดข้อผิดพลาดทางระบบ แต่บันทึกไว้ในเครื่องแล้ว');
-            })
+            .catch(() => { showToast('error', 'ล้มเหลว', 'เกิดข้อผิดพลาดทางระบบ แต่บันทึกไว้ในเครื่องแล้ว'); })
             .finally(() => {
                 document.getElementById('submitBtn').innerHTML = '<i class="fa-solid fa-paper-plane text-2xl"></i> ส่งข้อมูลเข้าสู่ระบบ';
                 document.getElementById('submitBtn').disabled = false;
             });
         }
 
-        // ================= Action Control =================
         function openApproveModal(id) { document.getElementById('modalApproveJobId').value = id; document.getElementById('approveModal').classList.remove('hidden'); }
         function closeApproveModal() { document.getElementById('approveModal').classList.add('hidden'); }
 
@@ -1079,7 +974,7 @@
                 localStorage.setItem('kaizenRequests', JSON.stringify(requests));
                 
                 closeApproveModal();
-                closeTaskDetail(); // ปิดหน้าต่างใหญ่เพื่อกลับไปดู Grid
+                closeTaskDetail(); 
                 renderTasks(); 
                 showToast('success', 'อนุมัติแล้ว', `อนุมัติงาน ${id} เรียบร้อย`);
 
@@ -1087,7 +982,8 @@
                 formData.append('action', 'updateStatus');
                 const jobIdParam = String(id).startsWith('KZ-') ? id : 'KZ-' + id;
                 formData.append('jobId', jobIdParam); formData.append('status', 'approved'); formData.append('priority', priority);
-                fetch(SCRIPT_URL, { method: 'POST', body: formData, mode: 'no-cors' }).catch(err => console.log(err));
+                formData.append('token', localStorage.getItem('kzToken') || '');
+                fetch(SCRIPT_URL, { method: 'POST', body: formData }).catch(err => console.log(err));
             }
         }
 
@@ -1105,7 +1001,8 @@
                 formData.append('action', 'updateStatus');
                 const jobIdParam = String(id).startsWith('KZ-') ? id : 'KZ-' + id;
                 formData.append('jobId', jobIdParam); formData.append('status', 'rejected'); formData.append('priority', '-');
-                fetch(SCRIPT_URL, { method: 'POST', body: formData, mode: 'no-cors' }).catch(err => console.log(err));
+                formData.append('token', localStorage.getItem('kzToken') || '');
+                fetch(SCRIPT_URL, { method: 'POST', body: formData }).catch(err => console.log(err));
             }
         }
 
@@ -1124,7 +1021,8 @@
                 formData.append('action', 'delete');
                 const jobIdParam = String(id).startsWith('KZ-') ? id : 'KZ-' + id;
                 formData.append('jobId', jobIdParam);
-                fetch(SCRIPT_URL, { method: 'POST', body: formData, mode: 'no-cors' }).catch(err => console.log(err));
+                formData.append('token', localStorage.getItem('kzToken') || '');
+                fetch(SCRIPT_URL, { method: 'POST', body: formData }).catch(err => console.log(err));
             }
         }
 
@@ -1167,7 +1065,8 @@
                 formData.append('action', 'updateAfter');
                 const jobIdParam = String(id).startsWith('KZ-') ? id : 'KZ-' + id;
                 formData.append('jobId', jobIdParam); formData.append('status', 'completed'); formData.append('completedAt', nowISO); formData.append('afterImage', afterImageBase64); 
-                fetch(SCRIPT_URL, { method: 'POST', body: formData, mode: 'no-cors' }).catch(err => console.log(err));
+                formData.append('token', localStorage.getItem('kzToken') || '');
+                fetch(SCRIPT_URL, { method: 'POST', body: formData }).catch(err => console.log(err));
             }
         }
 
@@ -1185,14 +1084,14 @@
                 formData.append('action', 'updateStatus');
                 const jobIdParam = String(id).startsWith('KZ-') ? id : 'KZ-' + id;
                 formData.append('jobId', jobIdParam); formData.append('status', newStatus); 
-                fetch(SCRIPT_URL, { method: 'POST', body: formData, mode: 'no-cors' }).catch(err => console.log(err));
+                formData.append('token', localStorage.getItem('kzToken') || '');
+                fetch(SCRIPT_URL, { method: 'POST', body: formData }).catch(err => console.log(err));
             }
         }
 
         function openChartModal() { document.getElementById('chartModal').classList.remove('hidden'); populateMonthSelect(); updateChart(); }
         function closeChartModal() { document.getElementById('chartModal').classList.add('hidden'); }
 
-        // ... (Chart functions keep as they were) ...
         function populateMonthSelect() {
             const select = document.getElementById('chartMonthSelect');
             select.innerHTML = '<option value="all">ทั้งหมด (All Time)</option>';
@@ -1262,52 +1161,26 @@
             });
         }
 
-        // ================= Pagination & Grid Render =================
-        function applyFilters() {
-            currentPage = 1; // กลับไปหน้าแรกเสมอเมื่อค้นหา/กรอง
-            renderTasks();
-        }
-
-        function changePage(page) {
-            currentPage = page;
-            renderTasks();
-        }
+        function applyFilters() { currentPage = 1; renderTasks(); }
+        function changePage(page) { currentPage = page; renderTasks(); }
 
         function renderPagination(totalItems) {
             const totalPages = Math.ceil(totalItems / itemsPerPage);
             const pagContainer = document.getElementById('pagination');
-            
-            if(totalPages <= 1) {
-                pagContainer.innerHTML = '';
-                return;
-            }
-            
-            let html = ``;
-            // Prev button
-            html += `<button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/80 backdrop-blur-sm text-slate-600 shadow-sm border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"><i class="fa-solid fa-chevron-left"></i></button>`;
-            
+            if(totalPages <= 1) { pagContainer.innerHTML = ''; return; }
+            let html = `<button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/80 backdrop-blur-sm text-slate-600 shadow-sm border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"><i class="fa-solid fa-chevron-left"></i></button>`;
             for(let i = 1; i <= totalPages; i++) {
-                if(i === currentPage) {
-                    html += `<button class="w-10 h-10 flex items-center justify-center rounded-xl bg-blue-500 text-white shadow-md font-extrabold transform scale-110 transition-all">${i}</button>`;
-                } else {
-                    html += `<button onclick="changePage(${i})" class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/80 backdrop-blur-sm text-slate-600 shadow-sm border border-slate-200 hover:bg-slate-50 font-bold transition-all">${i}</button>`;
-                }
+                if(i === currentPage) html += `<button class="w-10 h-10 flex items-center justify-center rounded-xl bg-blue-500 text-white shadow-md font-extrabold transform scale-110 transition-all">${i}</button>`;
+                else html += `<button onclick="changePage(${i})" class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/80 backdrop-blur-sm text-slate-600 shadow-sm border border-slate-200 hover:bg-slate-50 font-bold transition-all">${i}</button>`;
             }
-            
-            // Next button
             html += `<button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/80 backdrop-blur-sm text-slate-600 shadow-sm border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"><i class="fa-solid fa-chevron-right"></i></button>`;
-            
             pagContainer.innerHTML = html;
         }
 
         function renderTasks() {
             const taskList = document.getElementById('taskList');
             taskList.innerHTML = '';
-
-            if (!Array.isArray(requests)) {
-                requests = [];
-            }
-
+            if (!Array.isArray(requests)) requests = [];
             const searchText = document.getElementById('searchInput').value.toLowerCase();
             const filterStatus = document.getElementById('filterStatus').value;
             const filterDept = document.getElementById('filterDept').value;
@@ -1332,10 +1205,7 @@
             }
 
             taskList.classList.add('grid', 'grid-cols-2', 'sm:grid-cols-3', 'md:grid-cols-4', 'lg:grid-cols-5');
-
             let sortedRequests = [...filteredRequests].reverse();
-
-            // เรียงลำดับให้ "งานเร่งด่วน" ดันขึ้นมาอยู่บนสุดเสมอ
             sortedRequests.sort((a, b) => {
                 const priorityA = safeText(a.priority || a.Priority, '-');
                 const priorityB = safeText(b.priority || b.Priority, '-');
@@ -1344,7 +1214,6 @@
                 return 0;
             });
 
-            // คำนวณหน้า Pagination
             const totalPages = Math.ceil(sortedRequests.length / itemsPerPage);
             if(currentPage > totalPages && totalPages > 0) currentPage = totalPages;
             
@@ -1354,9 +1223,10 @@
 
             pageItems.forEach(req => {
                 const reqId = req.id || req.jobId || req['Job ID'];
-                const title = safeText(req.title || req.Title, '-');
-                const requester = safeText(req.requester || req.Requester, '-');
-                const priority = safeText(req.priority || req.Priority, '-');
+                // ป้องกัน XSS ฝั่ง List
+                const title = escapeHTML(safeText(req.title || req.Title, '-'));
+                const requester = escapeHTML(safeText(req.requester || req.Requester, '-'));
+                const priority = escapeHTML(safeText(req.priority || req.Priority, '-'));
                 const status = safeText(req.status || req.Status, 'pending');
                 const beforeTime = safeText(req.createdAt || req.Timestamp || reqId, '-'); 
                 
@@ -1372,39 +1242,35 @@
 
                 let cardHTML = `
                     <div onclick="openTaskDetail('${reqId}')" class="glass-card p-4 rounded-3xl cursor-pointer hover:-translate-y-2 transition-all duration-300 flex flex-col relative aspect-square group overflow-hidden border-2 ${priority === 'งานเร่งด่วน' ? 'border-red-400 shadow-[0_10px_20px_rgba(239,68,68,0.2)]' : 'border-transparent'}">
-                        
                         <div class="absolute top-3 right-3 z-10">${mobileBadge}</div>
                         ${priority === 'งานเร่งด่วน' ? `<div class="absolute top-3 left-3 z-10 bg-red-500 text-white text-[10px] px-2 py-1 rounded-lg font-bold shadow-sm animate-pulse flex items-center gap-1"><i class="fa-solid fa-siren-on"></i> ด่วน!</div>` : ''}
                         
                         <div class="h-[55%] w-full bg-slate-100 dark:bg-slate-800 rounded-2xl mb-3 flex items-center justify-center overflow-hidden relative shadow-inner">
                             ${isBeforeValid ? `<img src="${beforeImgSrc}" class="object-cover w-full h-full opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500">` : `<i class="fa-solid fa-image text-4xl text-slate-300"></i>`}
                         </div>
-
                         <div class="flex-1 flex flex-col justify-start">
                             <h4 class="text-sm font-extrabold text-slate-800 line-clamp-2 leading-snug mb-1 group-hover:text-blue-600 transition-colors">${title}</h4>
                             <p class="text-[11px] text-slate-500 font-bold line-clamp-1 mt-auto"><i class="fa-solid fa-user-astronaut opacity-70"></i> ${requester}</p>
                             <p class="text-[10px] text-slate-400 font-bold line-clamp-1"><i class="fa-regular fa-clock opacity-70"></i> ${formatThaiDateTime(beforeTime)}</p>
                         </div>
-                    </div>
-                `;
+                    </div>`;
                 taskList.innerHTML += cardHTML;
             });
-
             renderPagination(sortedRequests.length);
         }
 
-        // ================= หน้าต่างรายละเอียดงาน (Task Detail Modal) =================
         function openTaskDetail(reqId) {
             const req = requests.find(r => String(r.id || r.jobId || r['Job ID']) === String(reqId));
             if(!req) return;
 
-            const title = safeText(req.title || req.Title, '-');
-            const department = safeText(req.department || req.Department, '-');
-            const area = safeText(req.area || req.Area, '-');
-            const jobType = safeText(req.jobType || req['Job Type'] || req.JobType, '-');
-            const requester = safeText(req.requester || req.Requester, '-');
-            const desc = safeText(req.desc || req.description || req.Description, '-');
-            const priority = safeText(req.priority || req.Priority, '-');
+            // XSS Prevention ฝั่งรายละเอียดงาน
+            const title = escapeHTML(safeText(req.title || req.Title, '-'));
+            const department = escapeHTML(safeText(req.department || req.Department, '-'));
+            const area = escapeHTML(safeText(req.area || req.Area, '-'));
+            const jobType = escapeHTML(safeText(req.jobType || req['Job Type'] || req.JobType, '-'));
+            const requester = escapeHTML(safeText(req.requester || req.Requester, '-'));
+            const desc = escapeHTML(safeText(req.desc || req.description || req.Description, '-'));
+            const priority = escapeHTML(safeText(req.priority || req.Priority, '-'));
             const status = safeText(req.status || req.Status, 'pending');
             
             const beforeTime = safeText(req.createdAt || req.Timestamp || reqId, '-'); 
@@ -1434,10 +1300,7 @@
                     </div>
                 </div>`;
             } else {
-                stepperHTML = `
-                <div class="relative w-full max-w-sm ml-auto mt-2 hidden sm:block text-right">
-                    <span class="bg-red-100 text-red-700 px-4 py-2 rounded-xl text-sm font-extrabold shadow-sm border border-red-200 inline-flex items-center gap-2"><i class="fa-solid fa-ban"></i> คำขอถูกปฏิเสธ / ไม่อนุมัติ</span>
-                </div>`;
+                stepperHTML = `<div class="relative w-full max-w-sm ml-auto mt-2 hidden sm:block text-right"><span class="bg-red-100 text-red-700 px-4 py-2 rounded-xl text-sm font-extrabold shadow-sm border border-red-200 inline-flex items-center gap-2"><i class="fa-solid fa-ban"></i> คำขอถูกปฏิเสธ / ไม่อนุมัติ</span></div>`;
             }
 
             let mobileBadge = '';
@@ -1448,8 +1311,8 @@
             else if(status === 'rejected') mobileBadge = '<span class="sm:hidden bg-red-100 text-red-700 px-3 py-1 rounded-lg text-xs font-bold border border-red-200"><i class="fa-solid fa-ban"></i> ไม่อนุมัติ</span>';
 
             let priorityBadge = '';
-            if(priority === 'งานเร่งด่วน') { priorityBadge = '<span class="text-sm bg-red-50 text-red-600 px-3 py-1.5 rounded-lg font-extrabold border border-red-100 flex items-center gap-1.5 shadow-sm"><i class="fa-solid fa-siren-on text-red-500"></i> ด่วน!</span>'; } 
-            else if(priority === 'งานปกติ') { priorityBadge = '<span class="text-sm bg-white text-slate-500 px-3 py-1.5 rounded-lg font-bold border border-slate-100 flex items-center gap-1.5 shadow-sm"><i class="fa-solid fa-mug-hot text-slate-400"></i> ปกติ</span>'; }
+            if(priority === 'งานเร่งด่วน') priorityBadge = '<span class="text-sm bg-red-50 text-red-600 px-3 py-1.5 rounded-lg font-extrabold border border-red-100 flex items-center gap-1.5 shadow-sm"><i class="fa-solid fa-siren-on text-red-500"></i> ด่วน!</span>';
+            else if(priority === 'งานปกติ') priorityBadge = '<span class="text-sm bg-white text-slate-500 px-3 py-1.5 rounded-lg font-bold border border-slate-100 flex items-center gap-1.5 shadow-sm"><i class="fa-solid fa-mug-hot text-slate-400"></i> ปกติ</span>';
 
             const beforeImgSrc = req.imageBase64 || req.beforeImage || req['Before Image'] || req.BeforeImage || req.image; 
             const afterImgSrc = req.afterImageBase64 || req.afterImage || req['After Image'] || req.AfterImage;
@@ -1459,7 +1322,6 @@
             let detailHTML = `
                 <div class="glass-card p-6 md:p-10 rounded-[2.5rem] relative overflow-hidden h-full">
                     <div class="absolute top-0 left-0 w-2 h-full ${accentColor} opacity-90 shadow-[0_0_10px_${accentColor}]"></div>
-                    
                     <div class="flex flex-col sm:flex-row justify-between items-start mb-6 pl-4 gap-4 w-full">
                         <div class="flex-1">
                             <div class="flex justify-between items-start">
@@ -1499,9 +1361,7 @@
                                     </div>
                                     <div class="overflow-hidden rounded-xl bg-slate-900 flex items-center justify-center border-2 border-slate-100 shadow-inner h-56 relative cursor-pointer group/zoom" onclick="openImageModal('${beforeImgSrc}')">
                                         <img src="${beforeImgSrc}" class="h-full w-full object-contain object-center z-0 relative transition-transform duration-300 group-hover/zoom:scale-110">
-                                        <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/zoom:opacity-100 transition-opacity duration-300 z-10">
-                                            <i class="fa-solid fa-magnifying-glass-plus text-white text-3xl drop-shadow-md"></i>
-                                        </div>
+                                        <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/zoom:opacity-100 transition-opacity duration-300 z-10"><i class="fa-solid fa-magnifying-glass-plus text-white text-3xl drop-shadow-md"></i></div>
                                     </div>
                                 </div>
                             ` : ''}
@@ -1516,9 +1376,7 @@
                                     </div>
                                     <div class="overflow-hidden rounded-xl bg-slate-900 flex items-center justify-center border-2 border-green-50 shadow-inner h-56 relative cursor-pointer group/zoom" onclick="openImageModal('${afterImgSrc}')">
                                         <img src="${afterImgSrc}" class="h-full w-full object-contain object-center z-0 relative transition-transform duration-300 group-hover/zoom:scale-110">
-                                        <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/zoom:opacity-100 transition-opacity duration-300 z-10">
-                                            <i class="fa-solid fa-magnifying-glass-plus text-white text-3xl drop-shadow-md"></i>
-                                        </div>
+                                        <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/zoom:opacity-100 transition-opacity duration-300 z-10"><i class="fa-solid fa-magnifying-glass-plus text-white text-3xl drop-shadow-md"></i></div>
                                     </div>
                                 </div>
                             ` : ''}
