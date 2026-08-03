@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kaizen Report - Premium 3D UI (Ultra Fast Version)</title>
+    <title>Kaizen Report - Premium 3D UI (Advanced Secure Version)</title>
     <!-- Tailwind & Config for Dark Mode -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -79,6 +79,8 @@
         .btn-3d-green:hover { transform: translateY(-2px); box-shadow: 0 15px 25px -5px rgba(22, 163, 74, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4); }
         .btn-3d-red { background: linear-gradient(135deg, #dc2626, #ef4444); box-shadow: 0 10px 20px -5px rgba(220, 38, 38, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3); border: 1px solid rgba(220, 38, 38, 0.5); transition: all 0.3s ease; }
         .btn-3d-red:hover { transform: translateY(-2px); box-shadow: 0 15px 25px -5px rgba(220, 38, 38, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4); }
+        .card-3d-hover { transition: all 0.5s cubic-bezier(0.25, 1, 0.3, 1); }
+        .card-3d-hover:hover { transform: translateY(-5px); box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255,255,255,0.5); }
         
         @keyframes moveOrb { 0% { transform: translate(0, 0) scale(1); } 33% { transform: translate(30px, -50px) scale(1.1); } 66% { transform: translate(-20px, 20px) scale(0.9); } 100% { transform: translate(0, 0) scale(1); } }
         .ambient-orb { position: fixed; border-radius: 50%; filter: blur(60px); opacity: 0.4; pointer-events: none; z-index: -1; animation: moveOrb 15s infinite alternate ease-in-out; }
@@ -87,6 +89,7 @@
         .toast-enter { animation: slideInRight 0.4s cubic-bezier(0.25, 1, 0.3, 1) forwards; }
         .drag-over { border-color: #3b82f6 !important; background-color: rgba(59, 130, 246, 0.1) !important; transform: scale(1.02); }
 
+        /* การสั่นเวลาใส่ PIN ผิด */
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
             20%, 60% { transform: translateX(-6px); }
@@ -129,6 +132,7 @@
             </div>
             
             <div class="space-y-6">
+                <!-- แถบเลือกสิทธิ์การเข้าใช้งาน -->
                 <div class="flex justify-center">
                     <div class="flex p-1 bg-slate-100/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl w-full border border-white/50 dark:border-slate-700">
                         <button onclick="selectRole('employee')" id="tab-employee" class="flex-1 py-3 rounded-xl text-[13px] font-extrabold bg-white dark:bg-slate-600 shadow-sm text-blue-600 dark:text-white transition-all">พนักงาน</button>
@@ -138,6 +142,7 @@
                 </div>
                 <input type="hidden" id="loginRole" value="employee">
 
+                <!-- โซนพนักงาน -->
                 <div id="employeeLoginArea" class="animate-[fadeIn_0.3s_ease-out]">
                     <p class="text-center text-xs font-bold text-slate-500 dark:text-slate-400 mb-6 px-2 leading-relaxed">เข้าใช้งานเพื่อแจ้งงานและติดตามสถานะงานของคุณ โดยไม่ต้องใช้รหัสผ่าน</p>
                     <button onclick="loginEmployee()" class="btn-3d-blue w-full text-white font-extrabold text-lg py-4 px-4 rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-95">
@@ -145,6 +150,7 @@
                     </button>
                 </div>
 
+                <!-- โซนแป้นพิมพ์ PIN -->
                 <div id="pinLoginArea" class="hidden flex flex-col items-center animate-[fadeIn_0.3s_ease-out]">
                     <p class="text-slate-500 dark:text-slate-400 font-extrabold mb-4 text-[13px] tracking-wide">กรุณากดรหัส PIN 4 หลัก</p>
                     
@@ -1197,7 +1203,6 @@
                 document.getElementById('employeeView').classList.add('hidden');
                 document.getElementById('boardView').classList.remove('hidden');
                 
-                // ⚡ โหลดข้อมูลจาก LocalStorage แสดงผลทันที 0 วินาที
                 if (requests && requests.length > 0) {
                     renderTasks();
                 }
@@ -1224,7 +1229,6 @@
             </div>`;
         }
 
-        // ⚡ ดึงข้อมูลจากเซิร์ฟเวอร์แบบเงียบๆ
         function fetchTasksFromServer() {
             const refreshIcon = document.getElementById('refreshIcon');
             if (refreshIcon) refreshIcon.classList.add('fa-spin');
@@ -1587,7 +1591,6 @@
             renderTasks();
         }
 
-        // ⚡ วาดหน้าจอกระดานแบบความเร็วสูง (Ultra Fast Rendering)
         function renderTasks() {
             const taskList = document.getElementById('taskList');
             taskList.innerHTML = '';
@@ -1693,6 +1696,12 @@
                     const status = safeText(req.status || req.Status, 'pending');
                     const beforeTime = safeText(req.createdAt || req.Timestamp || reqId, '-'); 
                     
+                    const beforeImgSrc = req.imageBase64 || req.beforeImage || req['Before Image'] || req.BeforeImage || req.image; 
+                    const isBeforeValid = beforeImgSrc && beforeImgSrc !== '-' && String(beforeImgSrc).length > 100 && String(beforeImgSrc).toLowerCase() !== 'null';
+                    
+                    const afterImgSrc = req.afterImageBase64 || req.afterImage || req['After Image'] || req.AfterImage;
+                    const isAfterValid = afterImgSrc && afterImgSrc !== '-' && String(afterImgSrc).length > 100 && String(afterImgSrc).toLowerCase() !== 'null';
+
                     let stepNum = 1;
                     let stepText = 'ขั้นตอน 1/4: รออนุมัติ';
                     let badgeColor = 'bg-yellow-100/90 text-yellow-700';
@@ -1705,12 +1714,21 @@
 
                     let mobileBadge = `<span class="${badgeColor} px-3 py-1 rounded-xl text-xs font-extrabold shadow-sm flex items-center gap-1.5"><i class="fa-solid fa-layer-group text-[10px]"></i> ${stepText}</span>`;
 
+                    let thumbnailHtml = '';
+                    if (status === 'completed' && isAfterValid) {
+                        thumbnailHtml = `<img src="${afterImgSrc}" loading="lazy" class="object-cover w-full h-full">`;
+                    } else if (isBeforeValid) {
+                        thumbnailHtml = `<img src="${beforeImgSrc}" loading="lazy" class="object-cover w-full h-full">`;
+                    } else {
+                        thumbnailHtml = `<i class="fa-solid fa-image text-3xl text-slate-300"></i>`;
+                    }
+
                     let cardHTML = `
                         <div onclick="toggleTaskExpand('${reqId}')" class="glass-card p-5 rounded-3xl cursor-pointer hover:scale-[1.01] transition-all duration-300 flex flex-col md:flex-row items-center gap-5 relative border-2 ${priority === 'งานเร่งด่วน' ? 'border-red-400 shadow-[0_10px_20px_rgba(239,68,68,0.15)]' : 'border-transparent'}">
                             ${priority === 'งานเร่งด่วน' ? `<div class="absolute -top-2.5 left-6 z-10 bg-red-500 text-white text-[10px] px-2.5 py-0.5 rounded-full font-bold shadow-sm animate-pulse flex items-center gap-1"><i class="fa-solid fa-siren-on"></i> ด่วน!</div>` : ''}
                             
-                            <div class="w-14 h-14 shrink-0 bg-blue-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-blue-500 shadow-inner">
-                                <i class="fa-solid fa-file-invoice text-2xl"></i>
+                            <div class="w-24 h-24 shrink-0 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center overflow-hidden relative shadow-inner">
+                                ${thumbnailHtml}
                             </div>
 
                             <div class="flex-1 min-w-0 text-center md:text-left">
@@ -1735,11 +1753,6 @@
                         const jobType = escapeHTML(safeText(req.jobType || req['Job Type'] || req.JobType, '-'));
                         const desc = escapeHTML(safeText(req.desc || req.description || req.Description, '-'));
                         const completedTime = safeText(req.completedAt || req['เวลาที่ปิดงาน'], '-');
-                        const beforeImgSrc = req.imageBase64 || req.beforeImage || req['Before Image'] || req.BeforeImage || req.image; 
-                        const afterImgSrc = req.afterImageBase64 || req.afterImage || req['After Image'] || req.AfterImage;
-                        
-                        const isBeforeValid = beforeImgSrc && beforeImgSrc !== '-' && String(beforeImgSrc).length > 100 && String(beforeImgSrc).toLowerCase() !== 'null';
-                        const isAfterValid = afterImgSrc && afterImgSrc !== '-' && String(afterImgSrc).length > 100 && String(afterImgSrc).toLowerCase() !== 'null';
 
                         let accentColor = 'bg-blue-500';
                         if(status === 'pending') accentColor = 'bg-yellow-400';
