@@ -344,7 +344,7 @@
         </main>
     </div>
 
-    <!-- ================= Modals (เหลือเฉพาะ Modal อนุมัติ, ปิดงาน, กราฟ, รูปใหญ่) ================= -->
+    <!-- ================= Modals ================= -->
     <div id="approveModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4 hidden z-[70] transition-opacity">
         <div class="glass-card rounded-[2rem] max-w-sm w-full p-8 shadow-[0_30px_60px_rgba(0,0,0,0.2)] border border-white relative">
             <button onclick="closeApproveModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-slate-100/50 rounded-full text-slate-500 hover:bg-slate-200 transition-colors"><i class="fa-solid fa-xmark"></i></button>
@@ -1254,13 +1254,17 @@
                 const beforeImgSrc = req.imageBase64 || req.beforeImage || req['Before Image'] || req.BeforeImage || req.image; 
                 const isBeforeValid = beforeImgSrc && beforeImgSrc !== '-' && String(beforeImgSrc).length > 100 && String(beforeImgSrc).toLowerCase() !== 'null';
 
-                // --- กำหนดข้อความและป้ายบอกขั้นตอนตัวเลข (Step Badge) ---
-                let stepBadge = '';
-                if(status === 'pending') stepBadge = '<span class="bg-yellow-100/90 text-yellow-700 px-3 py-1 rounded-xl text-xs font-bold shadow-sm"><i class="fa-regular fa-hourglass-half mr-1"></i> ขั้นตอนที่ 1/4: รออนุมัติ</span>';
-                else if(status === 'approved') stepBadge = '<span class="bg-blue-100/90 text-blue-700 px-3 py-1 rounded-xl text-xs font-bold shadow-sm"><i class="fa-solid fa-user-gear mr-1"></i> ขั้นตอนที่ 2/4: รอช่างทำ</span>';
-                else if(status === 'inprogress') stepBadge = '<span class="bg-indigo-100/90 text-indigo-700 px-3 py-1 rounded-xl text-xs font-bold shadow-sm"><i class="fa-solid fa-cog fa-spin mr-1"></i> ขั้นตอนที่ 3/4: กำลังทำ</span>';
-                else if(status === 'completed') stepBadge = '<span class="bg-green-100/90 text-green-700 px-3 py-1 rounded-xl text-xs font-bold shadow-sm"><i class="fa-solid fa-check mr-1"></i> ขั้นตอนที่ 4/4: เสร็จสิ้น</span>';
-                else if(status === 'rejected') stepBadge = '<span class="bg-red-100/90 text-red-700 px-3 py-1 rounded-xl text-xs font-bold shadow-sm"><i class="fa-solid fa-ban mr-1"></i> ไม่อนุมัติ</span>';
+                let stepNum = 1;
+                let stepText = 'ขั้นตอน 1/4: รออนุมัติ';
+                let badgeColor = 'bg-yellow-100/90 text-yellow-700';
+
+                if(status === 'pending') { stepNum = 1; stepText = 'ขั้นตอน 1/4: รออนุมัติ'; badgeColor = 'bg-yellow-100/90 text-yellow-700'; }
+                else if(status === 'approved') { stepNum = 2; stepText = 'ขั้นตอน 2/4: รอช่างทำ'; badgeColor = 'bg-blue-100/90 text-blue-700'; }
+                else if(status === 'inprogress') { stepNum = 3; stepText = 'ขั้นตอน 3/4: กำลังทำ'; badgeColor = 'bg-indigo-100/90 text-indigo-700'; }
+                else if(status === 'completed') { stepNum = 4; stepText = 'ขั้นตอน 4/4: เสร็จสิ้น'; badgeColor = 'bg-green-100/90 text-green-700'; }
+                else if(status === 'rejected') { stepNum = 0; stepText = 'ไม่อนุมัติ'; badgeColor = 'bg-red-100/90 text-red-700'; }
+
+                let mobileBadge = `<span class="${badgeColor} px-3 py-1 rounded-xl text-xs font-extrabold shadow-sm flex items-center gap-1.5"><i class="fa-solid fa-layer-group text-[10px]"></i> ${stepText}</span>`;
 
                 let cardHTML = `
                     <div onclick="toggleTaskExpand('${reqId}')" class="glass-card p-5 rounded-3xl cursor-pointer hover:scale-[1.01] transition-all duration-300 flex flex-col md:flex-row items-center gap-5 relative border-2 ${priority === 'งานเร่งด่วน' ? 'border-red-400 shadow-[0_10px_20px_rgba(239,68,68,0.15)]' : 'border-transparent'}">
@@ -1273,7 +1277,7 @@
                         <div class="flex-1 min-w-0 text-center md:text-left">
                             <div class="flex flex-col md:flex-row md:items-center gap-2 mb-1">
                                 <h4 class="text-lg font-extrabold text-slate-800 truncate">${title}</h4>
-                                ${stepBadge}
+                                ${mobileBadge}
                             </div>
                             <p class="text-xs text-slate-500 font-bold mb-1"><i class="fa-solid fa-user-astronaut opacity-70 mr-1"></i> ผู้แจ้ง: ${requester} | <i class="fa-regular fa-clock opacity-70 ml-2 mr-1"></i> ${formatThaiDateTime(beforeTime)}</p>
                             <p class="text-xs text-slate-400 font-bold"><i class="fa-solid fa-fingerprint opacity-70 mr-1"></i> ID: ${reqId}</p>
@@ -1302,13 +1306,70 @@
                     else if(status === 'completed') accentColor = 'bg-green-500';
                     else if(status === 'rejected') accentColor = 'bg-red-500';
 
+                    // --- สร้างเส้นบอกสถานะแบบเป็นขั้นเป็นตอน (Step Progress Bar) ---
+                    let stepperHTML = '';
+                    if (status !== 'rejected') {
+                        const s1 = stepNum >= 1 ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-200 text-slate-400 border-slate-300';
+                        const s2 = stepNum >= 2 ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-200 text-slate-400 border-slate-300';
+                        const s3 = stepNum >= 3 ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-200 text-slate-400 border-slate-300';
+                        const s4 = stepNum >= 4 ? 'bg-green-600 text-white border-green-600' : 'bg-slate-200 text-slate-400 border-slate-300';
+                        
+                        const l12 = stepNum >= 2 ? 'bg-blue-600' : 'bg-slate-200';
+                        const l23 = stepNum >= 3 ? 'bg-blue-600' : 'bg-slate-200';
+                        const l34 = stepNum >= 4 ? 'bg-green-600' : 'bg-slate-200';
+
+                        stepperHTML = `
+                            <div class="bg-white/60 p-5 rounded-2xl border border-white shadow-sm mb-6">
+                                <div class="flex items-center justify-between max-w-xl mx-auto relative">
+                                    <!-- เส้นเชื่อมระหว่างจุด -->
+                                    <div class="absolute left-6 right-6 top-1/2 -translate-y-1/2 h-1 bg-slate-200 z-0"></div>
+                                    <div class="absolute left-6 right-6 top-1/2 -translate-y-1/2 flex justify-between z-0">
+                                        <div class="h-1 flex-1 ${l12}"></div>
+                                        <div class="h-1 flex-1 ${l23}"></div>
+                                        <div class="h-1 flex-1 ${l34}"></div>
+                                    </div>
+
+                                    <!-- จุดที่ 1: รออนุมัติ -->
+                                    <div class="relative z-10 flex flex-col items-center">
+                                        <div class="w-10 h-10 rounded-full flex items-center justify-center font-extrabold text-sm border-2 ${s1} shadow-md"><i class="fa-solid fa-file-signature"></i></div>
+                                        <span class="text-[11px] font-extrabold mt-1.5 ${stepNum >= 1 ? 'text-blue-600' : 'text-slate-400'}">รออนุมัติ</span>
+                                    </div>
+                                    <!-- จุดที่ 2: รอช่างทำ -->
+                                    <div class="relative z-10 flex flex-col items-center">
+                                        <div class="w-10 h-10 rounded-full flex items-center justify-center font-extrabold text-sm border-2 ${s2} shadow-md"><i class="fa-solid fa-user-gear"></i></div>
+                                        <span class="text-[11px] font-extrabold mt-1.5 ${stepNum >= 2 ? 'text-blue-600' : 'text-slate-400'}">รอช่างทำ</span>
+                                    </div>
+                                    <!-- จุดที่ 3: กำลังทำ -->
+                                    <div class="relative z-10 flex flex-col items-center">
+                                        <div class="w-10 h-10 rounded-full flex items-center justify-center font-extrabold text-sm border-2 ${s3} shadow-md"><i class="fa-solid fa-cog ${stepNum === 3 ? 'fa-spin' : ''}"></i></div>
+                                        <span class="text-[11px] font-extrabold mt-1.5 ${stepNum >= 3 ? 'text-blue-600' : 'text-slate-400'}">กำลังทำ</span>
+                                    </div>
+                                    <!-- จุดที่ 4: เสร็จสิ้น -->
+                                    <div class="relative z-10 flex flex-col items-center">
+                                        <div class="w-10 h-10 rounded-full flex items-center justify-center font-extrabold text-sm border-2 ${s4} shadow-md"><i class="fa-solid fa-check"></i></div>
+                                        <span class="text-[11px] font-extrabold mt-1.5 ${stepNum >= 4 ? 'text-green-600' : 'text-slate-400'}">เสร็จสิ้น</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        stepperHTML = `
+                            <div class="bg-red-50 p-4 rounded-2xl border border-red-200 shadow-sm mb-6 text-center">
+                                <span class="text-red-600 font-extrabold text-sm inline-flex items-center gap-2"><i class="fa-solid fa-ban text-lg"></i> คำขอนี้ถูกปฏิเสธ (ไม่อนุมัติ)</span>
+                            </div>
+                        `;
+                    }
+
                     cardHTML += `
                         <div class="glass-card p-6 md:p-8 rounded-[2.5rem] relative overflow-hidden animate-[fadeIn_0.3s_ease-out] border-2 border-blue-200/60 shadow-xl my-2">
                             <div class="absolute top-0 left-0 w-2.5 h-full ${accentColor} opacity-90"></div>
                             
-                            <div class="flex flex-col md:flex-row justify-between items-start gap-4 mb-6 pl-3">
+                            <div class="flex flex-col md:flex-row justify-between items-start gap-4 mb-4 pl-3">
                                 <div>
-                                    <h3 class="text-2xl font-extrabold text-slate-800 mb-2">${title}</h3>
+                                    <div class="flex items-center gap-3 mb-2">
+                                        <h3 class="text-2xl font-extrabold text-slate-800">${title}</h3>
+                                        <span class="bg-slate-900 text-white text-xs px-3 py-1 rounded-xl font-extrabold shadow-sm"><i class="fa-solid fa-bars-progress text-blue-400 mr-1"></i> ${stepText}</span>
+                                    </div>
                                     <div class="flex flex-wrap gap-2 items-center">
                                         <span class="text-xs bg-white/80 text-slate-600 px-3 py-1 rounded-lg font-bold border border-white shadow-sm"><i class="fa-solid fa-sitemap mr-1"></i> ${department}</span>
                                         <span class="text-xs bg-white/80 text-red-500 px-3 py-1 rounded-lg font-bold border border-white shadow-sm"><i class="fa-solid fa-map-pin mr-1"></i> ${area}</span>
@@ -1318,6 +1379,9 @@
                             </div>
 
                             <div class="pl-3 mb-6">
+                                <!-- แสดงเส้นบอกสถานะ (Stepper) -->
+                                ${stepperHTML}
+
                                 <div class="bg-white/50 p-5 rounded-2xl border border-white shadow-inner mb-6">
                                     <p class="text-sm text-slate-700 whitespace-pre-wrap font-bold leading-relaxed">${desc}</p>
                                 </div>
