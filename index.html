@@ -332,6 +332,10 @@
                         <button id="managerChartBtn" onclick="openChartModal()" class="hidden w-full sm:w-auto text-base bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-5 py-2.5 rounded-xl font-extrabold transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group active:scale-95">
                             <i class="fa-solid fa-chart-pie"></i> สถิติ
                         </button>
+                        <!-- 📥 ปุ่มส่งออก Excel -->
+                        <button id="exportBtn" onclick="exportToCSV()" class="hidden w-full sm:w-auto text-base bg-gradient-to-r from-emerald-500 to-green-600 text-white px-5 py-2.5 rounded-xl font-extrabold transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group active:scale-95">
+                            <i class="fa-solid fa-file-excel"></i> Export
+                        </button>
                         <button onclick="fetchTasksFromServer()" id="refreshBtn" class="w-full sm:w-auto text-base bg-white/80 backdrop-blur-sm text-blue-600 px-5 py-2.5 rounded-xl border border-blue-100 hover:border-blue-300 font-extrabold transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group active:scale-95">
                             <i id="refreshIcon" class="fa-solid fa-arrows-rotate text-blue-500 transition-transform duration-500"></i> อัปเดต
                         </button>
@@ -349,7 +353,7 @@
                         <span id="count-pending" class="text-2xl font-extrabold text-yellow-700 dark:text-yellow-400">0</span>
                     </div>
                     <div class="glass-card p-3 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors border-b-4 border-blue-400" onclick="document.getElementById('filterStatus').value='approved'; applyFilters();">
-                        <span class="text-blue-600 dark:text-blue-500 text-xs font-bold mb-1"><i class="fa-solid fa-user-gear"></i> รอช่างทำ</span>
+                        <span class="text-blue-600 dark:text-blue-500 text-xs font-bold mb-1"><i class="fa-solid fa-user-gear"></i> รอรับงาน</span>
                         <span id="count-approved" class="text-2xl font-extrabold text-blue-700 dark:text-blue-400">0</span>
                     </div>
                     <div class="glass-card p-3 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors border-b-4 border-indigo-400" onclick="document.getElementById('filterStatus').value='inprogress'; applyFilters();">
@@ -376,7 +380,7 @@
                         <select id="filterStatus" class="input-3d px-3 py-2.5 rounded-xl text-xs font-bold text-slate-700" onchange="applyFilters()">
                             <option value="all">ทุกสถานะ</option>
                             <option value="pending">รออนุมัติ</option>
-                            <option value="approved">รอช่างทำ</option>
+                            <option value="approved">รอรับงาน</option>
                             <option value="inprogress">กำลังทำ</option>
                             <option value="completed">ปิดงานแล้ว</option>
                             <option value="rejected">ไม่อนุมัติ</option>
@@ -509,7 +513,7 @@
 
     <!-- ================= SCRIPT การทำงานทั้งหมด ================= -->
     <script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxTtBI7I9B3wfIi8CyLcsX17qQzMryo_WwAwOdH3z9oJ7lakECpDlrFMCVJbJiudzO1/exec'; 
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwQy2ijVr2iQXlh0USlHfgS5ppYTFgpPHGs2KuhTO_DFcAGpNYAUXCsJgJiv1V_CkQR/exec'; 
 
         let currentPage = 1;
         const itemsPerPage = 10;
@@ -543,6 +547,48 @@
                 }
             }
         });
+
+        // 📥 ฟังก์ชันส่งออกเป็น Excel (CSV)
+        function exportToCSV() {
+            if (!requests || requests.length === 0) {
+                showToast('warning', 'ไม่มีข้อมูล', 'ไม่มีข้อมูลสำหรับส่งออก');
+                return;
+            }
+            
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; 
+            csvContent += "Job ID,วันที่แจ้ง,ชื่อผู้แจ้ง,แผนก,พื้นที่,ประเภทงาน,หัวข้อ,รายละเอียด,ความเร่งด่วน,สถานะ,วันที่ปิดงาน\n";
+            
+            requests.forEach(req => {
+                const id = req.id || req.jobId || req['Job ID'] || '';
+                const date = formatThaiDateTime(req.createdAt || req.Timestamp || '');
+                const requester = `"${String(req.requester || '').replace(/"/g, '""')}"`;
+                const dept = `"${String(req.department || '').replace(/"/g, '""')}"`;
+                const area = `"${String(req.area || '').replace(/"/g, '""')}"`;
+                const jobType = `"${String(req.jobType || '').replace(/"/g, '""')}"`;
+                const title = `"${String(req.title || '').replace(/"/g, '""')}"`;
+                const desc = `"${String(req.desc || req.description || '').replace(/"/g, '""')}"`;
+                const priority = `"${String(req.priority || '').replace(/"/g, '""')}"`;
+                
+                let statusTh = 'รออนุมัติ';
+                if(req.status === 'approved') statusTh = 'รอรับงาน';
+                else if(req.status === 'inprogress') statusTh = 'กำลังทำ';
+                else if(req.status === 'completed') statusTh = 'เสร็จสิ้น';
+                else if(req.status === 'rejected') statusTh = 'ไม่อนุมัติ';
+                
+                const completedAt = formatThaiDateTime(req.completedAt || '');
+                
+                csvContent += `${id},"${date}",${requester},${dept},${area},${jobType},${title},${desc},${priority},"${statusTh}","${completedAt}"\n`;
+            });
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Kaizen_Report_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('success', 'ดาวน์โหลดสำเร็จ', 'ส่งออกข้อมูลเป็นไฟล์ Excel (.csv) เรียบร้อย');
+        }
 
         function escapeHTML(str) {
             if (str === null || str === undefined) return '';
@@ -966,8 +1012,13 @@
             let roleName = currentRole === 'employee' ? 'ผู้แจ้งงาน' : currentRole === 'manager' ? 'หัวหน้าแผนก' : 'ช่างซ่อมบำรุง';
             document.getElementById('displayRole').innerText = roleName;
 
-            if (currentRole === 'manager') document.getElementById('managerChartBtn').classList.remove('hidden');
-            else document.getElementById('managerChartBtn').classList.add('hidden');
+            if (currentRole === 'manager') {
+                document.getElementById('managerChartBtn').classList.remove('hidden');
+                document.getElementById('exportBtn').classList.remove('hidden');
+            } else {
+                document.getElementById('managerChartBtn').classList.add('hidden');
+                document.getElementById('exportBtn').classList.add('hidden');
+            }
 
             if(currentRole === 'employee') {
                 document.getElementById('employeeView').classList.remove('hidden');
@@ -1419,8 +1470,6 @@
                     }
                 }
 
-                // นับจำนวนสถานะต่างๆ (จากงานที่ถูกกรองตาม Date, Dept, JobType, Search ยกเว้น Status เพื่อให้เห็นตัวเลขชัดเจน)
-                // หรือจะนับเฉพาะงานที่ถูก filter ทั้งหมดเลยก็ได้ ในที่นี้ขอนับจากงานทั้งหมดที่ผ่านเงื่อนไขอื่นๆ ยกเว้น FilterStatus
                 if (matchSearch && matchDept && matchJobType && matchDate) {
                     countAll++;
                     if(status === 'pending') countPending++;
@@ -1491,7 +1540,7 @@
                 let badgeColor = 'bg-yellow-100/90 text-yellow-700';
 
                 if(status === 'pending') { stepNum = 1; stepText = 'ขั้นตอน 1/4: รออนุมัติ'; badgeColor = 'bg-yellow-100/90 text-yellow-700'; }
-                else if(status === 'approved') { stepNum = 2; stepText = 'ขั้นตอน 2/4: รอช่างทำ'; badgeColor = 'bg-blue-100/90 text-blue-700'; }
+                else if(status === 'approved') { stepNum = 2; stepText = 'ขั้นตอน 2/4: รอรับงาน'; badgeColor = 'bg-blue-100/90 text-blue-700'; }
                 else if(status === 'inprogress') { stepNum = 3; stepText = 'ขั้นตอน 3/4: กำลังทำ'; badgeColor = 'bg-indigo-100/90 text-indigo-700'; }
                 else if(status === 'completed') { stepNum = 4; stepText = 'ขั้นตอน 4/4: เสร็จสิ้น'; badgeColor = 'bg-green-100/90 text-green-700'; }
                 else if(status === 'rejected') { stepNum = 0; stepText = 'ไม่อนุมัติ'; badgeColor = 'bg-red-100/90 text-red-700'; }
@@ -1565,7 +1614,7 @@
                                     </div>
                                     <div class="relative z-10 flex flex-col items-center">
                                         <div class="w-10 h-10 rounded-full flex items-center justify-center font-extrabold text-sm border-2 ${s2} shadow-md"><i class="fa-solid fa-user-gear"></i></div>
-                                        <span class="text-[11px] font-extrabold mt-1.5 ${stepNum >= 2 ? 'text-blue-600' : 'text-slate-400'}">รอช่างทำ</span>
+                                        <span class="text-[11px] font-extrabold mt-1.5 ${stepNum >= 2 ? 'text-blue-600' : 'text-slate-400'}">รอรับงาน</span>
                                     </div>
                                     <div class="relative z-10 flex flex-col items-center">
                                         <div class="w-10 h-10 rounded-full flex items-center justify-center font-extrabold text-sm border-2 ${s3} shadow-md"><i class="fa-solid fa-cog ${stepNum === 3 ? 'fa-spin' : ''}"></i></div>
