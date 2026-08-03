@@ -336,6 +336,10 @@
                         <button id="exportBtn" onclick="exportToCSV()" class="hidden w-full sm:w-auto text-base bg-gradient-to-r from-emerald-500 to-green-600 text-white px-5 py-2.5 rounded-xl font-extrabold transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group active:scale-95">
                             <i class="fa-solid fa-file-excel"></i> Export
                         </button>
+                        <!-- 🖨️ ปุ่มพิมพ์รายงานสรุป -->
+                        <button id="printSummaryBtn" onclick="openPrintSummaryModal()" class="hidden w-full sm:w-auto text-base bg-gradient-to-r from-sky-500 to-teal-500 text-white px-5 py-2.5 rounded-xl font-extrabold transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group active:scale-95">
+                            <i class="fa-solid fa-print"></i> พิมพ์สรุป
+                        </button>
                         <button onclick="fetchTasksFromServer()" id="refreshBtn" class="w-full sm:w-auto text-base bg-white/80 backdrop-blur-sm text-blue-600 px-5 py-2.5 rounded-xl border border-blue-100 hover:border-blue-300 font-extrabold transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group active:scale-95">
                             <i id="refreshIcon" class="fa-solid fa-arrows-rotate text-blue-500 transition-transform duration-500"></i> อัปเดต
                         </button>
@@ -481,6 +485,25 @@
         </div>
     </div>
 
+    <!-- 🖨️ Modal พิมพ์รายงานสรุป (Print Summary Modal) -->
+    <div id="printSummaryModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4 hidden z-[70] transition-opacity">
+        <div class="glass-card rounded-[2rem] max-w-sm w-full p-6 sm:p-8 shadow-[0_30px_60px_rgba(0,0,0,0.2)] border border-white relative">
+            <button onclick="closePrintSummaryModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-slate-100/50 rounded-full text-slate-500 hover:bg-slate-200 transition-colors"><i class="fa-solid fa-xmark"></i></button>
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-gradient-to-br from-sky-500 to-teal-500 text-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-[0_10px_20px_rgba(14,165,233,0.3)]"><i class="fa-solid fa-print text-2xl"></i></div>
+                <h3 class="text-2xl font-extrabold text-slate-800">พิมพ์รายงานสรุป</h3>
+                <p class="text-sm text-slate-500 mt-1 font-bold">เลือกเดือนที่ต้องการพิมพ์รายการที่เสร็จสิ้นแล้ว</p>
+            </div>
+            <div class="mb-6">
+                <select id="printMonthSelect" class="input-3d px-4 py-3 rounded-xl text-base font-bold text-slate-700 outline-none cursor-pointer w-full">
+                    <!-- จะถูกเติมข้อมูลจาก JS -->
+                </select>
+            </div>
+            <button onclick="executePrintSummary()" class="btn-3d-blue w-full text-white font-extrabold py-3 rounded-xl text-base flex justify-center items-center gap-2"><i class="fa-solid fa-print"></i> ดำเนินการพิมพ์</button>
+        </div>
+    </div>
+
+    <!-- 📊 Chart Modal -->
     <div id="chartModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4 hidden z-[70] transition-opacity">
         <div class="glass-card rounded-[2rem] max-w-2xl w-full p-6 sm:p-8 shadow-[0_30px_60px_rgba(0,0,0,0.2)] border border-white relative">
             <button onclick="closeChartModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-slate-100/50 rounded-full text-slate-500 hover:bg-slate-200 transition-colors"><i class="fa-solid fa-xmark"></i></button>
@@ -548,6 +571,144 @@
             }
         });
 
+        // 🖨️ ฟังก์ชันพิมพ์รายงานสรุป (Print Summary Modal)
+        function openPrintSummaryModal() {
+            document.getElementById('printSummaryModal').classList.remove('hidden');
+            const select = document.getElementById('printMonthSelect');
+            select.innerHTML = '<option value="all">ทั้งหมด (All Time)</option>';
+            const months = new Set();
+            if (!Array.isArray(requests)) return;
+            
+            // หาเฉพาะงานที่ "completed" เพื่อดึงเดือนมาสร้างเป็นตัวเลือก
+            requests.forEach(req => {
+                if(!req || req.status !== 'completed') return;
+                let dateStr = req.completedAt || req.createdAt || req.Timestamp || null;
+                if (dateStr && dateStr !== '-') { 
+                    let d = new Date(dateStr); 
+                    if (!isNaN(d)) { 
+                        months.add(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')); 
+                    } 
+                }
+            });
+            const sortedMonths = Array.from(months).sort().reverse();
+            const monthNames = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+            sortedMonths.forEach(ym => {
+                let parts = ym.split('-'); let y = parseInt(parts[0]) + 543; let m = parseInt(parts[1]) - 1;
+                select.innerHTML += `<option value="${ym}">${monthNames[m]} ${y}</option>`;
+            });
+        }
+
+        function closePrintSummaryModal() {
+            document.getElementById('printSummaryModal').classList.add('hidden');
+        }
+
+        function executePrintSummary() {
+            const selectedMonth = document.getElementById('printMonthSelect').value;
+            const printArea = document.getElementById('printArea');
+
+            // กรองเอางานที่เสร็จแล้ว (completed)
+            let completedRequests = requests.filter(req => req.status === 'completed');
+            
+            let monthLabel = "ทั้งหมด (All Time)";
+            if (selectedMonth !== 'all') {
+                completedRequests = completedRequests.filter(req => {
+                    let dateStr = req.completedAt || req.createdAt || req.Timestamp || null;
+                    if (!dateStr || dateStr === '-') return false;
+                    let d = new Date(dateStr);
+                    if (isNaN(d)) return false;
+                    let reqYM = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+                    return reqYM === selectedMonth;
+                });
+                const selOption = document.querySelector(`#printMonthSelect option[value="${selectedMonth}"]`);
+                if(selOption) monthLabel = selOption.text;
+            }
+
+            if (completedRequests.length === 0) {
+                showToast('warning', 'ไม่มีข้อมูล', 'ไม่มีรายการที่เสร็จสิ้นในเดือนที่เลือก');
+                return;
+            }
+
+            // เรียงลำดับจากเก่าไปใหม่ตามวันที่เสร็จสิ้น
+            completedRequests.sort((a, b) => new Date(a.completedAt || a.createdAt) - new Date(b.completedAt || b.createdAt));
+
+            let rowsHtml = '';
+            completedRequests.forEach((req, index) => {
+                const id = req.id || req.jobId || req['Job ID'] || '';
+                const dateReq = formatThaiDateTime(req.createdAt || req.Timestamp || '');
+                const dateComp = formatThaiDateTime(req.completedAt || '');
+                const requester = escapeHTML(safeText(req.requester || req.Requester, '-'));
+                const dept = escapeHTML(safeText(req.department || req.Department, '-'));
+                const area = escapeHTML(safeText(req.area || req.Area, '-'));
+                const jobType = escapeHTML(safeText(req.jobType || req['Job Type'] || req.JobType, '-'));
+                const title = escapeHTML(safeText(req.title || req.Title, '-'));
+
+                rowsHtml += `
+                    <tr>
+                        <td style="text-align: center;">${index + 1}</td>
+                        <td style="text-align: center;">${id}</td>
+                        <td style="text-align: center;">${dateReq}</td>
+                        <td style="text-align: center;">${dateComp}</td>
+                        <td>${requester}</td>
+                        <td>${dept} / ${area}</td>
+                        <td style="text-align: center;">${jobType}</td>
+                        <td>${title}</td>
+                    </tr>
+                `;
+            });
+
+            printArea.innerHTML = `
+                <style>
+                    @media print {
+                        @page { size: A4 landscape; margin: 10mm; } 
+                        body > *:not(#printArea) { display: none !important; }
+                        #printArea { display: block !important; position: static !important; width: 100%; background: white !important; z-index: 9999; }
+                    }
+                    .summary-table { width: 100%; border-collapse: collapse; font-size: 12px; font-family: 'Sarabun', 'Prompt', sans-serif; }
+                    .summary-table th, .summary-table td { border: 1px solid black; padding: 6px; }
+                    .summary-table th { background-color: #e5e7eb; font-weight: bold; text-align: center; }
+                </style>
+                <div style="color: black; font-family: 'Sarabun', 'Prompt', sans-serif;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid black; padding-bottom: 10px; margin-bottom: 20px;">
+                        <div style="width: 15%;">
+                            <img src="https://www.satpcl.co.th/themes/default/assets/static/images/logo.png" style="max-width: 100px;">
+                        </div>
+                        <div style="text-align: center; width: 70%;">
+                            <h2 style="font-size: 18px; margin: 0; font-weight: bold;">รายงานสรุปงาน Kaizen ที่ดำเนินการเสร็จสิ้น</h2>
+                            <h3 style="font-size: 14px; margin: 5px 0 0 0;">ประจำเดือน: ${monthLabel}</h3>
+                        </div>
+                        <div style="width: 15%; text-align: right; font-size: 10px;">
+                            KAIZEN SHOP<br>Production Engineer
+                        </div>
+                    </div>
+                    
+                    <table class="summary-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 5%;">ลำดับ</th>
+                                <th style="width: 12%;">รหัสงาน (Job ID)</th>
+                                <th style="width: 12%;">วันที่แจ้ง</th>
+                                <th style="width: 12%;">วันที่เสร็จสิ้น</th>
+                                <th style="width: 15%;">ผู้แจ้ง</th>
+                                <th style="width: 15%;">แผนก / พื้นที่</th>
+                                <th style="width: 10%;">ประเภทงาน</th>
+                                <th style="width: 19%;">หัวข้องาน</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsHtml}
+                        </tbody>
+                    </table>
+                    <div style="margin-top: 20px; font-size: 11px; text-align: right;">
+                        ออกรายงานเมื่อ: ${new Date().toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' })}
+                    </div>
+                </div>
+            `;
+            
+            closePrintSummaryModal();
+            window.print();
+            setTimeout(() => { printArea.innerHTML = ''; }, 1000);
+        }
+
         // 📥 ฟังก์ชันส่งออกเป็น Excel (CSV)
         function exportToCSV() {
             if (!requests || requests.length === 0) {
@@ -590,302 +751,6 @@
             showToast('success', 'ดาวน์โหลดสำเร็จ', 'ส่งออกข้อมูลเป็นไฟล์ Excel (.csv) เรียบร้อย');
         }
 
-        function escapeHTML(str) {
-            if (str === null || str === undefined) return '';
-            return String(str).replace(/[&<>'"]/g, function(match) {
-                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[match];
-            });
-        }
-
-        function showToast(type, title, message) {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            let colors = '', icon = '';
-            if(type === 'success') {
-                colors = 'bg-green-50 border-green-200 text-green-800 dark:bg-green-900/40 dark:border-green-700 dark:text-green-100';
-                icon = '<div class="w-10 h-10 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center text-green-500 dark:text-green-300 shrink-0"><i class="fa-solid fa-check"></i></div>';
-            } else if(type === 'error') {
-                colors = 'bg-red-50 border-red-200 text-red-800 dark:bg-red-900/40 dark:border-red-700 dark:text-red-100';
-                icon = '<div class="w-10 h-10 bg-red-100 dark:bg-red-800 rounded-full flex items-center justify-center text-red-500 dark:text-red-300 shrink-0"><i class="fa-solid fa-xmark"></i></div>';
-            } else {
-                colors = 'bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-900/40 dark:border-yellow-700 dark:text-yellow-100';
-                icon = '<div class="w-10 h-10 bg-yellow-100 dark:bg-yellow-800 rounded-full flex items-center justify-center text-yellow-500 dark:text-yellow-300 shrink-0"><i class="fa-solid fa-info"></i></div>';
-            }
-            toast.className = `toast-enter flex items-start p-4 mb-2 rounded-2xl shadow-lg border ${colors} backdrop-blur-md max-w-sm w-full transition-all duration-300`;
-            toast.innerHTML = `${icon}<div class="ml-3"><h4 class="font-extrabold text-sm">${title}</h4><p class="text-xs mt-0.5 opacity-80 font-bold">${message}</p></div>`;
-            container.appendChild(toast);
-            setTimeout(() => { toast.classList.add('opacity-0', 'translate-x-full'); setTimeout(() => toast.remove(), 300); }, 3500);
-        }
-
-        function setupDragAndDrop(containerId, inputId, uploadUI, previewUI, nameDisplayId) {
-            const dropZone = document.getElementById(containerId);
-            const input = document.getElementById(inputId);
-            if(!dropZone || !input) return;
-            dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
-            dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('drag-over'); });
-            dropZone.addEventListener('drop', (e) => {
-                e.preventDefault(); dropZone.classList.remove('drag-over');
-                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                    input.files = e.dataTransfer.files; 
-                    previewImageName(input, uploadUI, previewUI, nameDisplayId);
-                }
-            });
-        }
-        
-        document.addEventListener('DOMContentLoaded', () => {
-            setupDragAndDrop('uploadContainerBefore', 'reqImage', 'uploadUI', 'previewUI', 'fileNameDisplay');
-            setupDragAndDrop('uploadContainerAfter', 'afterImageInput', 'modalUploadUI', 'modalPreviewUI', 'modalFileName');
-        });
-
-        function safeText(val, fallback) {
-            if (val === undefined || val === null) return fallback;
-            const s = String(val).trim();
-            if (s === '' || s.toLowerCase() === 'null' || s.toLowerCase() === 'undefined' || s === '-') return fallback;
-            return s;
-        }
-
-        function formatThaiDateTime(isoString) {
-            const s = String(isoString).trim().toLowerCase();
-            if(!isoString || s === '-' || s === 'null' || s === 'undefined' || s === '') return '-';
-            const date = new Date(isoString);
-            if(isNaN(date)) return '-';
-            const months = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
-            return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear() + 543} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
-        }
-
-        function printReport(id) {
-            const req = requests.find(r => String(r.id || r.jobId || r['Job ID']) === String(id));
-            if(!req) return;
-            const printArea = document.getElementById('printArea');
-            
-            const title = escapeHTML(safeText(req.title || req.Title, '....................................................................................'));
-            const department = escapeHTML(safeText(req.department || req.Department, '................................'));
-            const area = escapeHTML(safeText(req.area || req.Area, '..................'));
-            const requester = escapeHTML(safeText(req.requester || req.Requester, '................................'));
-            const desc = escapeHTML(safeText(req.desc || req.description || req.Description, ''));
-            const jobType = String(req.jobType || req['Job Type'] || req.JobType || '').toLowerCase();
-            const status = safeText(req.status || req.Status, 'pending');
-            
-            const rawBeforeTime = safeText(req.createdAt || req.Timestamp || id, '-');
-            const beforeTime = formatThaiDateTime(rawBeforeTime) === '-' ? '......../......../........' : formatThaiDateTime(rawBeforeTime);
-            
-            const rawCompletedTime = safeText(req.completedAt || req['เวลาที่ปิดงาน'], '-');
-            const completedTime = formatThaiDateTime(rawCompletedTime) === '-' ? '..........................................................' : formatThaiDateTime(rawCompletedTime);
-            
-            const beforeImgSrc = req.imageBase64 || req.beforeImage || req['Before Image'] || req.BeforeImage || req.image; 
-            const afterImgSrc = req.afterImageBase64 || req.afterImage || req['After Image'] || req.AfterImage;
-            
-            const isBeforeValid = beforeImgSrc && beforeImgSrc !== '-' && String(beforeImgSrc).length > 100 && String(beforeImgSrc).toLowerCase() !== 'null';
-            const isAfterValid = afterImgSrc && afterImgSrc !== '-' && String(afterImgSrc).length > 100 && String(afterImgSrc).toLowerCase() !== 'null';
-            const isProgram = jobType.includes('program') ? 'checked' : '';
-            const isTooling = jobType.includes('tooling') ? 'checked' : '';
-            const isEquipment = jobType.includes('equipment') ? 'checked' : '';
-            const isJig = jobType.includes('jig') ? 'checked' : '';
-            const isApproved = ['approved', 'inprogress', 'completed'].includes(status) ? 'checked' : '';
-            const isRejected = status === 'rejected' ? 'checked' : '';
-
-            printArea.innerHTML = `
-                <style>
-                    @media print {
-                        @page { size: A4 portrait; margin: 5mm; } 
-                        body > *:not(#printArea) { display: none !important; }
-                        #printArea { display: block !important; position: static !important; width: 100%; background: white !important; z-index: 9999; }
-                    }
-                    .kz-form { width: 100%; max-width: 100%; height: 285mm; color: black; font-family: 'Sarabun', 'Prompt', sans-serif; font-size: 12px; border: 2px solid black; box-sizing: border-box; margin: 0; display: flex; flex-direction: column; }
-                    .kz-form * { box-sizing: border-box; }
-                    .kz-border-b { border-bottom: 1px solid black; }
-                    .kz-border-r { border-right: 1px solid black; }
-                    .kz-flex { display: flex; }
-                    .kz-center { display: flex; align-items: center; justify-content: center; text-align: center; }
-                    .kz-title { font-weight: bold; background-color: #e5e7eb; padding: 2px 8px; border-bottom: 1px solid black; }
-                    input[type="checkbox"] { margin-right: 4px; pointer-events: none; }
-                </style>
-                <div class="kz-form">
-                    <div class="kz-flex kz-border-b" style="border-width: 2px;">
-                        <div class="kz-border-r kz-center" style="width: 12%; padding: 5px;">
-                            <img src="https://www.satpcl.co.th/themes/default/assets/static/images/logo.png" style="max-width: 100%; height: auto;">
-                        </div>
-                        <div class="kz-border-r kz-center" style="width: 65%; font-size: 18px; font-weight: bold; white-space: nowrap;">เอกสารแจ้งดำเนินงาน ปรับปรุง แก้ไขปัญหางาน</div>
-                        <div class="kz-center" style="width: 23%; flex-direction: column;">
-                            <div style="font-weight: bold; font-size: 14px;">KAIZEN SHOP</div>
-                            <div style="font-size: 10px;">Production Engineer Department</div>
-                        </div>
-                    </div>
-                    <div class="kz-title">ส่วนหน่วยงานผู้ร้องขอ</div>
-                    <div class="kz-border-b" style="padding: 6px 10px;">
-                        <div class="kz-flex" style="justify-content: space-between; margin-bottom: 4px;">
-                            <div>วันที่ <strong>${beforeTime}</strong></div>
-                            <div>ครั้งที่....................</div>
-                        </div>
-                        <div class="kz-flex" style="margin-bottom: 4px;">
-                            <div style="width: 40%;">ผู้ร้องขอ <strong>${requester}</strong></div>
-                            <div style="width: 60%;">หน่วยงาน <strong>${department} / ${area}</strong></div>
-                        </div>
-                        <div style="margin-bottom: 4px;">ชื่องาน <strong>${title}</strong></div>
-                        <div class="kz-flex" style="gap: 20px; align-items: center;">
-                            <div>เอกสารประกอบ</div>
-                            <div><input type="checkbox"> แบบงาน</div><div><input type="checkbox"> รูปวาด</div>
-                            <div><input type="checkbox" checked> รูปภาพ</div><div><input type="checkbox"> อื่นๆ</div>
-                        </div>
-                    </div>
-                    <div class="kz-flex kz-border-b" style="border-width: 2px; flex: 1; overflow: hidden;">
-                        <div class="kz-border-r kz-center" style="width: 40%; padding: 5px;">
-                            ${isBeforeValid ? `<img src="${beforeImgSrc}" style="max-width: 100%; max-height: 100%; object-fit: contain;">` : '<span style="color: #999;">ไม่มีรูปภาพประกอบ</span>'}
-                        </div>
-                        <div style="width: 60%; display: flex; flex-direction: column;">
-                            <div class="kz-flex kz-border-b" style="padding: 4px; justify-content: space-around; font-size: 11px;">
-                                <div><input type="checkbox" ${isProgram}> PROGRAM</div><div><input type="checkbox" ${isTooling}> TOOLING</div>
-                                <div><input type="checkbox" ${isEquipment}> EQUIPMENT</div><div><input type="checkbox" ${isJig}> JIG FIXTURE</div>
-                            </div>
-                            <div class="kz-flex" style="flex-grow: 1; overflow: hidden;">
-                                <div class="kz-border-r" style="width: 100%; padding: 4px; display: flex; flex-direction: column;">
-                                    <div class="kz-center kz-border-b" style="font-weight: bold; padding-bottom: 4px; margin-bottom: 4px;">ปัญหา / สิ่งที่ต้องการปรับปรุง</div>
-                                    <div style="white-space: pre-wrap; padding: 4px; font-size: 11px; flex-grow: 1; overflow: hidden;">${desc}</div>
-                                </div>
-                            </div>
-                            <div style="border-top: 1px solid black;">
-                                <div class="kz-flex kz-border-b" style="justify-content: flex-end; padding: 4px 10px; background-color: #e5e7eb;">
-                                    <div style="margin-right: 20px;"><input type="checkbox" ${isApproved}> อนุมัติ</div>
-                                    <div><input type="checkbox" ${isRejected}> ไม่อนุมัติ</div>
-                                </div>
-                                <div class="kz-flex" style="justify-content: space-around; padding: 10px 10px 5px 10px;">
-                                    <div class="kz-center" style="flex-direction: column;"><div>.....................................................</div><div style="margin-top: 2px;">(......../......../........)</div><div style="margin-top: 2px;">Foreman</div></div>
-                                    <div class="kz-center" style="flex-direction: column;"><div>.....................................................</div><div style="margin-top: 2px;">(......../......../........)</div><div style="margin-top: 2px;">Chief/Manager</div><div style="font-size: 10px;">(หน่วยงานที่เกี่ยวข้อง)</div></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="kz-title kz-flex" style="justify-content: space-between;">
-                        <span>ส่วนหน่วยงานปรับปรุง</span><span>รหัสงาน <strong>${id}</strong></span>
-                    </div>
-                    <div class="kz-flex kz-border-b" style="padding: 6px 10px; justify-content: space-between;">
-                        <div style="width: 50%;">วันที่รับงาน..............................................................</div>
-                        <div style="width: 50%;">วันที่ดำเนินการเสร็จ <strong>${completedTime}</strong></div>
-                    </div>
-                    <div class="kz-flex kz-border-b" style="border-width: 2px; flex: 1; overflow: hidden;">
-                        <div class="kz-border-r kz-center" style="width: 40%; padding: 5px;">
-                            ${isAfterValid ? `<img src="${afterImgSrc}" style="max-width: 100%; max-height: 100%; object-fit: contain;">` : '<span style="color: #999;">ยังไม่ได้ดำเนินการ (ไม่มีรูปภาพ After)</span>'}
-                        </div>
-                        <div style="width: 60%; display: flex; flex-direction: column;">
-                            <div class="kz-center kz-border-b" style="font-weight: bold; background-color: #e5e7eb; padding: 4px;">รายละเอียดการแก้ไขปรับปรุง</div>
-                            <div style="padding: 6px;">
-                                <div class="kz-flex" style="justify-content: space-around; font-size: 11px;">
-                                    <div><input type="checkbox"> เริ่มการอบชุบ/ตัดชิ้นส่วน/สั่งซื้อ</div>
-                                    <div><input type="checkbox"> ไม่เริ่มการอบชุบ/ตัดชิ้นส่วน/สั่งซื้อ</div>
-                                </div>
-                            </div>
-                            <div style="border-top: 1px solid black; padding: 6px; flex-grow: 1;">
-                                <div style="font-weight: bold; font-size: 11px; margin-bottom: 4px;">ประเมินผลหลังการดำเนินการแก้ไขปรับปรุง</div>
-                                <div class="kz-flex" style="flex-wrap: wrap; font-size: 10px; gap: 4px;">
-                                    <div style="width: 32%;"><input type="checkbox"> สภาพใช้งาน/ไม่ชำรุด</div><div style="width: 32%;"><input type="checkbox"> ปฏิบัติงานเป็นที่ Shop Kaizen</div>
-                                    <div style="width: 32%;"><input type="checkbox"> ปฏิบัติงานในพื้นที่ Shop Kaizen</div><div style="width: 32%;"><input type="checkbox"> ประหยัดเวลา/เพิ่มผลผลิต</div>
-                                    <div style="width: 32%;"><input type="checkbox"> ลดของเสีย/ลดค่าความเสียหาย</div><div style="width: 32%;"><input type="checkbox"> เพิ่มประสิทธิภาพ/คุณภาพ</div>
-                                    <div style="width: 32%;"><input type="checkbox"> ลดการสูญเสีย/สูญเปล่า</div><div style="width: 32%;"><input type="checkbox"> ลดความยุ่งยาก/ซ้ำซ้อน</div>
-                                    <div style="width: 32%;"><input type="checkbox"> อื่นๆ ระบุ....................</div>
-                                </div>
-                            </div>
-                            <div style="border-top: 1px solid black;">
-                                <div class="kz-flex" style="justify-content: space-around; padding: 10px 10px 5px 10px;">
-                                    <div class="kz-center" style="flex-direction: column;"><div>.....................................................</div><div style="margin-top: 2px;">(......../......../........)</div><div style="margin-top: 2px;">Foreman</div></div>
-                                    <div class="kz-center" style="flex-direction: column;"><div>.....................................................</div><div style="margin-top: 2px;">(......../......../........)</div><div style="margin-top: 2px;">Chief/Manager</div><div style="font-size: 10px;">(แผนกวิศวกรรมการผลิต)</div></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="kz-flex" style="font-size: 11px;">
-                        <div class="kz-border-r" style="width: 40%; padding: 8px;">
-                            <div style="margin-bottom: 15px;">ส่ง KC ก่อนเริ่มงาน .....................................................</div>
-                            <div>ผู้รับงาน .....................................................................</div>
-                        </div>
-                        <div style="width: 60%; padding: 8px;">
-                            <strong>Remark</strong>
-                            <div style="background-color: #e5e7eb; padding: 2px 5px; margin-top: 2px;">หน่วยงาน/ฝ่ายที่ขอปฏิบัติหน้าที่</div>
-                            <ol style="margin-top: 4px; padding-left: 20px; line-height: 1.3;">
-                                <li>เขียนรายละเอียดให้ครบถ้วน ครอบคลุมเพื่อง่ายต่อการทำ</li>
-                                <li>ดำเนินการแล้วเสร็จให้ทำการตรวจสอบความเรียบร้อยร่วมกันทุกหน้าที่ ที่มีมิติ</li>
-                                <li>ในการดำเนินการปรับปรุงระบบ ควบคุมความปลอดภัยและมาตราฐานการปฏิบัติงานในพื้นที่</li>
-                            </ol>
-                        </div>
-                    </div>
-                </div>
-            `;
-            window.print();
-            setTimeout(() => { printArea.innerHTML = ''; }, 1000);
-        }
-
-        function toggleTheme() {
-            document.documentElement.classList.toggle('dark');
-            const isDark = document.documentElement.classList.contains('dark');
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            updateThemeIcon(isDark);
-            if (!document.getElementById('chartModal').classList.contains('hidden')) updateChart();
-        }
-
-        function updateThemeIcon(isDark) {
-            const icon = document.getElementById('themeIcon');
-            if (isDark) { icon.className = 'fa-solid fa-sun text-2xl text-yellow-400 group-hover:rotate-45 transition-transform'; } 
-            else { icon.className = 'fa-solid fa-moon text-2xl text-indigo-600 group-hover:rotate-12 transition-transform'; }
-        }
-
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark'); updateThemeIcon(true);
-        } else { updateThemeIcon(false); }
-
-        function openImageModal(src) {
-            const modal = document.getElementById('imageModal');
-            const img = document.getElementById('fullSizeImage');
-            img.src = src;
-            modal.classList.remove('hidden');
-            setTimeout(() => { modal.classList.remove('opacity-0'); img.classList.remove('scale-95'); img.classList.add('scale-100'); }, 10);
-        }
-
-        function closeImageModal() {
-            const modal = document.getElementById('imageModal');
-            const img = document.getElementById('fullSizeImage');
-            modal.classList.add('opacity-0'); img.classList.remove('scale-100'); img.classList.add('scale-95');
-            setTimeout(() => { modal.classList.add('hidden'); img.src = ''; }, 300);
-        }
-
-        try {
-            let savedRequests = localStorage.getItem('kaizenRequests');
-            if (savedRequests) requests = JSON.parse(savedRequests);
-            if (!Array.isArray(requests)) requests = [];
-        } catch (e) {
-            console.error("Local Storage Error:", e);
-            requests = [];
-            localStorage.removeItem('kaizenRequests');
-        }
-
-        function compressImageForSheet(file, callback) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    const MAX_SIZE = 400; let width = img.width; let height = img.height;
-                    if (width > height) { if (width > MAX_SIZE) { height = Math.round((height * MAX_SIZE) / width); width = MAX_SIZE; } } 
-                    else { if (height > MAX_SIZE) { width = Math.round((width * MAX_SIZE) / height); height = MAX_SIZE; } }
-                    canvas.width = width; canvas.height = height;
-                    const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
-                    const dataUrl = canvas.toDataURL('image/jpeg', 0.4);
-                    if (dataUrl.length > 49000) {
-                        const canvas2 = document.createElement('canvas'); canvas2.width = width * 0.7; canvas2.height = height * 0.7;
-                        canvas2.getContext('2d').drawImage(canvas, 0, 0, canvas2.width, canvas2.height);
-                        callback(canvas2.toDataURL('image/jpeg', 0.3));
-                    } else { callback(dataUrl); }
-                }; img.src = event.target.result;
-            }; reader.readAsDataURL(file);
-        }
-
-        function previewImageName(input, uploadId, previewId, nameDisplayId) {
-            if(input.files && input.files[0]) {
-                document.getElementById(uploadId).classList.add('hidden');
-                document.getElementById(previewId).classList.remove('hidden');
-                document.getElementById(nameDisplayId).innerText = input.files[0].name;
-            }
-        }
-
         function selectRole(role) {
             document.getElementById('loginRole').value = role;
             
@@ -915,7 +780,6 @@
             }
         }
 
-        // ================= Login 0 วิ =================
         function pressPin(digit) {
             const errorMsg = document.getElementById('loginError');
             errorMsg.classList.add('hidden'); 
@@ -928,7 +792,6 @@
                     const numpadBtns = document.querySelectorAll('#numpad button');
                     numpadBtns.forEach(b => b.disabled = true);
                     
-                    // เรียก Login ทันทีแบบ 0 วินาที
                     loginWithPin();
                 }
             }
@@ -964,13 +827,11 @@
             const role = document.getElementById('loginRole').value;
             const errorMsg = document.getElementById('loginError');
 
-            // ⚡ Optimistic Login: ตรวจรหัสท้องถิ่น เข้าได้เลย 0 วินาที
             if (FAST_PINS[role] && FAST_PINS[role] === currentPin) {
                 currentRole = role;
                 localStorage.setItem('kzRole', role); 
                 showMainApp(); 
                 
-                // แอบขอ Token ด้านหลังบ้านแบบเงียบๆ ไม่ต้องรอ
                 const formData = new URLSearchParams();
                 formData.append('action', 'login');
                 formData.append('role', role);
@@ -984,7 +845,6 @@
                     }
                 }).catch(err => console.error(err));
 
-                // เคลียร์ปุ่มเผื่อรอบหน้า
                 const numpadBtns = document.querySelectorAll('#numpad button');
                 numpadBtns.forEach(b => b.disabled = false);
             } else {
@@ -1015,9 +875,11 @@
             if (currentRole === 'manager') {
                 document.getElementById('managerChartBtn').classList.remove('hidden');
                 document.getElementById('exportBtn').classList.remove('hidden');
+                document.getElementById('printSummaryBtn').classList.remove('hidden'); // แสดงปุ่มพิมพ์สำหรับ Manager
             } else {
                 document.getElementById('managerChartBtn').classList.add('hidden');
                 document.getElementById('exportBtn').classList.add('hidden');
+                document.getElementById('printSummaryBtn').classList.add('hidden');
             }
 
             if(currentRole === 'employee') {
@@ -1437,7 +1299,6 @@
             const filterJobType = document.getElementById('filterJobType').value; 
             const filterDate = document.getElementById('filterDate').value;     
 
-            // 1. กรองข้อมูลทั้งหมดก่อนเพื่อให้ได้จำนวน Tasks แต่ละสถานะ (สำหรับอัปเดตตัวเลขในแถบสถานะ)
             let countAll = 0, countPending = 0, countApproved = 0, countInprogress = 0, countCompleted = 0, countRejected = 0;
             
             let filteredRequests = requests.filter(req => {
@@ -1482,7 +1343,6 @@
                 return matchSearch && matchStatus && matchDept && matchJobType && matchDate;
             });
 
-            // อัปเดตตัวเลขบน UI
             document.getElementById('count-all').innerText = countAll;
             document.getElementById('count-pending').innerText = countPending;
             document.getElementById('count-approved').innerText = countApproved;
