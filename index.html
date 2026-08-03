@@ -292,64 +292,71 @@
                 </div>
             </div>
 
-            <!-- ================= 2. มุมมองกระดานงาน (Grid View) ================= -->
-            <div id="boardView" class="hidden animate-[fadeIn_0.5s_ease-out]">
-                <div class="glass-card p-5 px-6 rounded-[2rem] mb-6 flex flex-col sm:flex-row justify-between items-center gap-4 relative overflow-hidden">
-                    <h2 class="text-2xl font-extrabold text-slate-800 flex items-center gap-3 relative z-10">
-                        <div class="bg-gradient-to-br from-indigo-500 to-blue-600 w-12 h-12 rounded-xl text-white flex items-center justify-center shadow-md"><i class="fa-solid fa-layer-group text-xl"></i></div>
-                        กระดานงาน (Workflow)
-                    </h2>
-                    <div class="flex items-center gap-2 relative z-10 w-full sm:w-auto">
-                        <button id="managerChartBtn" onclick="openChartModal()" class="hidden w-full sm:w-auto text-base bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-5 py-2.5 rounded-xl font-extrabold transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group active:scale-95">
-                            <i class="fa-solid fa-chart-pie"></i> สถิติ
-                        </button>
-                        <button onclick="fetchTasksFromServer()" id="refreshBtn" class="w-full sm:w-auto text-base bg-white/80 backdrop-blur-sm text-blue-600 px-5 py-2.5 rounded-xl border border-blue-100 hover:border-blue-300 font-extrabold transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group active:scale-95">
-                            <i id="refreshIcon" class="fa-solid fa-arrows-rotate text-blue-500 transition-transform duration-500"></i> อัปเดต
-                        </button>
+            <!-- ================= 2. มุมมองกระดานงาน (Grid View & Inline Detail) ================= -->
+            <div id="boardView" class="hidden">
+                <!-- ส่วนกระดานหลัก (จะถูกซ่อนเมื่อเปิดดูรายละเอียดแบบ Inline) -->
+                <div id="boardMainContainer" class="animate-[fadeIn_0.5s_ease-out]">
+                    <div class="glass-card p-5 px-6 rounded-[2rem] mb-6 flex flex-col sm:flex-row justify-between items-center gap-4 relative overflow-hidden">
+                        <h2 class="text-2xl font-extrabold text-slate-800 flex items-center gap-3 relative z-10">
+                            <div class="bg-gradient-to-br from-indigo-500 to-blue-600 w-12 h-12 rounded-xl text-white flex items-center justify-center shadow-md"><i class="fa-solid fa-layer-group text-xl"></i></div>
+                            กระดานงาน (Workflow)
+                        </h2>
+                        <div class="flex items-center gap-2 relative z-10 w-full sm:w-auto flex-wrap justify-end">
+                            <button id="managerExportBtn" onclick="exportToCSV()" class="hidden w-full sm:w-auto text-base bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-extrabold transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group active:scale-95">
+                                <i class="fa-solid fa-file-csv"></i> Export CSV
+                            </button>
+                            <button id="managerChartBtn" onclick="openChartModal()" class="hidden w-full sm:w-auto text-base bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-5 py-2.5 rounded-xl font-extrabold transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group active:scale-95">
+                                <i class="fa-solid fa-chart-pie"></i> สถิติ
+                            </button>
+                            <button onclick="fetchTasksFromServer()" id="refreshBtn" class="w-full sm:w-auto text-base bg-white/80 backdrop-blur-sm text-blue-600 px-5 py-2.5 rounded-xl border border-blue-100 hover:border-blue-300 font-extrabold transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group active:scale-95">
+                                <i id="refreshIcon" class="fa-solid fa-arrows-rotate text-blue-500 transition-transform duration-500"></i> อัปเดต
+                            </button>
+                        </div>
                     </div>
+
+                    <div class="glass-card p-4 rounded-[1.5rem] mb-6 flex flex-col md:flex-row gap-3 items-center relative z-10">
+                        <div class="relative w-full md:flex-1">
+                            <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="text" id="searchInput" placeholder="ค้นหาชื่อผู้แจ้ง, หัวข้องาน..." class="input-3d pl-10 pr-4 py-2.5 rounded-xl text-sm font-bold w-full text-slate-700" oninput="applyFilters()">
+                        </div>
+                        <div class="flex gap-2 w-full md:w-auto">
+                            <select id="filterStatus" class="input-3d px-4 py-2.5 rounded-xl text-sm font-bold text-slate-700 w-full md:w-auto" onchange="applyFilters()">
+                                <option value="all">ทุกสถานะ</option>
+                                <option value="pending">รออนุมัติ</option>
+                                <option value="approved">รอช่างทำ</option>
+                                <option value="inprogress">กำลังทำ</option>
+                                <option value="completed">ปิดงานแล้ว</option>
+                            </select>
+                            <select id="filterDept" class="input-3d px-4 py-2.5 rounded-xl text-sm font-bold text-slate-700 w-full md:w-auto" onchange="applyFilters()">
+                                <option value="all">ทุกแผนก</option>
+                                <option value="Production Engineering (PE)">PE</option>
+                                <option value="Production Forging (PF)">PF</option>
+                                <option value="Production Machine (PM)">PM</option>
+                                <option value="Planning (PL)">Planning (PL)</option>
+                                <option value="Engineering (EN)">Engineering (EN)</option>
+                                <option value="Quality Control (QC)">QC</option>
+                                <option value="Quality Assurance (QA)">QA</option>
+                                <option value="Maintenance (MT)">MT</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="taskList" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 relative z-10"></div>
+                    <div id="pagination" class="flex justify-center gap-2 mt-8 mb-4 relative z-10"></div>
                 </div>
 
-                <div class="glass-card p-4 rounded-[1.5rem] mb-6 flex flex-col md:flex-row gap-3 items-center relative z-10">
-                    <div class="relative w-full md:flex-1">
-                        <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <input type="text" id="searchInput" placeholder="ค้นหาชื่อผู้แจ้ง, หัวข้องาน..." class="input-3d pl-10 pr-4 py-2.5 rounded-xl text-sm font-bold w-full text-slate-700" oninput="applyFilters()">
-                    </div>
-                    <div class="flex gap-2 w-full md:w-auto">
-                        <select id="filterStatus" class="input-3d px-4 py-2.5 rounded-xl text-sm font-bold text-slate-700 w-full md:w-auto" onchange="applyFilters()">
-                            <option value="all">ทุกสถานะ</option>
-                            <option value="pending">รออนุมัติ</option>
-                            <option value="approved">รอช่างทำ</option>
-                            <option value="inprogress">กำลังทำ</option>
-                            <option value="completed">ปิดงานแล้ว</option>
-                        </select>
-                        <select id="filterDept" class="input-3d px-4 py-2.5 rounded-xl text-sm font-bold text-slate-700 w-full md:w-auto" onchange="applyFilters()">
-                            <option value="all">ทุกแผนก</option>
-                            <option value="Production Engineering (PE)">PE</option>
-                            <option value="Production Forging (PF)">PF</option>
-                            <option value="Production Machine (PM)">PM</option>
-                            <option value="Planning (PL)">Planning (PL)</option>
-                            <option value="Engineering (EN)">Engineering (EN)</option>
-                            <option value="Quality Control (QC)">QC</option>
-                            <option value="Quality Assurance (QA)">QA</option>
-                            <option value="Maintenance (MT)">MT</option>
-                        </select>
-                    </div>
+                <!-- ส่วนรายละเอียดงานแบบ Inline (จะถูกแสดงแทนกระดานหลักเมื่อกดดู) -->
+                <div id="taskDetailInlineContainer" class="hidden animate-[fadeIn_0.3s_ease-out] w-full">
+                    <button onclick="closeTaskDetail()" class="mb-6 bg-white hover:bg-slate-50 text-slate-600 px-5 py-2.5 rounded-xl text-sm font-extrabold shadow-[0_4px_10px_rgba(0,0,0,0.05)] border border-slate-200 transition-all flex items-center gap-2 hover:-translate-x-1 group">
+                        <i class="fa-solid fa-arrow-left text-blue-500 group-hover:-translate-x-1 transition-transform"></i> กลับไปหน้ากระดานงาน
+                    </button>
+                    <div id="taskDetailContent" class="w-full"></div>
                 </div>
-
-                <div id="taskList" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 relative z-10"></div>
-                <div id="pagination" class="flex justify-center gap-2 mt-8 mb-4 relative z-10"></div>
             </div>
         </main>
     </div>
 
-    <!-- ================= Modals ================= -->
-    <div id="taskDetailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[60] transition-opacity opacity-0" onclick="closeTaskDetail()">
-        <div class="max-w-4xl w-full max-h-[90vh] overflow-y-auto hide-scrollbar rounded-[2.5rem] relative shadow-2xl" onclick="event.stopPropagation()">
-            <button onclick="closeTaskDetail()" class="absolute top-6 right-6 w-10 h-10 flex items-center justify-center bg-slate-900/20 hover:bg-slate-900/40 backdrop-blur-md rounded-full text-white transition-colors z-50 shadow-md border border-white/10"><i class="fa-solid fa-xmark text-xl"></i></button>
-            <div id="taskDetailContent" class="w-full h-full"></div>
-        </div>
-    </div>
-
+    <!-- ================= Modals (สำหรับ Action ย่อย) ================= -->
     <div id="approveModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4 hidden z-[70] transition-opacity">
         <div class="glass-card rounded-[2rem] max-w-sm w-full p-8 shadow-[0_30px_60px_rgba(0,0,0,0.2)] border border-white relative">
             <button onclick="closeApproveModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-slate-100/50 rounded-full text-slate-500 hover:bg-slate-200 transition-colors"><i class="fa-solid fa-xmark"></i></button>
@@ -443,7 +450,7 @@
     <!-- ================= SCRIPT การทำงานทั้งหมด ================= -->
     <script>
         // 🔴 เชื่อมต่อกับ SCRIPT_URL 🔴
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw8zAYxqBSRxb6sQb7Yg53Q1FA25ijHHRmmzBPnqt7Nzn5tHxCsB-GouqV8n6vgcr2P/exec'; 
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzmkGjmaIPcHaHY7_ebORP19JEilVOPbWGrPw_rABRKlQ9x7AuBGl9CGbaRFd6n9cva/exec'; 
 
         let currentPage = 1;
         const itemsPerPage = 10;
@@ -463,6 +470,49 @@
                     '"': '&quot;'
                 }[match];
             });
+        }
+
+        // ================= ระบบดาวน์โหลด CSV =================
+        function exportToCSV() {
+            if (!requests || requests.length === 0) {
+                showToast('warning', 'ไม่มีข้อมูล', 'ไม่มีข้อมูลสำหรับส่งออก');
+                return;
+            }
+            
+            // ใช้ \uFEFF เพื่อให้ Excel อ่านภาษาไทย (UTF-8) ได้สมบูรณ์
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+            csvContent += "รหัสงาน,วันที่แจ้ง,แผนก,ผู้แจ้ง,พื้นที่,ประเภทงาน,หัวข้อเรื่อง,รายละเอียดปัญหา,สถานะ,ความเร่งด่วน,วันที่ปิดงาน\n";
+            
+            requests.forEach(req => {
+                const id = escapeCSV(req.id || req.jobId || "");
+                const date = escapeCSV(formatThaiDateTime(req.createdAt || req.Timestamp || ""));
+                const dept = escapeCSV(req.department || "");
+                const requester = escapeCSV(req.requester || "");
+                const area = escapeCSV(req.area || "");
+                const jobType = escapeCSV(req.jobType || "");
+                const title = escapeCSV(req.title || "");
+                const desc = escapeCSV(req.desc || req.description || "");
+                const status = escapeCSV(req.status || "");
+                const priority = escapeCSV(req.priority || "");
+                const completedAt = escapeCSV(formatThaiDateTime(req.completedAt || ""));
+                
+                csvContent += `${id},${date},${dept},${requester},${area},${jobType},${title},${desc},${status},${priority},${completedAt}\n`;
+            });
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Kaizen_Report_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('success', 'ดาวน์โหลดสำเร็จ', 'ส่งออกข้อมูลเป็นไฟล์ CSV แล้ว');
+        }
+
+        function escapeCSV(str) {
+            let result = String(str).replace(/"/g, '""');
+            // ครอบด้วย Double Quotes ป้องกันปัญหาคอมม่าหรือเว้นบรรทัดในข้อความ
+            return `"${result}"`;
         }
 
         function showToast(type, title, message) {
@@ -526,7 +576,6 @@
             if(!req) return;
             const printArea = document.getElementById('printArea');
             
-            // XSS Prevention for Print
             const title = escapeHTML(safeText(req.title || req.Title, '....................................................................................'));
             const department = escapeHTML(safeText(req.department || req.Department, '................................'));
             const area = escapeHTML(safeText(req.area || req.Area, '..................'));
@@ -813,8 +862,14 @@
             let roleName = currentRole === 'employee' ? 'ผู้แจ้งงาน' : currentRole === 'manager' ? 'หัวหน้าแผนก' : 'ช่างซ่อมบำรุง';
             document.getElementById('displayRole').innerText = roleName;
 
-            if (currentRole === 'manager') document.getElementById('managerChartBtn').classList.remove('hidden');
-            else document.getElementById('managerChartBtn').classList.add('hidden');
+            // การแสดงปุ่ม Export และ สถิติ สำหรับ Manager เท่านั้น
+            if (currentRole === 'manager') {
+                document.getElementById('managerChartBtn').classList.remove('hidden');
+                document.getElementById('managerExportBtn').classList.remove('hidden');
+            } else {
+                document.getElementById('managerChartBtn').classList.add('hidden');
+                document.getElementById('managerExportBtn').classList.add('hidden');
+            }
 
             if(currentRole === 'employee') {
                 document.getElementById('employeeView').classList.remove('hidden');
@@ -1206,7 +1261,7 @@
 
             taskList.classList.add('grid', 'grid-cols-2', 'sm:grid-cols-3', 'md:grid-cols-4', 'lg:grid-cols-5');
             
-            // เริ่มต้นด้วยการสลับอาร์เรย์ให้อันล่าสุดอยู่ก่อน (เวลาจัดกลุ่มแล้วอันใหม่สุดจะอยู่บนสุด)
+            // เริ่มต้นด้วยการสลับอาร์เรย์ให้อันล่าสุดอยู่ก่อน
             let sortedRequests = [...filteredRequests].reverse();
             
             // การให้คะแนนเพื่อจัดเรียง (ค่าน้อยอยู่บน ค่ามากอยู่ล่าง)
@@ -1276,6 +1331,7 @@
             renderPagination(sortedRequests.length);
         }
 
+        // ================= เปิดดูรายละเอียด (แบบ Inline) =================
         function openTaskDetail(reqId) {
             const req = requests.find(r => String(r.id || r.jobId || r['Job ID']) === String(reqId));
             if(!req) return;
@@ -1336,7 +1392,7 @@
             const isAfterValid = afterImgSrc && afterImgSrc !== '-' && String(afterImgSrc).length > 100 && String(afterImgSrc).toLowerCase() !== 'null';
 
             let detailHTML = `
-                <div class="glass-card p-6 md:p-10 rounded-[2.5rem] relative overflow-hidden h-full">
+                <div class="glass-card p-6 md:p-10 rounded-[2.5rem] relative overflow-hidden h-full shadow-lg">
                     <div class="absolute top-0 left-0 w-2 h-full ${accentColor} opacity-90 shadow-[0_0_10px_${accentColor}]"></div>
                     <div class="flex flex-col sm:flex-row justify-between items-start mb-6 pl-4 gap-4 w-full">
                         <div class="flex-1">
@@ -1423,18 +1479,22 @@
             detailHTML += `</div></div>`;
             
             document.getElementById('taskDetailContent').innerHTML = detailHTML;
-            const modal = document.getElementById('taskDetailModal');
-            modal.classList.remove('hidden');
-            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+            
+            // สลับ View จาก Grid เป็น Inline
+            document.getElementById('boardMainContainer').classList.add('hidden');
+            document.getElementById('taskDetailInlineContainer').classList.remove('hidden');
+            
+            // เลื่อนหน้าจอขึ้นบนสุด
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function closeTaskDetail() {
-            const modal = document.getElementById('taskDetailModal');
-            modal.classList.add('opacity-0');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-                document.getElementById('taskDetailContent').innerHTML = '';
-            }, 300);
+            // สลับ View กลับมาหน้า Grid หลัก
+            document.getElementById('taskDetailInlineContainer').classList.add('hidden');
+            document.getElementById('boardMainContainer').classList.remove('hidden');
+            document.getElementById('taskDetailContent').innerHTML = '';
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     </script>
 </body>
