@@ -442,7 +442,7 @@
 
     <!-- ================= SCRIPT การทำงานทั้งหมด ================= -->
     <script>
-        // 🔴 เชื่อมต่อกับ SCRIPT_URL ที่คุณให้มาแล้ว 🔴
+        // 🔴 เชื่อมต่อกับ SCRIPT_URL 🔴
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzmkGjmaIPcHaHY7_ebORP19JEilVOPbWGrPw_rABRKlQ9x7AuBGl9CGbaRFd6n9cva/exec'; 
 
         let currentPage = 1;
@@ -931,7 +931,6 @@
             formData.append('image', imageBase64); 
             formData.append('area', area);
             formData.append('jobType', jobType);
-            // พนักงานแจ้งงานไม่ต้องใช้ Token
 
             const newTask = {
                 id: newId, jobId: newId, department: dept, requester: name, title: title,
@@ -1177,6 +1176,7 @@
             pagContainer.innerHTML = html;
         }
 
+        // ================= ลอจิกการจัดเรียงลำดับใหม่ (Sorting Logic) =================
         function renderTasks() {
             const taskList = document.getElementById('taskList');
             taskList.innerHTML = '';
@@ -1205,13 +1205,31 @@
             }
 
             taskList.classList.add('grid', 'grid-cols-2', 'sm:grid-cols-3', 'md:grid-cols-4', 'lg:grid-cols-5');
+            
+            // เริ่มต้นด้วยการสลับอาร์เรย์ให้อันล่าสุดอยู่ก่อน (เวลาจัดกลุ่มแล้วอันใหม่สุดจะอยู่บนสุด)
             let sortedRequests = [...filteredRequests].reverse();
+            
+            // การให้คะแนนเพื่อจัดเรียง (ค่าน้อยอยู่บน ค่ามากอยู่ล่าง)
             sortedRequests.sort((a, b) => {
-                const priorityA = safeText(a.priority || a.Priority, '-');
-                const priorityB = safeText(b.priority || b.Priority, '-');
-                if (priorityA === 'งานเร่งด่วน' && priorityB !== 'งานเร่งด่วน') return -1;
-                if (priorityA !== 'งานเร่งด่วน' && priorityB === 'งานเร่งด่วน') return 1;
-                return 0;
+                const getScore = (req) => {
+                    const status = String(req.status || req.Status || 'pending').toLowerCase();
+                    const priority = String(req.priority || req.Priority || '-');
+
+                    if (status === 'rejected') return 80;  // ลำดับท้ายสุด: ไม่อนุมัติ
+                    if (status === 'completed') return 70; // ลำดับรองลงมา: ปิดงานแล้ว (งานด่วนที่ปิดแล้วจะมาอยู่ที่นี่)
+
+                    // ลำดับสถานะงานที่ยังไม่เสร็จ
+                    let baseScore = 0;
+                    if (status === 'pending') baseScore = 10;
+                    else if (status === 'approved') baseScore = 20;
+                    else if (status === 'inprogress') baseScore = 30;
+                    else baseScore = 40;
+
+                    // งานเร่งด่วนจะอยู่กลุ่มบนสุด (คะแนน 10-30) / งานปกติถูกดันไปข้างล่าง (คะแนน 40-60)
+                    return priority === 'งานเร่งด่วน' ? baseScore : baseScore + 30;
+                };
+
+                return getScore(a) - getScore(b);
             });
 
             const totalPages = Math.ceil(sortedRequests.length / itemsPerPage);
@@ -1223,7 +1241,6 @@
 
             pageItems.forEach(req => {
                 const reqId = req.id || req.jobId || req['Job ID'];
-                // ป้องกัน XSS ฝั่ง List
                 const title = escapeHTML(safeText(req.title || req.Title, '-'));
                 const requester = escapeHTML(safeText(req.requester || req.Requester, '-'));
                 const priority = escapeHTML(safeText(req.priority || req.Priority, '-'));
@@ -1263,7 +1280,6 @@
             const req = requests.find(r => String(r.id || r.jobId || r['Job ID']) === String(reqId));
             if(!req) return;
 
-            // XSS Prevention ฝั่งรายละเอียดงาน
             const title = escapeHTML(safeText(req.title || req.Title, '-'));
             const department = escapeHTML(safeText(req.department || req.Department, '-'));
             const area = escapeHTML(safeText(req.area || req.Area, '-'));
