@@ -95,7 +95,7 @@
             20%, 60% { transform: translateX(-6px); }
             40%, 80% { transform: translateX(6px); }
         }
-        .animate-shake { animation: shake 0.4s ease-in-out; }
+        .animate-shake { animation: shake 0.3s ease-in-out; }
 
         @media print {
             @page { size: A4 portrait; margin: 5mm; } 
@@ -389,7 +389,7 @@
         </main>
     </div>
 
-    <!-- ================= Modals (เหลือเฉพาะ Modal อนุมัติ, ปิดงาน, กราฟ, รูปใหญ่) ================= -->
+    <!-- ================= Modals ================= -->
     <div id="approveModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4 hidden z-[70] transition-opacity">
         <div class="glass-card rounded-[2rem] max-w-sm w-full p-8 shadow-[0_30px_60px_rgba(0,0,0,0.2)] border border-white relative">
             <button onclick="closeApproveModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-slate-100/50 rounded-full text-slate-500 hover:bg-slate-200 transition-colors"><i class="fa-solid fa-xmark"></i></button>
@@ -490,9 +490,8 @@
         let currentRole = '';
         let kaizenChartInstance = null;
         let expandedJobId = null; 
-        let currentPin = ''; // ตัวแปรเก็บรหัส PIN
+        let currentPin = ''; 
 
-        // ตรวจสอบสถานะการล็อกอินทันทีที่โหลดหน้าเว็บ
         document.addEventListener('DOMContentLoaded', () => {
             const savedRole = localStorage.getItem('kzRole');
             const savedToken = localStorage.getItem('kzToken');
@@ -501,7 +500,7 @@
                 currentRole = savedRole;
                 showMainApp();
             } else {
-                selectRole('employee'); // ค่าเริ่มต้น
+                selectRole('employee'); 
             }
         });
 
@@ -840,9 +839,15 @@
                 updatePinDisplay();
                 
                 if (currentPin.length === 4) {
+                    // ล็อกปุ่มกดและแสดงสถานะ Loading
+                    const numpadBtns = document.querySelectorAll('#numpad button');
+                    numpadBtns.forEach(b => b.disabled = true);
+                    document.getElementById('pinDotsContainer').classList.add('animate-pulse');
+                    
+                    // ลดเวลาหน่วงเหลือ 10ms (ให้ UI อัปเดตทันก่อนเริ่ม fetch)
                     setTimeout(() => {
                         loginWithPin();
-                    }, 150);
+                    }, 10);
                 }
             }
         }
@@ -899,17 +904,24 @@
                 showToast('error', 'ข้อผิดพลาด', 'เชื่อมต่อระบบ Login ไม่ได้');
                 console.error(err);
                 triggerShake();
+            })
+            .finally(() => {
+                // ปลดล็อกการโหลดและปุ่มกด
+                document.getElementById('pinDotsContainer').classList.remove('animate-pulse');
+                const numpadBtns = document.querySelectorAll('#numpad button');
+                numpadBtns.forEach(b => b.disabled = false);
             });
         }
 
         function triggerShake() {
             const dotsContainer = document.getElementById('pinDotsContainer');
+            dotsContainer.classList.remove('animate-pulse');
             dotsContainer.classList.add('animate-shake');
             setTimeout(() => {
                 dotsContainer.classList.remove('animate-shake');
                 currentPin = ''; 
                 updatePinDisplay();
-            }, 500);
+            }, 400);
         }
 
         function showMainApp() {
