@@ -444,7 +444,17 @@
         let requests = [];
         let currentRole = '';
         let kaizenChartInstance = null;
-        let expandedJobId = null; // เก็บ ID ของการ์ดที่กำลังเปิดแถวขยายอยู่
+        let expandedJobId = null; 
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedRole = localStorage.getItem('kzRole');
+            const savedToken = localStorage.getItem('kzToken');
+            
+            if (savedRole && (savedRole === 'employee' || savedToken)) {
+                currentRole = savedRole;
+                showMainApp();
+            }
+        });
 
         function escapeHTML(str) {
             if (str === null || str === undefined) return '';
@@ -765,6 +775,7 @@
 
             if (role === 'employee') {
                 currentRole = role;
+                localStorage.setItem('kzRole', role); 
                 showMainApp();
                 return;
             }
@@ -783,6 +794,7 @@
             .then(data => {
                 if (data.success) {
                     currentRole = role;
+                    localStorage.setItem('kzRole', role); 
                     localStorage.setItem('kzToken', data.token);
                     showMainApp();
                 } else {
@@ -822,6 +834,7 @@
         function logout() {
             currentRole = '';
             localStorage.removeItem('kzToken');
+            localStorage.removeItem('kzRole'); 
             document.getElementById('mainApp').classList.add('hidden');
             document.getElementById('loginScreen').classList.remove('hidden');
             document.getElementById('loginRole').value = 'employee';
@@ -866,11 +879,9 @@
 
                     localStorage.setItem('kaizenRequests', JSON.stringify(requests)); 
                     renderTasks();
-                    if(requests.length > 0) showToast('success', 'ซิงค์ข้อมูลสำเร็จ', 'อัปเดตกระดานงานล่าสุดแล้ว');
                 })
                 .catch(error => {
                     console.error("Fetch Error:", error);
-                    showToast('error', 'ข้อผิดพลาด', 'ไม่สามารถดึงข้อมูลได้ โหลดข้อมูลสำรองแทน');
                     try {
                         let saved = localStorage.getItem('kaizenRequests');
                         requests = saved ? JSON.parse(saved) : [];
@@ -966,7 +977,7 @@
                 localStorage.setItem('kaizenRequests', JSON.stringify(requests));
                 
                 closeApproveModal();
-                expandedJobId = null; // ปิดแถวขยาย
+                expandedJobId = null; 
                 renderTasks(); 
                 showToast('success', 'อนุมัติแล้ว', `อนุมัติงาน ${id} เรียบร้อย`);
 
@@ -1169,17 +1180,15 @@
             pagContainer.innerHTML = html;
         }
 
-        // ================= ฟังก์ชันสลับเปิด/ปิดแถวรายละเอียดแนวนอน =================
         function toggleTaskExpand(reqId) {
             if (expandedJobId === reqId) {
-                expandedJobId = null; // ถ้าคลิกซ้ำที่เดิม ให้พับเก็บ
+                expandedJobId = null; 
             } else {
-                expandedJobId = reqId; // ขยายการ์ดนี้
+                expandedJobId = reqId; 
             }
             renderTasks();
         }
 
-        // ================= เรนเดอร์กระดานงานพร้อมแถวรายละเอียดแนวนอน =================
         function renderTasks() {
             const taskList = document.getElementById('taskList');
             taskList.innerHTML = '';
@@ -1208,7 +1217,6 @@
 
             let sortedRequests = [...filteredRequests].reverse();
             
-            // ลอจิกการเรียงลำดับ: งานด่วน(ยังไม่ปิด) > งานปกติ(ยังไม่ปิด) > งานเสร็จสิ้น > ไม่อนุมัติ
             sortedRequests.sort((a, b) => {
                 const getScore = (req) => {
                     const status = String(req.status || req.Status || 'pending').toLowerCase();
@@ -1246,14 +1254,14 @@
                 const beforeImgSrc = req.imageBase64 || req.beforeImage || req['Before Image'] || req.BeforeImage || req.image; 
                 const isBeforeValid = beforeImgSrc && beforeImgSrc !== '-' && String(beforeImgSrc).length > 100 && String(beforeImgSrc).toLowerCase() !== 'null';
 
-                let mobileBadge = '';
-                if(status === 'pending') mobileBadge = '<span class="bg-yellow-100/90 text-yellow-700 px-3 py-1 rounded-xl text-xs font-bold shadow-sm"><i class="fa-regular fa-hourglass-half"></i> รออนุมัติ</span>';
-                else if(status === 'approved') mobileBadge = '<span class="bg-blue-100/90 text-blue-700 px-3 py-1 rounded-xl text-xs font-bold shadow-sm"><i class="fa-solid fa-user-gear"></i> รอช่างทำ</span>';
-                else if(status === 'inprogress') mobileBadge = '<span class="bg-indigo-100/90 text-indigo-700 px-3 py-1 rounded-xl text-xs font-bold shadow-sm"><i class="fa-solid fa-cog fa-spin"></i> กำลังทำ</span>';
-                else if(status === 'completed') mobileBadge = '<span class="bg-green-100/90 text-green-700 px-3 py-1 rounded-xl text-xs font-bold shadow-sm"><i class="fa-solid fa-check"></i> เสร็จสิ้น</span>';
-                else if(status === 'rejected') mobileBadge = '<span class="bg-red-100/90 text-red-700 px-3 py-1 rounded-xl text-xs font-bold shadow-sm"><i class="fa-solid fa-ban"></i> ไม่อนุมัติ</span>';
+                // --- กำหนดข้อความและป้ายบอกขั้นตอนตัวเลข (Step Badge) ---
+                let stepBadge = '';
+                if(status === 'pending') stepBadge = '<span class="bg-yellow-100/90 text-yellow-700 px-3 py-1 rounded-xl text-xs font-bold shadow-sm"><i class="fa-regular fa-hourglass-half mr-1"></i> ขั้นตอนที่ 1/4: รออนุมัติ</span>';
+                else if(status === 'approved') stepBadge = '<span class="bg-blue-100/90 text-blue-700 px-3 py-1 rounded-xl text-xs font-bold shadow-sm"><i class="fa-solid fa-user-gear mr-1"></i> ขั้นตอนที่ 2/4: รอช่างทำ</span>';
+                else if(status === 'inprogress') stepBadge = '<span class="bg-indigo-100/90 text-indigo-700 px-3 py-1 rounded-xl text-xs font-bold shadow-sm"><i class="fa-solid fa-cog fa-spin mr-1"></i> ขั้นตอนที่ 3/4: กำลังทำ</span>';
+                else if(status === 'completed') stepBadge = '<span class="bg-green-100/90 text-green-700 px-3 py-1 rounded-xl text-xs font-bold shadow-sm"><i class="fa-solid fa-check mr-1"></i> ขั้นตอนที่ 4/4: เสร็จสิ้น</span>';
+                else if(status === 'rejected') stepBadge = '<span class="bg-red-100/90 text-red-700 px-3 py-1 rounded-xl text-xs font-bold shadow-sm"><i class="fa-solid fa-ban mr-1"></i> ไม่อนุมัติ</span>';
 
-                // --- 1. การ์ดสรุปย่อ (แถวบน) ---
                 let cardHTML = `
                     <div onclick="toggleTaskExpand('${reqId}')" class="glass-card p-5 rounded-3xl cursor-pointer hover:scale-[1.01] transition-all duration-300 flex flex-col md:flex-row items-center gap-5 relative border-2 ${priority === 'งานเร่งด่วน' ? 'border-red-400 shadow-[0_10px_20px_rgba(239,68,68,0.15)]' : 'border-transparent'}">
                         ${priority === 'งานเร่งด่วน' ? `<div class="absolute -top-2.5 left-6 z-10 bg-red-500 text-white text-[10px] px-2.5 py-0.5 rounded-full font-bold shadow-sm animate-pulse flex items-center gap-1"><i class="fa-solid fa-siren-on"></i> ด่วน!</div>` : ''}
@@ -1265,7 +1273,7 @@
                         <div class="flex-1 min-w-0 text-center md:text-left">
                             <div class="flex flex-col md:flex-row md:items-center gap-2 mb-1">
                                 <h4 class="text-lg font-extrabold text-slate-800 truncate">${title}</h4>
-                                ${mobileBadge}
+                                ${stepBadge}
                             </div>
                             <p class="text-xs text-slate-500 font-bold mb-1"><i class="fa-solid fa-user-astronaut opacity-70 mr-1"></i> ผู้แจ้ง: ${requester} | <i class="fa-regular fa-clock opacity-70 ml-2 mr-1"></i> ${formatThaiDateTime(beforeTime)}</p>
                             <p class="text-xs text-slate-400 font-bold"><i class="fa-solid fa-fingerprint opacity-70 mr-1"></i> ID: ${reqId}</p>
@@ -1278,7 +1286,6 @@
                         </div>
                     </div>`;
 
-                // --- 2. แถวขยายรายละเอียดแบบแนวนอน (Inline Expandable Row) ---
                 if (expandedJobId === reqId) {
                     const department = escapeHTML(safeText(req.department || req.Department, '-'));
                     const area = escapeHTML(safeText(req.area || req.Area, '-'));
