@@ -332,15 +332,14 @@
                         <button id="managerChartBtn" onclick="openChartModal()" class="hidden w-full sm:w-auto text-base bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-5 py-2.5 rounded-xl font-extrabold transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group active:scale-95">
                             <i class="fa-solid fa-chart-pie"></i> สถิติ
                         </button>
-                        <!-- 📥 ปุ่มส่งออก Excel -->
                         <button id="exportBtn" onclick="exportToCSV()" class="hidden w-full sm:w-auto text-base bg-gradient-to-r from-emerald-500 to-green-600 text-white px-5 py-2.5 rounded-xl font-extrabold transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group active:scale-95">
                             <i class="fa-solid fa-file-excel"></i> Export
                         </button>
-                        <!-- 🖨️ ปุ่มพิมพ์รายงานสรุป -->
                         <button id="printSummaryBtn" onclick="openPrintSummaryModal()" class="hidden w-full sm:w-auto text-base bg-gradient-to-r from-sky-500 to-teal-500 text-white px-5 py-2.5 rounded-xl font-extrabold transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group active:scale-95">
                             <i class="fa-solid fa-print"></i> พิมพ์สรุป
                         </button>
-                        <button onclick="fetchTasksFromServer()" id="refreshBtn" class="w-full sm:w-auto text-base bg-white/80 backdrop-blur-sm text-blue-600 px-5 py-2.5 rounded-xl border border-blue-100 hover:border-blue-300 font-extrabold transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group active:scale-95">
+                        <!-- เปลี่ยนปุ่มเป็น forceRefresh เพื่อป้องกันปัญหา Cache เก่าขัดแย้ง -->
+                        <button onclick="forceRefresh()" id="refreshBtn" class="w-full sm:w-auto text-base bg-white/80 backdrop-blur-sm text-blue-600 px-5 py-2.5 rounded-xl border border-blue-100 hover:border-blue-300 font-extrabold transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group active:scale-95">
                             <i id="refreshIcon" class="fa-solid fa-arrows-rotate text-blue-500 transition-transform duration-500"></i> อัปเดต
                         </button>
                     </div>
@@ -485,7 +484,6 @@
         </div>
     </div>
 
-    <!-- 🖨️ Modal พิมพ์รายงานสรุป (Print Summary Modal) -->
     <div id="printSummaryModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4 hidden z-[70] transition-opacity">
         <div class="glass-card rounded-[2rem] max-w-sm w-full p-6 sm:p-8 shadow-[0_30px_60px_rgba(0,0,0,0.2)] border border-white relative">
             <button onclick="closePrintSummaryModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-slate-100/50 rounded-full text-slate-500 hover:bg-slate-200 transition-colors"><i class="fa-solid fa-xmark"></i></button>
@@ -503,7 +501,6 @@
         </div>
     </div>
 
-    <!-- 📊 Chart Modal -->
     <div id="chartModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4 hidden z-[70] transition-opacity">
         <div class="glass-card rounded-[2rem] max-w-2xl w-full p-6 sm:p-8 shadow-[0_30px_60px_rgba(0,0,0,0.2)] border border-white relative">
             <button onclick="closeChartModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-slate-100/50 rounded-full text-slate-500 hover:bg-slate-200 transition-colors"><i class="fa-solid fa-xmark"></i></button>
@@ -571,7 +568,17 @@
             }
         });
 
-        // 🖨️ ฟังก์ชันพิมพ์รายงานสรุป (Print Summary Modal)
+        // 🗑️ ฟังก์ชันรีเฟรชแบบล้างแคช เพื่อป้องกันบักข้อมูลขัดแย้ง
+        function forceRefresh() {
+            const refreshIcon = document.getElementById('refreshIcon');
+            if (refreshIcon) refreshIcon.classList.add('fa-spin');
+            
+            localStorage.removeItem('kaizenRequests');
+            requests = [];
+            
+            fetchTasksFromServer();
+        }
+
         function openPrintSummaryModal() {
             document.getElementById('printSummaryModal').classList.remove('hidden');
             const select = document.getElementById('printMonthSelect');
@@ -579,7 +586,6 @@
             const months = new Set();
             if (!Array.isArray(requests)) return;
             
-            // หาเฉพาะงานที่ "completed" เพื่อดึงเดือนมาสร้างเป็นตัวเลือก
             requests.forEach(req => {
                 if(!req || req.status !== 'completed') return;
                 let dateStr = req.completedAt || req.createdAt || req.Timestamp || null;
@@ -606,7 +612,6 @@
             const selectedMonth = document.getElementById('printMonthSelect').value;
             const printArea = document.getElementById('printArea');
 
-            // กรองเอางานที่เสร็จแล้ว (completed)
             let completedRequests = requests.filter(req => req.status === 'completed');
             
             let monthLabel = "ทั้งหมด (All Time)";
@@ -628,7 +633,6 @@
                 return;
             }
 
-            // เรียงลำดับจากเก่าไปใหม่ตามวันที่เสร็จสิ้น
             completedRequests.sort((a, b) => new Date(a.completedAt || a.createdAt) - new Date(b.completedAt || b.createdAt));
 
             let rowsHtml = '';
@@ -709,7 +713,6 @@
             setTimeout(() => { printArea.innerHTML = ''; }, 1000);
         }
 
-        // 📥 ฟังก์ชันส่งออกเป็น Excel (CSV)
         function exportToCSV() {
             if (!requests || requests.length === 0) {
                 showToast('warning', 'ไม่มีข้อมูล', 'ไม่มีข้อมูลสำหรับส่งออก');
@@ -749,6 +752,302 @@
             link.click();
             document.body.removeChild(link);
             showToast('success', 'ดาวน์โหลดสำเร็จ', 'ส่งออกข้อมูลเป็นไฟล์ Excel (.csv) เรียบร้อย');
+        }
+
+        function escapeHTML(str) {
+            if (str === null || str === undefined) return '';
+            return String(str).replace(/[&<>'"]/g, function(match) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[match];
+            });
+        }
+
+        function showToast(type, title, message) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            let colors = '', icon = '';
+            if(type === 'success') {
+                colors = 'bg-green-50 border-green-200 text-green-800 dark:bg-green-900/40 dark:border-green-700 dark:text-green-100';
+                icon = '<div class="w-10 h-10 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center text-green-500 dark:text-green-300 shrink-0"><i class="fa-solid fa-check"></i></div>';
+            } else if(type === 'error') {
+                colors = 'bg-red-50 border-red-200 text-red-800 dark:bg-red-900/40 dark:border-red-700 dark:text-red-100';
+                icon = '<div class="w-10 h-10 bg-red-100 dark:bg-red-800 rounded-full flex items-center justify-center text-red-500 dark:text-red-300 shrink-0"><i class="fa-solid fa-xmark"></i></div>';
+            } else {
+                colors = 'bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-900/40 dark:border-yellow-700 dark:text-yellow-100';
+                icon = '<div class="w-10 h-10 bg-yellow-100 dark:bg-yellow-800 rounded-full flex items-center justify-center text-yellow-500 dark:text-yellow-300 shrink-0"><i class="fa-solid fa-info"></i></div>';
+            }
+            toast.className = `toast-enter flex items-start p-4 mb-2 rounded-2xl shadow-lg border ${colors} backdrop-blur-md max-w-sm w-full transition-all duration-300`;
+            toast.innerHTML = `${icon}<div class="ml-3"><h4 class="font-extrabold text-sm">${title}</h4><p class="text-xs mt-0.5 opacity-80 font-bold">${message}</p></div>`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.classList.add('opacity-0', 'translate-x-full'); setTimeout(() => toast.remove(), 300); }, 3500);
+        }
+
+        function setupDragAndDrop(containerId, inputId, uploadUI, previewUI, nameDisplayId) {
+            const dropZone = document.getElementById(containerId);
+            const input = document.getElementById(inputId);
+            if(!dropZone || !input) return;
+            dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+            dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('drag-over'); });
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault(); dropZone.classList.remove('drag-over');
+                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    input.files = e.dataTransfer.files; 
+                    previewImageName(input, uploadUI, previewUI, nameDisplayId);
+                }
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            setupDragAndDrop('uploadContainerBefore', 'reqImage', 'uploadUI', 'previewUI', 'fileNameDisplay');
+            setupDragAndDrop('uploadContainerAfter', 'afterImageInput', 'modalUploadUI', 'modalPreviewUI', 'modalFileName');
+        });
+
+        function safeText(val, fallback) {
+            if (val === undefined || val === null) return fallback;
+            const s = String(val).trim();
+            if (s === '' || s.toLowerCase() === 'null' || s.toLowerCase() === 'undefined' || s === '-') return fallback;
+            return s;
+        }
+
+        function formatThaiDateTime(isoString) {
+            const s = String(isoString).trim().toLowerCase();
+            if(!isoString || s === '-' || s === 'null' || s === 'undefined' || s === '') return '-';
+            const date = new Date(isoString);
+            if(isNaN(date)) return '-';
+            const months = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+            return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear() + 543} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+        }
+
+        function printReport(id) {
+            const req = requests.find(r => String(r.id || r.jobId || r['Job ID']) === String(id));
+            if(!req) return;
+            const printArea = document.getElementById('printArea');
+            
+            const title = escapeHTML(safeText(req.title || req.Title, '....................................................................................'));
+            const department = escapeHTML(safeText(req.department || req.Department, '................................'));
+            const area = escapeHTML(safeText(req.area || req.Area, '..................'));
+            const requester = escapeHTML(safeText(req.requester || req.Requester, '................................'));
+            const desc = escapeHTML(safeText(req.desc || req.description || req.Description, ''));
+            const jobType = String(req.jobType || req['Job Type'] || req.JobType || '').toLowerCase();
+            const status = safeText(req.status || req.Status, 'pending');
+            
+            const rawBeforeTime = safeText(req.createdAt || req.Timestamp || id, '-');
+            const beforeTime = formatThaiDateTime(rawBeforeTime) === '-' ? '......../......../........' : formatThaiDateTime(rawBeforeTime);
+            
+            const rawCompletedTime = safeText(req.completedAt || req['เวลาที่ปิดงาน'], '-');
+            const completedTime = formatThaiDateTime(rawCompletedTime) === '-' ? '..........................................................' : formatThaiDateTime(rawCompletedTime);
+            
+            const beforeImgSrc = req.imageBase64 || req.beforeImage || req['Before Image'] || req.BeforeImage || req.image; 
+            const afterImgSrc = req.afterImageBase64 || req.afterImage || req['After Image'] || req.AfterImage;
+            
+            const isBeforeValid = beforeImgSrc && beforeImgSrc !== '-' && String(beforeImgSrc).length > 100 && String(beforeImgSrc).toLowerCase() !== 'null';
+            const isAfterValid = afterImgSrc && afterImgSrc !== '-' && String(afterImgSrc).length > 100 && String(afterImgSrc).toLowerCase() !== 'null';
+            const isProgram = jobType.includes('program') ? 'checked' : '';
+            const isTooling = jobType.includes('tooling') ? 'checked' : '';
+            const isEquipment = jobType.includes('equipment') ? 'checked' : '';
+            const isJig = jobType.includes('jig') ? 'checked' : '';
+            const isApproved = ['approved', 'inprogress', 'completed'].includes(status) ? 'checked' : '';
+            const isRejected = status === 'rejected' ? 'checked' : '';
+
+            printArea.innerHTML = `
+                <style>
+                    @media print {
+                        @page { size: A4 portrait; margin: 5mm; } 
+                        body > *:not(#printArea) { display: none !important; }
+                        #printArea { display: block !important; position: static !important; width: 100%; background: white !important; z-index: 9999; }
+                    }
+                    .kz-form { width: 100%; max-width: 100%; height: 285mm; color: black; font-family: 'Sarabun', 'Prompt', sans-serif; font-size: 12px; border: 2px solid black; box-sizing: border-box; margin: 0; display: flex; flex-direction: column; }
+                    .kz-form * { box-sizing: border-box; }
+                    .kz-border-b { border-bottom: 1px solid black; }
+                    .kz-border-r { border-right: 1px solid black; }
+                    .kz-flex { display: flex; }
+                    .kz-center { display: flex; align-items: center; justify-content: center; text-align: center; }
+                    .kz-title { font-weight: bold; background-color: #e5e7eb; padding: 2px 8px; border-bottom: 1px solid black; }
+                    input[type="checkbox"] { margin-right: 4px; pointer-events: none; }
+                </style>
+                <div class="kz-form">
+                    <div class="kz-flex kz-border-b" style="border-width: 2px;">
+                        <div class="kz-border-r kz-center" style="width: 12%; padding: 5px;">
+                            <img src="https://www.satpcl.co.th/themes/default/assets/static/images/logo.png" style="max-width: 100%; height: auto;">
+                        </div>
+                        <div class="kz-border-r kz-center" style="width: 65%; font-size: 18px; font-weight: bold; white-space: nowrap;">เอกสารแจ้งดำเนินงาน ปรับปรุง แก้ไขปัญหางาน</div>
+                        <div class="kz-center" style="width: 23%; flex-direction: column;">
+                            <div style="font-weight: bold; font-size: 14px;">KAIZEN SHOP</div>
+                            <div style="font-size: 10px;">Production Engineer Department</div>
+                        </div>
+                    </div>
+                    <div class="kz-title">ส่วนหน่วยงานผู้ร้องขอ</div>
+                    <div class="kz-border-b" style="padding: 6px 10px;">
+                        <div class="kz-flex" style="justify-content: space-between; margin-bottom: 4px;">
+                            <div>วันที่ <strong>${beforeTime}</strong></div>
+                            <div>ครั้งที่....................</div>
+                        </div>
+                        <div class="kz-flex" style="margin-bottom: 4px;">
+                            <div style="width: 40%;">ผู้ร้องขอ <strong>${requester}</strong></div>
+                            <div style="width: 60%;">หน่วยงาน <strong>${department} / ${area}</strong></div>
+                        </div>
+                        <div style="margin-bottom: 4px;">ชื่องาน <strong>${title}</strong></div>
+                        <div class="kz-flex" style="gap: 20px; align-items: center;">
+                            <div>เอกสารประกอบ</div>
+                            <div><input type="checkbox"> แบบงาน</div><div><input type="checkbox"> รูปวาด</div>
+                            <div><input type="checkbox" checked> รูปภาพ</div><div><input type="checkbox"> อื่นๆ</div>
+                        </div>
+                    </div>
+                    <div class="kz-flex kz-border-b" style="border-width: 2px; flex: 1; overflow: hidden;">
+                        <div class="kz-border-r kz-center" style="width: 40%; padding: 5px;">
+                            ${isBeforeValid ? `<img src="${beforeImgSrc}" style="max-width: 100%; max-height: 100%; object-fit: contain;">` : '<span style="color: #999;">ไม่มีรูปภาพประกอบ</span>'}
+                        </div>
+                        <div style="width: 60%; display: flex; flex-direction: column;">
+                            <div class="kz-flex kz-border-b" style="padding: 4px; justify-content: space-around; font-size: 11px;">
+                                <div><input type="checkbox" ${isProgram}> PROGRAM</div><div><input type="checkbox" ${isTooling}> TOOLING</div>
+                                <div><input type="checkbox" ${isEquipment}> EQUIPMENT</div><div><input type="checkbox" ${isJig}> JIG FIXTURE</div>
+                            </div>
+                            <div class="kz-flex" style="flex-grow: 1; overflow: hidden;">
+                                <div class="kz-border-r" style="width: 100%; padding: 4px; display: flex; flex-direction: column;">
+                                    <div class="kz-center kz-border-b" style="font-weight: bold; padding-bottom: 4px; margin-bottom: 4px;">ปัญหา / สิ่งที่ต้องการปรับปรุง</div>
+                                    <div style="white-space: pre-wrap; padding: 4px; font-size: 11px; flex-grow: 1; overflow: hidden;">${desc}</div>
+                                </div>
+                            </div>
+                            <div style="border-top: 1px solid black;">
+                                <div class="kz-flex kz-border-b" style="justify-content: flex-end; padding: 4px 10px; background-color: #e5e7eb;">
+                                    <div style="margin-right: 20px;"><input type="checkbox" ${isApproved}> อนุมัติ</div>
+                                    <div><input type="checkbox" ${isRejected}> ไม่อนุมัติ</div>
+                                </div>
+                                <div class="kz-flex" style="justify-content: space-around; padding: 10px 10px 5px 10px;">
+                                    <div class="kz-center" style="flex-direction: column;"><div>.....................................................</div><div style="margin-top: 2px;">(......../......../........)</div><div style="margin-top: 2px;">Foreman</div></div>
+                                    <div class="kz-center" style="flex-direction: column;"><div>.....................................................</div><div style="margin-top: 2px;">(......../......../........)</div><div style="margin-top: 2px;">Chief/Manager</div><div style="font-size: 10px;">(หน่วยงานที่เกี่ยวข้อง)</div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="kz-title kz-flex" style="justify-content: space-between;">
+                        <span>ส่วนหน่วยงานปรับปรุง</span><span>รหัสงาน <strong>${id}</strong></span>
+                    </div>
+                    <div class="kz-flex kz-border-b" style="padding: 6px 10px; justify-content: space-between;">
+                        <div style="width: 50%;">วันที่รับงาน..............................................................</div>
+                        <div style="width: 50%;">วันที่ดำเนินการเสร็จ <strong>${completedTime}</strong></div>
+                    </div>
+                    <div class="kz-flex kz-border-b" style="border-width: 2px; flex: 1; overflow: hidden;">
+                        <div class="kz-border-r kz-center" style="width: 40%; padding: 5px;">
+                            ${isAfterValid ? `<img src="${afterImgSrc}" style="max-width: 100%; max-height: 100%; object-fit: contain;">` : '<span style="color: #999;">ยังไม่ได้ดำเนินการ (ไม่มีรูปภาพ After)</span>'}
+                        </div>
+                        <div style="width: 60%; display: flex; flex-direction: column;">
+                            <div class="kz-center kz-border-b" style="font-weight: bold; background-color: #e5e7eb; padding: 4px;">รายละเอียดการแก้ไขปรับปรุง</div>
+                            <div style="padding: 6px;">
+                                <div class="kz-flex" style="justify-content: space-around; font-size: 11px;">
+                                    <div><input type="checkbox"> เริ่มการอบชุบ/ตัดชิ้นส่วน/สั่งซื้อ</div>
+                                    <div><input type="checkbox"> ไม่เริ่มการอบชุบ/ตัดชิ้นส่วน/สั่งซื้อ</div>
+                                </div>
+                            </div>
+                            <div style="border-top: 1px solid black; padding: 6px; flex-grow: 1;">
+                                <div style="font-weight: bold; font-size: 11px; margin-bottom: 4px;">ประเมินผลหลังการดำเนินการแก้ไขปรับปรุง</div>
+                                <div class="kz-flex" style="flex-wrap: wrap; font-size: 10px; gap: 4px;">
+                                    <div style="width: 32%;"><input type="checkbox"> สภาพใช้งาน/ไม่ชำรุด</div><div style="width: 32%;"><input type="checkbox"> ปฏิบัติงานเป็นที่ Shop Kaizen</div>
+                                    <div style="width: 32%;"><input type="checkbox"> ปฏิบัติงานในพื้นที่ Shop Kaizen</div><div style="width: 32%;"><input type="checkbox"> ประหยัดเวลา/เพิ่มผลผลิต</div>
+                                    <div style="width: 32%;"><input type="checkbox"> ลดของเสีย/ลดค่าความเสียหาย</div><div style="width: 32%;"><input type="checkbox"> เพิ่มประสิทธิภาพ/คุณภาพ</div>
+                                    <div style="width: 32%;"><input type="checkbox"> ลดการสูญเสีย/สูญเปล่า</div><div style="width: 32%;"><input type="checkbox"> ลดความยุ่งยาก/ซ้ำซ้อน</div>
+                                    <div style="width: 32%;"><input type="checkbox"> อื่นๆ ระบุ....................</div>
+                                </div>
+                            </div>
+                            <div style="border-top: 1px solid black;">
+                                <div class="kz-flex" style="justify-content: space-around; padding: 10px 10px 5px 10px;">
+                                    <div class="kz-center" style="flex-direction: column;"><div>.....................................................</div><div style="margin-top: 2px;">(......../......../........)</div><div style="margin-top: 2px;">Foreman</div></div>
+                                    <div class="kz-center" style="flex-direction: column;"><div>.....................................................</div><div style="margin-top: 2px;">(......../......../........)</div><div style="margin-top: 2px;">Chief/Manager</div><div style="font-size: 10px;">(แผนกวิศวกรรมการผลิต)</div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="kz-flex" style="font-size: 11px;">
+                        <div class="kz-border-r" style="width: 40%; padding: 8px;">
+                            <div style="margin-bottom: 15px;">ส่ง KC ก่อนเริ่มงาน .....................................................</div>
+                            <div>ผู้รับงาน .....................................................................</div>
+                        </div>
+                        <div style="width: 60%; padding: 8px;">
+                            <strong>Remark</strong>
+                            <div style="background-color: #e5e7eb; padding: 2px 5px; margin-top: 2px;">หน่วยงาน/ฝ่ายที่ขอปฏิบัติหน้าที่</div>
+                            <ol style="margin-top: 4px; padding-left: 20px; line-height: 1.3;">
+                                <li>เขียนรายละเอียดให้ครบถ้วน ครอบคลุมเพื่อง่ายต่อการทำ</li>
+                                <li>ดำเนินการแล้วเสร็จให้ทำการตรวจสอบความเรียบร้อยร่วมกันทุกหน้าที่ ที่มีมิติ</li>
+                                <li>ในการดำเนินการปรับปรุงระบบ ควบคุมความปลอดภัยและมาตราฐานการปฏิบัติงานในพื้นที่</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            `;
+            window.print();
+            setTimeout(() => { printArea.innerHTML = ''; }, 1000);
+        }
+
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            updateThemeIcon(isDark);
+            if (!document.getElementById('chartModal').classList.contains('hidden')) updateChart();
+        }
+
+        function updateThemeIcon(isDark) {
+            const icon = document.getElementById('themeIcon');
+            if (isDark) { icon.className = 'fa-solid fa-sun text-2xl text-yellow-400 group-hover:rotate-45 transition-transform'; } 
+            else { icon.className = 'fa-solid fa-moon text-2xl text-indigo-600 group-hover:rotate-12 transition-transform'; }
+        }
+
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark'); updateThemeIcon(true);
+        } else { updateThemeIcon(false); }
+
+        function openImageModal(src) {
+            const modal = document.getElementById('imageModal');
+            const img = document.getElementById('fullSizeImage');
+            img.src = src;
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); img.classList.remove('scale-95'); img.classList.add('scale-100'); }, 10);
+        }
+
+        function closeImageModal() {
+            const modal = document.getElementById('imageModal');
+            const img = document.getElementById('fullSizeImage');
+            modal.classList.add('opacity-0'); img.classList.remove('scale-100'); img.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); img.src = ''; }, 300);
+        }
+
+        try {
+            let savedRequests = localStorage.getItem('kaizenRequests');
+            if (savedRequests) requests = JSON.parse(savedRequests);
+            if (!Array.isArray(requests)) requests = [];
+        } catch (e) {
+            console.error("Local Storage Error:", e);
+            requests = [];
+            localStorage.removeItem('kaizenRequests');
+        }
+
+        function compressImageForSheet(file, callback) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX_SIZE = 400; let width = img.width; let height = img.height;
+                    if (width > height) { if (width > MAX_SIZE) { height = Math.round((height * MAX_SIZE) / width); width = MAX_SIZE; } } 
+                    else { if (height > MAX_SIZE) { width = Math.round((width * MAX_SIZE) / height); height = MAX_SIZE; } }
+                    canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.4);
+                    if (dataUrl.length > 49000) {
+                        const canvas2 = document.createElement('canvas'); canvas2.width = width * 0.7; canvas2.height = height * 0.7;
+                        canvas2.getContext('2d').drawImage(canvas, 0, 0, canvas2.width, canvas2.height);
+                        callback(canvas2.toDataURL('image/jpeg', 0.3));
+                    } else { callback(dataUrl); }
+                }; img.src = event.target.result;
+            }; reader.readAsDataURL(file);
+        }
+
+        function previewImageName(input, uploadId, previewId, nameDisplayId) {
+            if(input.files && input.files[0]) {
+                document.getElementById(uploadId).classList.add('hidden');
+                document.getElementById(previewId).classList.remove('hidden');
+                document.getElementById(nameDisplayId).innerText = input.files[0].name;
+            }
         }
 
         function selectRole(role) {
@@ -875,7 +1174,7 @@
             if (currentRole === 'manager') {
                 document.getElementById('managerChartBtn').classList.remove('hidden');
                 document.getElementById('exportBtn').classList.remove('hidden');
-                document.getElementById('printSummaryBtn').classList.remove('hidden'); // แสดงปุ่มพิมพ์สำหรับ Manager
+                document.getElementById('printSummaryBtn').classList.remove('hidden');
             } else {
                 document.getElementById('managerChartBtn').classList.add('hidden');
                 document.getElementById('exportBtn').classList.add('hidden');
@@ -1384,216 +1683,222 @@
             const endIndex = startIndex + itemsPerPage;
             const pageItems = sortedRequests.slice(startIndex, endIndex);
 
+            // ใช้ try...catch ครอบแต่ละการ์ดไว้ ป้องกันข้อมูลในแถวนั้นพังแล้วทำให้หน้าจอโล่ง
             pageItems.forEach(req => {
-                const reqId = req.id || req.jobId || req['Job ID'];
-                const title = escapeHTML(safeText(req.title || req.Title, '-'));
-                const requester = escapeHTML(safeText(req.requester || req.Requester, '-'));
-                const priority = escapeHTML(safeText(req.priority || req.Priority, '-'));
-                const status = safeText(req.status || req.Status, 'pending');
-                const beforeTime = safeText(req.createdAt || req.Timestamp || reqId, '-'); 
-                
-                const beforeImgSrc = req.imageBase64 || req.beforeImage || req['Before Image'] || req.BeforeImage || req.image; 
-                const isBeforeValid = beforeImgSrc && beforeImgSrc !== '-' && String(beforeImgSrc).length > 100 && String(beforeImgSrc).toLowerCase() !== 'null';
+                try {
+                    const reqId = req.id || req.jobId || req['Job ID'];
+                    const title = escapeHTML(safeText(req.title || req.Title, '-'));
+                    const requester = escapeHTML(safeText(req.requester || req.Requester, '-'));
+                    const priority = escapeHTML(safeText(req.priority || req.Priority, '-'));
+                    const status = safeText(req.status || req.Status, 'pending');
+                    const beforeTime = safeText(req.createdAt || req.Timestamp || reqId, '-'); 
+                    
+                    const beforeImgSrc = req.imageBase64 || req.beforeImage || req['Before Image'] || req.BeforeImage || req.image; 
+                    const isBeforeValid = beforeImgSrc && beforeImgSrc !== '-' && String(beforeImgSrc).length > 100 && String(beforeImgSrc).toLowerCase() !== 'null';
 
-                let stepNum = 1;
-                let stepText = 'ขั้นตอน 1/4: รออนุมัติ';
-                let badgeColor = 'bg-yellow-100/90 text-yellow-700';
+                    let stepNum = 1;
+                    let stepText = 'ขั้นตอน 1/4: รออนุมัติ';
+                    let badgeColor = 'bg-yellow-100/90 text-yellow-700';
 
-                if(status === 'pending') { stepNum = 1; stepText = 'ขั้นตอน 1/4: รออนุมัติ'; badgeColor = 'bg-yellow-100/90 text-yellow-700'; }
-                else if(status === 'approved') { stepNum = 2; stepText = 'ขั้นตอน 2/4: รอรับงาน'; badgeColor = 'bg-blue-100/90 text-blue-700'; }
-                else if(status === 'inprogress') { stepNum = 3; stepText = 'ขั้นตอน 3/4: กำลังทำ'; badgeColor = 'bg-indigo-100/90 text-indigo-700'; }
-                else if(status === 'completed') { stepNum = 4; stepText = 'ขั้นตอน 4/4: เสร็จสิ้น'; badgeColor = 'bg-green-100/90 text-green-700'; }
-                else if(status === 'rejected') { stepNum = 0; stepText = 'ไม่อนุมัติ'; badgeColor = 'bg-red-100/90 text-red-700'; }
+                    if(status === 'pending') { stepNum = 1; stepText = 'ขั้นตอน 1/4: รออนุมัติ'; badgeColor = 'bg-yellow-100/90 text-yellow-700'; }
+                    else if(status === 'approved') { stepNum = 2; stepText = 'ขั้นตอน 2/4: รอรับงาน'; badgeColor = 'bg-blue-100/90 text-blue-700'; }
+                    else if(status === 'inprogress') { stepNum = 3; stepText = 'ขั้นตอน 3/4: กำลังทำ'; badgeColor = 'bg-indigo-100/90 text-indigo-700'; }
+                    else if(status === 'completed') { stepNum = 4; stepText = 'ขั้นตอน 4/4: เสร็จสิ้น'; badgeColor = 'bg-green-100/90 text-green-700'; }
+                    else if(status === 'rejected') { stepNum = 0; stepText = 'ไม่อนุมัติ'; badgeColor = 'bg-red-100/90 text-red-700'; }
 
-                let mobileBadge = `<span class="${badgeColor} px-3 py-1 rounded-xl text-xs font-extrabold shadow-sm flex items-center gap-1.5"><i class="fa-solid fa-layer-group text-[10px]"></i> ${stepText}</span>`;
+                    let mobileBadge = `<span class="${badgeColor} px-3 py-1 rounded-xl text-xs font-extrabold shadow-sm flex items-center gap-1.5"><i class="fa-solid fa-layer-group text-[10px]"></i> ${stepText}</span>`;
 
-                let cardHTML = `
-                    <div onclick="toggleTaskExpand('${reqId}')" class="glass-card p-5 rounded-3xl cursor-pointer hover:scale-[1.01] transition-all duration-300 flex flex-col md:flex-row items-center gap-5 relative border-2 ${priority === 'งานเร่งด่วน' ? 'border-red-400 shadow-[0_10px_20px_rgba(239,68,68,0.15)]' : 'border-transparent'}">
-                        ${priority === 'งานเร่งด่วน' ? `<div class="absolute -top-2.5 left-6 z-10 bg-red-500 text-white text-[10px] px-2.5 py-0.5 rounded-full font-bold shadow-sm animate-pulse flex items-center gap-1"><i class="fa-solid fa-siren-on"></i> ด่วน!</div>` : ''}
-                        
-                        <div class="w-24 h-24 shrink-0 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center overflow-hidden relative shadow-inner">
-                            ${isBeforeValid ? `<img src="${beforeImgSrc}" class="object-cover w-full h-full">` : `<i class="fa-solid fa-image text-3xl text-slate-300"></i>`}
-                        </div>
-
-                        <div class="flex-1 min-w-0 text-center md:text-left">
-                            <div class="flex flex-col md:flex-row md:items-center gap-2 mb-1">
-                                <h4 class="text-lg font-extrabold text-slate-800 truncate">${title}</h4>
-                                ${mobileBadge}
-                            </div>
-                            <p class="text-xs text-slate-500 font-bold mb-1"><i class="fa-solid fa-user-astronaut opacity-70 mr-1"></i> ผู้แจ้ง: ${requester} | <i class="fa-regular fa-clock opacity-70 ml-2 mr-1"></i> ${formatThaiDateTime(beforeTime)}</p>
-                            <p class="text-xs text-slate-400 font-bold"><i class="fa-solid fa-fingerprint opacity-70 mr-1"></i> ID: ${reqId}</p>
-                        </div>
-
-                        <div class="shrink-0">
-                            <div class="w-10 h-10 rounded-full bg-white/80 shadow-sm border border-slate-200 flex items-center justify-center text-blue-600 transition-transform ${expandedJobId === reqId ? 'rotate-180 bg-blue-500 text-white' : ''}">
-                                <i class="fa-solid fa-chevron-down"></i>
-                            </div>
-                        </div>
-                    </div>`;
-
-                if (expandedJobId === reqId) {
-                    const department = escapeHTML(safeText(req.department || req.Department, '-'));
-                    const area = escapeHTML(safeText(req.area || req.Area, '-'));
-                    const jobType = escapeHTML(safeText(req.jobType || req['Job Type'] || req.JobType, '-'));
-                    const desc = escapeHTML(safeText(req.desc || req.description || req.Description, '-'));
-                    const completedTime = safeText(req.completedAt || req['เวลาที่ปิดงาน'], '-');
-                    const afterImgSrc = req.afterImageBase64 || req.afterImage || req['After Image'] || req.AfterImage;
-                    const isAfterValid = afterImgSrc && afterImgSrc !== '-' && String(afterImgSrc).length > 100 && String(afterImgSrc).toLowerCase() !== 'null';
-
-                    let accentColor = 'bg-blue-500';
-                    if(status === 'pending') accentColor = 'bg-yellow-400';
-                    else if(status === 'approved') accentColor = 'bg-blue-400';
-                    else if(status === 'inprogress') accentColor = 'bg-indigo-500';
-                    else if(status === 'completed') accentColor = 'bg-green-500';
-                    else if(status === 'rejected') accentColor = 'bg-red-500';
-
-                    let stepperHTML = '';
-                    if (status !== 'rejected') {
-                        const s1 = stepNum >= 1 ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-200 text-slate-400 border-slate-300';
-                        const s2 = stepNum >= 2 ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-200 text-slate-400 border-slate-300';
-                        const s3 = stepNum >= 3 ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-200 text-slate-400 border-slate-300';
-                        const s4 = stepNum >= 4 ? 'bg-green-600 text-white border-green-600' : 'bg-slate-200 text-slate-400 border-slate-300';
-                        
-                        const l12 = stepNum >= 2 ? 'bg-blue-600' : 'bg-slate-200';
-                        const l23 = stepNum >= 3 ? 'bg-blue-600' : 'bg-slate-200';
-                        const l34 = stepNum >= 4 ? 'bg-green-600' : 'bg-slate-200';
-
-                        stepperHTML = `
-                            <div class="bg-white/60 p-5 rounded-2xl border border-white shadow-sm mb-6">
-                                <div class="flex items-center justify-between max-w-xl mx-auto relative">
-                                    <div class="absolute left-6 right-6 top-1/2 -translate-y-1/2 h-1 bg-slate-200 z-0"></div>
-                                    <div class="absolute left-6 right-6 top-1/2 -translate-y-1/2 flex justify-between z-0">
-                                        <div class="h-1 flex-1 ${l12}"></div>
-                                        <div class="h-1 flex-1 ${l23}"></div>
-                                        <div class="h-1 flex-1 ${l34}"></div>
-                                    </div>
-
-                                    <div class="relative z-10 flex flex-col items-center">
-                                        <div class="w-10 h-10 rounded-full flex items-center justify-center font-extrabold text-sm border-2 ${s1} shadow-md"><i class="fa-solid fa-file-signature"></i></div>
-                                        <span class="text-[11px] font-extrabold mt-1.5 ${stepNum >= 1 ? 'text-blue-600' : 'text-slate-400'}">รออนุมัติ</span>
-                                    </div>
-                                    <div class="relative z-10 flex flex-col items-center">
-                                        <div class="w-10 h-10 rounded-full flex items-center justify-center font-extrabold text-sm border-2 ${s2} shadow-md"><i class="fa-solid fa-user-gear"></i></div>
-                                        <span class="text-[11px] font-extrabold mt-1.5 ${stepNum >= 2 ? 'text-blue-600' : 'text-slate-400'}">รอรับงาน</span>
-                                    </div>
-                                    <div class="relative z-10 flex flex-col items-center">
-                                        <div class="w-10 h-10 rounded-full flex items-center justify-center font-extrabold text-sm border-2 ${s3} shadow-md"><i class="fa-solid fa-cog ${stepNum === 3 ? 'fa-spin' : ''}"></i></div>
-                                        <span class="text-[11px] font-extrabold mt-1.5 ${stepNum >= 3 ? 'text-blue-600' : 'text-slate-400'}">กำลังทำ</span>
-                                    </div>
-                                    <div class="relative z-10 flex flex-col items-center">
-                                        <div class="w-10 h-10 rounded-full flex items-center justify-center font-extrabold text-sm border-2 ${s4} shadow-md"><i class="fa-solid fa-check"></i></div>
-                                        <span class="text-[11px] font-extrabold mt-1.5 ${stepNum >= 4 ? 'text-green-600' : 'text-slate-400'}">เสร็จสิ้น</span>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    } else {
-                        stepperHTML = `
-                            <div class="bg-red-50 p-4 rounded-2xl border border-red-200 shadow-sm mb-6 text-center">
-                                <span class="text-red-600 font-extrabold text-sm inline-flex items-center gap-2"><i class="fa-solid fa-ban text-lg"></i> คำขอนี้ถูกปฏิเสธ (ไม่อนุมัติ)</span>
-                            </div>
-                        `;
-                    }
-
-                    let taskComments = req.comments || [];
-                    let commentsHTML = taskComments.map(c => `
-                        <div class="bg-white/80 p-3 rounded-xl border border-slate-100 shadow-xs mb-2">
-                            <div class="flex justify-between items-center mb-1">
-                                <span class="text-xs font-extrabold text-blue-600"><i class="fa-solid fa-user-circle mr-1"></i> ${c.user}</span>
-                                <span class="text-[10px] text-slate-400 font-bold">${c.time}</span>
-                            </div>
-                            <p class="text-xs text-slate-700 font-bold">${escapeHTML(c.text)}</p>
-                        </div>
-                    `).join('') || '<p class="text-xs text-slate-400 italic text-center py-2">ยังไม่มีความคิดเห็นหรือประวัติการพูดคุย</p>';
-
-                    cardHTML += `
-                        <div class="glass-card p-6 md:p-8 rounded-[2.5rem] relative overflow-hidden animate-[fadeIn_0.3s_ease-out] border-2 border-blue-200/60 shadow-xl my-2">
-                            <div class="absolute top-0 left-0 w-2.5 h-full ${accentColor} opacity-90"></div>
+                    let cardHTML = `
+                        <div onclick="toggleTaskExpand('${reqId}')" class="glass-card p-5 rounded-3xl cursor-pointer hover:scale-[1.01] transition-all duration-300 flex flex-col md:flex-row items-center gap-5 relative border-2 ${priority === 'งานเร่งด่วน' ? 'border-red-400 shadow-[0_10px_20px_rgba(239,68,68,0.15)]' : 'border-transparent'}">
+                            ${priority === 'งานเร่งด่วน' ? `<div class="absolute -top-2.5 left-6 z-10 bg-red-500 text-white text-[10px] px-2.5 py-0.5 rounded-full font-bold shadow-sm animate-pulse flex items-center gap-1"><i class="fa-solid fa-siren-on"></i> ด่วน!</div>` : ''}
                             
-                            <div class="flex flex-col md:flex-row justify-between items-start gap-4 mb-4 pl-3">
-                                <div>
-                                    <div class="flex items-center gap-3 mb-2">
-                                        <h3 class="text-2xl font-extrabold text-slate-800">${title}</h3>
-                                        <span class="bg-slate-900 text-white text-xs px-3 py-1 rounded-xl font-extrabold shadow-sm"><i class="fa-solid fa-bars-progress text-blue-400 mr-1"></i> ${stepText}</span>
-                                    </div>
-                                    <div class="flex flex-wrap gap-2 items-center">
-                                        <span class="text-xs bg-white/80 text-slate-600 px-3 py-1 rounded-lg font-bold border border-white shadow-sm"><i class="fa-solid fa-sitemap mr-1"></i> ${department}</span>
-                                        <span class="text-xs bg-white/80 text-red-500 px-3 py-1 rounded-lg font-bold border border-white shadow-sm"><i class="fa-solid fa-map-pin mr-1"></i> ${area}</span>
-                                        <span class="text-xs bg-blue-50 text-blue-600 px-3 py-1 rounded-lg font-extrabold border border-blue-100 shadow-sm"><i class="fa-solid fa-microchip mr-1"></i> ${jobType}</span>
-                                    </div>
-                                </div>
+                            <div class="w-24 h-24 shrink-0 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center overflow-hidden relative shadow-inner">
+                                ${isBeforeValid ? `<img src="${beforeImgSrc}" class="object-cover w-full h-full">` : `<i class="fa-solid fa-image text-3xl text-slate-300"></i>`}
                             </div>
 
-                            <div class="pl-3 mb-6">
-                                ${stepperHTML}
-
-                                <div class="bg-white/50 p-5 rounded-2xl border border-white shadow-inner mb-6">
-                                    <p class="text-sm text-slate-700 whitespace-pre-wrap font-bold leading-relaxed">${desc}</p>
+                            <div class="flex-1 min-w-0 text-center md:text-left">
+                                <div class="flex flex-col md:flex-row md:items-center gap-2 mb-1">
+                                    <h4 class="text-lg font-extrabold text-slate-800 truncate">${title}</h4>
+                                    ${mobileBadge}
                                 </div>
-
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
-                                    ${isBeforeValid ? `
-                                        <div class="bg-white/70 p-4 rounded-2xl border border-white shadow-sm">
-                                            <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
-                                                <span class="text-xs font-extrabold text-slate-700"><i class="fa-solid fa-clock-rotate-left text-blue-500 mr-1"></i> ภาพก่อนทำ (Before)</span>
-                                                <span class="text-[10px] text-slate-400 font-bold">${formatThaiDateTime(beforeTime)}</span>
-                                            </div>
-                                            <div class="overflow-hidden rounded-xl bg-slate-900 h-48 flex items-center justify-center cursor-pointer group" onclick="openImageModal('${beforeImgSrc}')">
-                                                <img src="${beforeImgSrc}" class="h-full w-full object-contain group-hover:scale-105 transition-transform">
-                                            </div>
-                                        </div>
-                                    ` : ''}
-
-                                    ${isAfterValid ? `
-                                        <div class="bg-green-50/70 p-4 rounded-2xl border border-green-100 shadow-sm">
-                                            <div class="flex justify-between items-center mb-3 pb-2 border-b border-green-100/50">
-                                                <span class="text-xs font-extrabold text-green-700"><i class="fa-solid fa-wand-magic-sparkles text-green-500 mr-1"></i> ภาพหลังทำ (After)</span>
-                                                <span class="text-[10px] text-green-600 font-bold">${formatThaiDateTime(completedTime)}</span>
-                                            </div>
-                                            <div class="overflow-hidden rounded-xl bg-slate-900 h-48 flex items-center justify-center cursor-pointer group" onclick="openImageModal('${afterImgSrc}')">
-                                                <img src="${afterImgSrc}" class="h-full w-full object-contain group-hover:scale-105 transition-transform">
-                                            </div>
-                                        </div>
-                                    ` : ''}
-                                </div>
-
-                                <div class="bg-white/40 p-5 rounded-2xl border border-white shadow-inner">
-                                    <h4 class="text-xs font-extrabold text-slate-700 mb-3 flex items-center gap-2"><i class="fa-solid fa-comments text-blue-500"></i> พูดคุย / อัปเดตความคืบหน้างานนี้</h4>
-                                    <div class="max-h-48 overflow-y-auto mb-3 pr-1 hide-scrollbar">
-                                        ${commentsHTML}
-                                    </div>
-                                    <div class="flex gap-2" onclick="event.stopPropagation()">
-                                        <input type="text" id="commentInput-${reqId}" placeholder="พิมพ์ข้อความอัปเดต หรือสอบถาม..." class="input-3d px-4 py-2.5 rounded-xl text-xs font-bold w-full text-slate-700" onkeydown="if(event.key==='Enter') addComment('${reqId}')">
-                                        <button onclick="addComment('${reqId}')" class="btn-3d-blue text-white px-4 py-2.5 rounded-xl text-xs font-extrabold shrink-0 flex items-center gap-1.5"><i class="fa-solid fa-paper-plane"></i> ส่ง</button>
-                                    </div>
-                                </div>
+                                <p class="text-xs text-slate-500 font-bold mb-1"><i class="fa-solid fa-user-astronaut opacity-70 mr-1"></i> ผู้แจ้ง: ${requester} | <i class="fa-regular fa-clock opacity-70 ml-2 mr-1"></i> ${formatThaiDateTime(beforeTime)}</p>
+                                <p class="text-xs text-slate-400 font-bold"><i class="fa-solid fa-fingerprint opacity-70 mr-1"></i> ID: ${reqId}</p>
                             </div>
 
-                            <div class="flex flex-wrap items-center gap-3 pl-3 pt-4 border-t border-slate-200/60">
-                                <button onclick="printReport('${reqId}')" class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-4 py-2.5 rounded-xl text-xs font-extrabold shadow-sm flex items-center gap-2"><i class="fa-solid fa-print"></i> พิมพ์ใบรายงาน</button>
-                    `;
+                            <div class="shrink-0">
+                                <div class="w-10 h-10 rounded-full bg-white/80 shadow-sm border border-slate-200 flex items-center justify-center text-blue-600 transition-transform ${expandedJobId === reqId ? 'rotate-180 bg-blue-500 text-white' : ''}">
+                                    <i class="fa-solid fa-chevron-down"></i>
+                                </div>
+                            </div>
+                        </div>`;
 
-                    if (currentRole === 'manager') {
-                        if (status === 'pending') {
-                            cardHTML += `<button onclick="openApproveModal('${reqId}')" class="btn-3d-green text-white px-5 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2"><i class="fa-solid fa-thumbs-up"></i> อนุมัติ</button>
-                                         <button onclick="rejectRequest('${reqId}')" class="btn-3d-red text-white px-5 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2"><i class="fa-solid fa-thumbs-down"></i> ไม่อนุมัติ</button>`;
+                    if (expandedJobId === reqId) {
+                        const department = escapeHTML(safeText(req.department || req.Department, '-'));
+                        const area = escapeHTML(safeText(req.area || req.Area, '-'));
+                        const jobType = escapeHTML(safeText(req.jobType || req['Job Type'] || req.JobType, '-'));
+                        const desc = escapeHTML(safeText(req.desc || req.description || req.Description, '-'));
+                        const completedTime = safeText(req.completedAt || req['เวลาที่ปิดงาน'], '-');
+                        const afterImgSrc = req.afterImageBase64 || req.afterImage || req['After Image'] || req.AfterImage;
+                        const isAfterValid = afterImgSrc && afterImgSrc !== '-' && String(afterImgSrc).length > 100 && String(afterImgSrc).toLowerCase() !== 'null';
+
+                        let accentColor = 'bg-blue-500';
+                        if(status === 'pending') accentColor = 'bg-yellow-400';
+                        else if(status === 'approved') accentColor = 'bg-blue-400';
+                        else if(status === 'inprogress') accentColor = 'bg-indigo-500';
+                        else if(status === 'completed') accentColor = 'bg-green-500';
+                        else if(status === 'rejected') accentColor = 'bg-red-500';
+
+                        let stepperHTML = '';
+                        if (status !== 'rejected') {
+                            const s1 = stepNum >= 1 ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-200 text-slate-400 border-slate-300';
+                            const s2 = stepNum >= 2 ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-200 text-slate-400 border-slate-300';
+                            const s3 = stepNum >= 3 ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-200 text-slate-400 border-slate-300';
+                            const s4 = stepNum >= 4 ? 'bg-green-600 text-white border-green-600' : 'bg-slate-200 text-slate-400 border-slate-300';
+                            
+                            const l12 = stepNum >= 2 ? 'bg-blue-600' : 'bg-slate-200';
+                            const l23 = stepNum >= 3 ? 'bg-blue-600' : 'bg-slate-200';
+                            const l34 = stepNum >= 4 ? 'bg-green-600' : 'bg-slate-200';
+
+                            stepperHTML = `
+                                <div class="bg-white/60 p-5 rounded-2xl border border-white shadow-sm mb-6">
+                                    <div class="flex items-center justify-between max-w-xl mx-auto relative">
+                                        <div class="absolute left-6 right-6 top-1/2 -translate-y-1/2 h-1 bg-slate-200 z-0"></div>
+                                        <div class="absolute left-6 right-6 top-1/2 -translate-y-1/2 flex justify-between z-0">
+                                            <div class="h-1 flex-1 ${l12}"></div>
+                                            <div class="h-1 flex-1 ${l23}"></div>
+                                            <div class="h-1 flex-1 ${l34}"></div>
+                                        </div>
+
+                                        <div class="relative z-10 flex flex-col items-center">
+                                            <div class="w-10 h-10 rounded-full flex items-center justify-center font-extrabold text-sm border-2 ${s1} shadow-md"><i class="fa-solid fa-file-signature"></i></div>
+                                            <span class="text-[11px] font-extrabold mt-1.5 ${stepNum >= 1 ? 'text-blue-600' : 'text-slate-400'}">รออนุมัติ</span>
+                                        </div>
+                                        <div class="relative z-10 flex flex-col items-center">
+                                            <div class="w-10 h-10 rounded-full flex items-center justify-center font-extrabold text-sm border-2 ${s2} shadow-md"><i class="fa-solid fa-user-gear"></i></div>
+                                            <span class="text-[11px] font-extrabold mt-1.5 ${stepNum >= 2 ? 'text-blue-600' : 'text-slate-400'}">รอรับงาน</span>
+                                        </div>
+                                        <div class="relative z-10 flex flex-col items-center">
+                                            <div class="w-10 h-10 rounded-full flex items-center justify-center font-extrabold text-sm border-2 ${s3} shadow-md"><i class="fa-solid fa-cog ${stepNum === 3 ? 'fa-spin' : ''}"></i></div>
+                                            <span class="text-[11px] font-extrabold mt-1.5 ${stepNum >= 3 ? 'text-blue-600' : 'text-slate-400'}">กำลังทำ</span>
+                                        </div>
+                                        <div class="relative z-10 flex flex-col items-center">
+                                            <div class="w-10 h-10 rounded-full flex items-center justify-center font-extrabold text-sm border-2 ${s4} shadow-md"><i class="fa-solid fa-check"></i></div>
+                                            <span class="text-[11px] font-extrabold mt-1.5 ${stepNum >= 4 ? 'text-green-600' : 'text-slate-400'}">เสร็จสิ้น</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            stepperHTML = `
+                                <div class="bg-red-50 p-4 rounded-2xl border border-red-200 shadow-sm mb-6 text-center">
+                                    <span class="text-red-600 font-extrabold text-sm inline-flex items-center gap-2"><i class="fa-solid fa-ban text-lg"></i> คำขอนี้ถูกปฏิเสธ (ไม่อนุมัติ)</span>
+                                </div>
+                            `;
                         }
-                        cardHTML += `<button onclick="deleteRequest('${reqId}')" class="ml-auto bg-white hover:bg-red-50 text-slate-500 hover:text-red-500 border border-slate-200 px-4 py-2.5 rounded-xl text-xs font-extrabold shadow-sm flex items-center gap-2"><i class="fa-solid fa-trash-can"></i> ลบ</button>`;
-                    }
-                    
-                    if (currentRole === 'shop' && status === 'approved') {
-                        cardHTML += `<button onclick="changeStatus('${reqId}', 'inprogress')" class="btn-3d-blue text-white px-5 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2 ml-auto"><i class="fa-solid fa-hand-holding-hand"></i> รับงานนี้มาทำ</button>`;
-                    }
-                    
-                    if (currentRole === 'shop' && status === 'inprogress') {
-                        cardHTML += `<button onclick="openCompleteModal('${reqId}')" class="btn-3d-green text-white px-5 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2 ml-auto"><i class="fa-solid fa-camera-retro"></i> ส่งผลงาน (ถ่ายรูป After)</button>`;
+
+                        let taskComments = req.comments || [];
+                        let commentsHTML = taskComments.map(c => `
+                            <div class="bg-white/80 p-3 rounded-xl border border-slate-100 shadow-xs mb-2">
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-xs font-extrabold text-blue-600"><i class="fa-solid fa-user-circle mr-1"></i> ${c.user}</span>
+                                    <span class="text-[10px] text-slate-400 font-bold">${c.time}</span>
+                                </div>
+                                <p class="text-xs text-slate-700 font-bold">${escapeHTML(c.text)}</p>
+                            </div>
+                        `).join('') || '<p class="text-xs text-slate-400 italic text-center py-2">ยังไม่มีความคิดเห็นหรือประวัติการพูดคุย</p>';
+
+                        cardHTML += `
+                            <div class="glass-card p-6 md:p-8 rounded-[2.5rem] relative overflow-hidden animate-[fadeIn_0.3s_ease-out] border-2 border-blue-200/60 shadow-xl my-2">
+                                <div class="absolute top-0 left-0 w-2.5 h-full ${accentColor} opacity-90"></div>
+                                
+                                <div class="flex flex-col md:flex-row justify-between items-start gap-4 mb-4 pl-3">
+                                    <div>
+                                        <div class="flex items-center gap-3 mb-2">
+                                            <h3 class="text-2xl font-extrabold text-slate-800">${title}</h3>
+                                            <span class="bg-slate-900 text-white text-xs px-3 py-1 rounded-xl font-extrabold shadow-sm"><i class="fa-solid fa-bars-progress text-blue-400 mr-1"></i> ${stepText}</span>
+                                        </div>
+                                        <div class="flex flex-wrap gap-2 items-center">
+                                            <span class="text-xs bg-white/80 text-slate-600 px-3 py-1 rounded-lg font-bold border border-white shadow-sm"><i class="fa-solid fa-sitemap mr-1"></i> ${department}</span>
+                                            <span class="text-xs bg-white/80 text-red-500 px-3 py-1 rounded-lg font-bold border border-white shadow-sm"><i class="fa-solid fa-map-pin mr-1"></i> ${area}</span>
+                                            <span class="text-xs bg-blue-50 text-blue-600 px-3 py-1 rounded-lg font-extrabold border border-blue-100 shadow-sm"><i class="fa-solid fa-microchip mr-1"></i> ${jobType}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="pl-3 mb-6">
+                                    ${stepperHTML}
+
+                                    <div class="bg-white/50 p-5 rounded-2xl border border-white shadow-inner mb-6">
+                                        <p class="text-sm text-slate-700 whitespace-pre-wrap font-bold leading-relaxed">${desc}</p>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+                                        ${isBeforeValid ? `
+                                            <div class="bg-white/70 p-4 rounded-2xl border border-white shadow-sm">
+                                                <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
+                                                    <span class="text-xs font-extrabold text-slate-700"><i class="fa-solid fa-clock-rotate-left text-blue-500 mr-1"></i> ภาพก่อนทำ (Before)</span>
+                                                    <span class="text-[10px] text-slate-400 font-bold">${formatThaiDateTime(beforeTime)}</span>
+                                                </div>
+                                                <div class="overflow-hidden rounded-xl bg-slate-900 h-48 flex items-center justify-center cursor-pointer group" onclick="openImageModal('${beforeImgSrc}')">
+                                                    <img src="${beforeImgSrc}" class="h-full w-full object-contain group-hover:scale-105 transition-transform">
+                                                </div>
+                                            </div>
+                                        ` : ''}
+
+                                        ${isAfterValid ? `
+                                            <div class="bg-green-50/70 p-4 rounded-2xl border border-green-100 shadow-sm">
+                                                <div class="flex justify-between items-center mb-3 pb-2 border-b border-green-100/50">
+                                                    <span class="text-xs font-extrabold text-green-700"><i class="fa-solid fa-wand-magic-sparkles text-green-500 mr-1"></i> ภาพหลังทำ (After)</span>
+                                                    <span class="text-[10px] text-green-600 font-bold">${formatThaiDateTime(completedTime)}</span>
+                                                </div>
+                                                <div class="overflow-hidden rounded-xl bg-slate-900 h-48 flex items-center justify-center cursor-pointer group" onclick="openImageModal('${afterImgSrc}')">
+                                                    <img src="${afterImgSrc}" class="h-full w-full object-contain group-hover:scale-105 transition-transform">
+                                                </div>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+
+                                    <div class="bg-white/40 p-5 rounded-2xl border border-white shadow-inner">
+                                        <h4 class="text-xs font-extrabold text-slate-700 mb-3 flex items-center gap-2"><i class="fa-solid fa-comments text-blue-500"></i> พูดคุย / อัปเดตความคืบหน้างานนี้</h4>
+                                        <div class="max-h-48 overflow-y-auto mb-3 pr-1 hide-scrollbar">
+                                            ${commentsHTML}
+                                        </div>
+                                        <div class="flex gap-2" onclick="event.stopPropagation()">
+                                            <input type="text" id="commentInput-${reqId}" placeholder="พิมพ์ข้อความอัปเดต หรือสอบถาม..." class="input-3d px-4 py-2.5 rounded-xl text-xs font-bold w-full text-slate-700" onkeydown="if(event.key==='Enter') addComment('${reqId}')">
+                                            <button onclick="addComment('${reqId}')" class="btn-3d-blue text-white px-4 py-2.5 rounded-xl text-xs font-extrabold shrink-0 flex items-center gap-1.5"><i class="fa-solid fa-paper-plane"></i> ส่ง</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-wrap items-center gap-3 pl-3 pt-4 border-t border-slate-200/60">
+                                    <button onclick="printReport('${reqId}')" class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-4 py-2.5 rounded-xl text-xs font-extrabold shadow-sm flex items-center gap-2"><i class="fa-solid fa-print"></i> พิมพ์ใบรายงาน</button>
+                        `;
+
+                        if (currentRole === 'manager') {
+                            if (status === 'pending') {
+                                cardHTML += `<button onclick="openApproveModal('${reqId}')" class="btn-3d-green text-white px-5 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2"><i class="fa-solid fa-thumbs-up"></i> อนุมัติ</button>
+                                             <button onclick="rejectRequest('${reqId}')" class="btn-3d-red text-white px-5 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2"><i class="fa-solid fa-thumbs-down"></i> ไม่อนุมัติ</button>`;
+                            }
+                            cardHTML += `<button onclick="deleteRequest('${reqId}')" class="ml-auto bg-white hover:bg-red-50 text-slate-500 hover:text-red-500 border border-slate-200 px-4 py-2.5 rounded-xl text-xs font-extrabold shadow-sm flex items-center gap-2"><i class="fa-solid fa-trash-can"></i> ลบ</button>`;
+                        }
+                        
+                        if (currentRole === 'shop' && status === 'approved') {
+                            cardHTML += `<button onclick="changeStatus('${reqId}', 'inprogress')" class="btn-3d-blue text-white px-5 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2 ml-auto"><i class="fa-solid fa-hand-holding-hand"></i> รับงานนี้มาทำ</button>`;
+                        }
+                        
+                        if (currentRole === 'shop' && status === 'inprogress') {
+                            cardHTML += `<button onclick="openCompleteModal('${reqId}')" class="btn-3d-green text-white px-5 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2 ml-auto"><i class="fa-solid fa-camera-retro"></i> ส่งผลงาน (ถ่ายรูป After)</button>`;
+                        }
+
+                        cardHTML += `</div></div>`;
                     }
 
-                    cardHTML += `</div></div>`;
+                    taskList.innerHTML += cardHTML;
+                    
+                } catch (err) {
+                    console.error("เกิดข้อผิดพลาดในการวาดการ์ด:", err);
                 }
-
-                taskList.innerHTML += cardHTML;
-            });
+            }); // สิ้นสุด forEach
 
             renderPagination(sortedRequests.length);
         }
