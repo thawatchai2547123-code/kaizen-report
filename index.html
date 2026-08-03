@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kaizen Report - Premium 3D UI (Advanced Secure Version)</title>
+    <title>Kaizen Report - Premium 3D UI (Stable & Fast Version)</title>
     <!-- Tailwind & Config for Dark Mode -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -132,6 +132,7 @@
             </div>
             
             <div class="space-y-6">
+                <!-- แถบเลือกสิทธิ์การเข้าใช้งาน -->
                 <div class="flex justify-center">
                     <div class="flex p-1 bg-slate-100/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl w-full border border-white/50 dark:border-slate-700">
                         <button onclick="selectRole('employee')" id="tab-employee" class="flex-1 py-3 rounded-xl text-[13px] font-extrabold bg-white dark:bg-slate-600 shadow-sm text-blue-600 dark:text-white transition-all">พนักงาน</button>
@@ -141,6 +142,7 @@
                 </div>
                 <input type="hidden" id="loginRole" value="employee">
 
+                <!-- โซนพนักงาน -->
                 <div id="employeeLoginArea" class="animate-[fadeIn_0.3s_ease-out]">
                     <p class="text-center text-xs font-bold text-slate-500 dark:text-slate-400 mb-6 px-2 leading-relaxed">เข้าใช้งานเพื่อแจ้งงานและติดตามสถานะงานของคุณ โดยไม่ต้องใช้รหัสผ่าน</p>
                     <button onclick="loginEmployee()" class="btn-3d-blue w-full text-white font-extrabold text-lg py-4 px-4 rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-95">
@@ -148,6 +150,7 @@
                     </button>
                 </div>
 
+                <!-- โซนแป้นพิมพ์ PIN -->
                 <div id="pinLoginArea" class="hidden flex flex-col items-center animate-[fadeIn_0.3s_ease-out]">
                     <p class="text-slate-500 dark:text-slate-400 font-extrabold mb-4 text-[13px] tracking-wide">กรุณากดรหัส PIN 4 หลัก</p>
                     
@@ -335,6 +338,7 @@
                         <button id="printSummaryBtn" onclick="openPrintSummaryModal()" class="hidden w-full sm:w-auto text-base bg-gradient-to-r from-sky-500 to-teal-500 text-white px-5 py-2.5 rounded-xl font-extrabold transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group active:scale-95">
                             <i class="fa-solid fa-print"></i> พิมพ์สรุป
                         </button>
+                        <!-- เปลี่ยนปุ่มให้บังคับโหลดใหม่เสมอ -->
                         <button onclick="forceRefresh()" id="refreshBtn" class="w-full sm:w-auto text-base bg-white/80 backdrop-blur-sm text-blue-600 px-5 py-2.5 rounded-xl border border-blue-100 hover:border-blue-300 font-extrabold transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group active:scale-95">
                             <i id="refreshIcon" class="fa-solid fa-arrows-rotate text-blue-500 transition-transform duration-500"></i> อัปเดต
                         </button>
@@ -537,6 +541,8 @@
         let kaizenChartInstance = null;
         let expandedJobId = null; 
         let currentPin = ''; 
+        
+        const FAST_PINS = { manager: '1234', shop: '5678' }; 
 
         document.addEventListener('DOMContentLoaded', () => {
             const savedRole = localStorage.getItem('kzRole');
@@ -561,12 +567,15 @@
             }
         });
 
+        // 🗑️ ลบแคชและโหลดใหม่จากเซิร์ฟเวอร์
         function forceRefresh() {
             const refreshIcon = document.getElementById('refreshIcon');
             if (refreshIcon) refreshIcon.classList.add('fa-spin');
             
+            // ลบแคชทิ้งเพื่อให้โหลดใหม่ทั้งหมด
             localStorage.removeItem('kaizenRequests');
             requests = [];
+            document.getElementById('taskList').innerHTML = getSkeletonHTML() + getSkeletonHTML() + getSkeletonHTML();
             
             fetchTasksFromServer();
         }
@@ -827,239 +836,6 @@
             return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear() + 543} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
         }
 
-        function printReport(id) {
-            const req = requests.find(r => String(r.id || r.jobId || r['Job ID']) === String(id));
-            if(!req) return;
-            const printArea = document.getElementById('printArea');
-            
-            const title = escapeHTML(safeText(req.title || req.Title, '....................................................................................'));
-            const department = escapeHTML(safeText(req.department || req.Department, '................................'));
-            const area = escapeHTML(safeText(req.area || req.Area, '..................'));
-            const requester = escapeHTML(safeText(req.requester || req.Requester, '................................'));
-            const desc = escapeHTML(safeText(req.desc || req.description || req.Description, ''));
-            const jobType = String(req.jobType || req['Job Type'] || req.JobType || '').toLowerCase();
-            const status = safeText(req.status || req.Status, 'pending');
-            
-            const rawBeforeTime = safeText(req.createdAt || req.Timestamp || id, '-');
-            const beforeTime = formatThaiDateTime(rawBeforeTime) === '-' ? '......../......../........' : formatThaiDateTime(rawBeforeTime);
-            
-            const rawCompletedTime = safeText(req.completedAt || req['เวลาที่ปิดงาน'], '-');
-            const completedTime = formatThaiDateTime(rawCompletedTime) === '-' ? '..........................................................' : formatThaiDateTime(rawCompletedTime);
-            
-            const beforeImgSrc = req.imageBase64 || req.beforeImage || req['Before Image'] || req.BeforeImage || req.image; 
-            const afterImgSrc = req.afterImageBase64 || req.afterImage || req['After Image'] || req.AfterImage;
-            
-            const isBeforeValid = beforeImgSrc && beforeImgSrc !== '-' && String(beforeImgSrc).length > 100 && String(beforeImgSrc).toLowerCase() !== 'null';
-            const isAfterValid = afterImgSrc && afterImgSrc !== '-' && String(afterImgSrc).length > 100 && String(afterImgSrc).toLowerCase() !== 'null';
-            const isProgram = jobType.includes('program') ? 'checked' : '';
-            const isTooling = jobType.includes('tooling') ? 'checked' : '';
-            const isEquipment = jobType.includes('equipment') ? 'checked' : '';
-            const isJig = jobType.includes('jig') ? 'checked' : '';
-            const isApproved = ['approved', 'inprogress', 'completed'].includes(status) ? 'checked' : '';
-            const isRejected = status === 'rejected' ? 'checked' : '';
-
-            printArea.innerHTML = `
-                <style>
-                    @media print {
-                        @page { size: A4 portrait; margin: 5mm; } 
-                        body > *:not(#printArea) { display: none !important; }
-                        #printArea { display: block !important; position: static !important; width: 100%; background: white !important; z-index: 9999; }
-                    }
-                    .kz-form { width: 100%; max-width: 100%; height: 285mm; color: black; font-family: 'Sarabun', 'Prompt', sans-serif; font-size: 12px; border: 2px solid black; box-sizing: border-box; margin: 0; display: flex; flex-direction: column; }
-                    .kz-form * { box-sizing: border-box; }
-                    .kz-border-b { border-bottom: 1px solid black; }
-                    .kz-border-r { border-right: 1px solid black; }
-                    .kz-flex { display: flex; }
-                    .kz-center { display: flex; align-items: center; justify-content: center; text-align: center; }
-                    .kz-title { font-weight: bold; background-color: #e5e7eb; padding: 2px 8px; border-bottom: 1px solid black; }
-                    input[type="checkbox"] { margin-right: 4px; pointer-events: none; }
-                </style>
-                <div class="kz-form">
-                    <div class="kz-flex kz-border-b" style="border-width: 2px;">
-                        <div class="kz-border-r kz-center" style="width: 12%; padding: 5px;">
-                            <img src="https://www.satpcl.co.th/themes/default/assets/static/images/logo.png" style="max-width: 100%; height: auto;">
-                        </div>
-                        <div class="kz-border-r kz-center" style="width: 65%; font-size: 18px; font-weight: bold; white-space: nowrap;">เอกสารแจ้งดำเนินงาน ปรับปรุง แก้ไขปัญหางาน</div>
-                        <div class="kz-center" style="width: 23%; flex-direction: column;">
-                            <div style="font-weight: bold; font-size: 14px;">KAIZEN SHOP</div>
-                            <div style="font-size: 10px;">Production Engineer Department</div>
-                        </div>
-                    </div>
-                    <div class="kz-title">ส่วนหน่วยงานผู้ร้องขอ</div>
-                    <div class="kz-border-b" style="padding: 6px 10px;">
-                        <div class="kz-flex" style="justify-content: space-between; margin-bottom: 4px;">
-                            <div>วันที่ <strong>${beforeTime}</strong></div>
-                            <div>ครั้งที่....................</div>
-                        </div>
-                        <div class="kz-flex" style="margin-bottom: 4px;">
-                            <div style="width: 40%;">ผู้ร้องขอ <strong>${requester}</strong></div>
-                            <div style="width: 60%;">หน่วยงาน <strong>${department} / ${area}</strong></div>
-                        </div>
-                        <div style="margin-bottom: 4px;">ชื่องาน <strong>${title}</strong></div>
-                        <div class="kz-flex" style="gap: 20px; align-items: center;">
-                            <div>เอกสารประกอบ</div>
-                            <div><input type="checkbox"> แบบงาน</div><div><input type="checkbox"> รูปวาด</div>
-                            <div><input type="checkbox" checked> รูปภาพ</div><div><input type="checkbox"> อื่นๆ</div>
-                        </div>
-                    </div>
-                    <div class="kz-flex kz-border-b" style="border-width: 2px; flex: 1; overflow: hidden;">
-                        <div class="kz-border-r kz-center" style="width: 40%; padding: 5px;">
-                            ${isBeforeValid ? `<img src="${beforeImgSrc}" style="max-width: 100%; max-height: 100%; object-fit: contain;">` : '<span style="color: #999;">ไม่มีรูปภาพประกอบ</span>'}
-                        </div>
-                        <div style="width: 60%; display: flex; flex-direction: column;">
-                            <div class="kz-flex kz-border-b" style="padding: 4px; justify-content: space-around; font-size: 11px;">
-                                <div><input type="checkbox" ${isProgram}> PROGRAM</div><div><input type="checkbox" ${isTooling}> TOOLING</div>
-                                <div><input type="checkbox" ${isEquipment}> EQUIPMENT</div><div><input type="checkbox" ${isJig}> JIG FIXTURE</div>
-                            </div>
-                            <div class="kz-flex" style="flex-grow: 1; overflow: hidden;">
-                                <div class="kz-border-r" style="width: 100%; padding: 4px; display: flex; flex-direction: column;">
-                                    <div class="kz-center kz-border-b" style="font-weight: bold; padding-bottom: 4px; margin-bottom: 4px;">ปัญหา / สิ่งที่ต้องการปรับปรุง</div>
-                                    <div style="white-space: pre-wrap; padding: 4px; font-size: 11px; flex-grow: 1; overflow: hidden;">${desc}</div>
-                                </div>
-                            </div>
-                            <div style="border-top: 1px solid black;">
-                                <div class="kz-flex kz-border-b" style="justify-content: flex-end; padding: 4px 10px; background-color: #e5e7eb;">
-                                    <div style="margin-right: 20px;"><input type="checkbox" ${isApproved}> อนุมัติ</div>
-                                    <div><input type="checkbox" ${isRejected}> ไม่อนุมัติ</div>
-                                </div>
-                                <div class="kz-flex" style="justify-content: space-around; padding: 10px 10px 5px 10px;">
-                                    <div class="kz-center" style="flex-direction: column;"><div>.....................................................</div><div style="margin-top: 2px;">(......../......../........)</div><div style="margin-top: 2px;">Foreman</div></div>
-                                    <div class="kz-center" style="flex-direction: column;"><div>.....................................................</div><div style="margin-top: 2px;">(......../......../........)</div><div style="margin-top: 2px;">Chief/Manager</div><div style="font-size: 10px;">(หน่วยงานที่เกี่ยวข้อง)</div></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="kz-title kz-flex" style="justify-content: space-between;">
-                        <span>ส่วนหน่วยงานปรับปรุง</span><span>รหัสงาน <strong>${id}</strong></span>
-                    </div>
-                    <div class="kz-flex kz-border-b" style="padding: 6px 10px; justify-content: space-between;">
-                        <div style="width: 50%;">วันที่รับงาน..............................................................</div>
-                        <div style="width: 50%;">วันที่ดำเนินการเสร็จ <strong>${completedTime}</strong></div>
-                    </div>
-                    <div class="kz-flex kz-border-b" style="border-width: 2px; flex: 1; overflow: hidden;">
-                        <div class="kz-border-r kz-center" style="width: 40%; padding: 5px;">
-                            ${isAfterValid ? `<img src="${afterImgSrc}" style="max-width: 100%; max-height: 100%; object-fit: contain;">` : '<span style="color: #999;">ยังไม่ได้ดำเนินการ (ไม่มีรูปภาพ After)</span>'}
-                        </div>
-                        <div style="width: 60%; display: flex; flex-direction: column;">
-                            <div class="kz-center kz-border-b" style="font-weight: bold; background-color: #e5e7eb; padding: 4px;">รายละเอียดการแก้ไขปรับปรุง</div>
-                            <div style="padding: 6px;">
-                                <div class="kz-flex" style="justify-content: space-around; font-size: 11px;">
-                                    <div><input type="checkbox"> เริ่มการอบชุบ/ตัดชิ้นส่วน/สั่งซื้อ</div>
-                                    <div><input type="checkbox"> ไม่เริ่มการอบชุบ/ตัดชิ้นส่วน/สั่งซื้อ</div>
-                                </div>
-                            </div>
-                            <div style="border-top: 1px solid black; padding: 6px; flex-grow: 1;">
-                                <div style="font-weight: bold; font-size: 11px; margin-bottom: 4px;">ประเมินผลหลังการดำเนินการแก้ไขปรับปรุง</div>
-                                <div class="kz-flex" style="flex-wrap: wrap; font-size: 10px; gap: 4px;">
-                                    <div style="width: 32%;"><input type="checkbox"> สภาพใช้งาน/ไม่ชำรุด</div><div style="width: 32%;"><input type="checkbox"> ปฏิบัติงานเป็นที่ Shop Kaizen</div>
-                                    <div style="width: 32%;"><input type="checkbox"> ปฏิบัติงานในพื้นที่ Shop Kaizen</div><div style="width: 32%;"><input type="checkbox"> ประหยัดเวลา/เพิ่มผลผลิต</div>
-                                    <div style="width: 32%;"><input type="checkbox"> ลดของเสีย/ลดค่าความเสียหาย</div><div style="width: 32%;"><input type="checkbox"> เพิ่มประสิทธิภาพ/คุณภาพ</div>
-                                    <div style="width: 32%;"><input type="checkbox"> ลดการสูญเสีย/สูญเปล่า</div><div style="width: 32%;"><input type="checkbox"> ลดความยุ่งยาก/ซ้ำซ้อน</div>
-                                    <div style="width: 32%;"><input type="checkbox"> อื่นๆ ระบุ....................</div>
-                                </div>
-                            </div>
-                            <div style="border-top: 1px solid black;">
-                                <div class="kz-flex" style="justify-content: space-around; padding: 10px 10px 5px 10px;">
-                                    <div class="kz-center" style="flex-direction: column;"><div>.....................................................</div><div style="margin-top: 2px;">(......../......../........)</div><div style="margin-top: 2px;">Foreman</div></div>
-                                    <div class="kz-center" style="flex-direction: column;"><div>.....................................................</div><div style="margin-top: 2px;">(......../......../........)</div><div style="margin-top: 2px;">Chief/Manager</div><div style="font-size: 10px;">(แผนกวิศวกรรมการผลิต)</div></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="kz-flex" style="font-size: 11px;">
-                        <div class="kz-border-r" style="width: 40%; padding: 8px;">
-                            <div style="margin-bottom: 15px;">ส่ง KC ก่อนเริ่มงาน .....................................................</div>
-                            <div>ผู้รับงาน .....................................................................</div>
-                        </div>
-                        <div style="width: 60%; padding: 8px;">
-                            <strong>Remark</strong>
-                            <div style="background-color: #e5e7eb; padding: 2px 5px; margin-top: 2px;">หน่วยงาน/ฝ่ายที่ขอปฏิบัติหน้าที่</div>
-                            <ol style="margin-top: 4px; padding-left: 20px; line-height: 1.3;">
-                                <li>เขียนรายละเอียดให้ครบถ้วน ครอบคลุมเพื่อง่ายต่อการทำ</li>
-                                <li>ดำเนินการแล้วเสร็จให้ทำการตรวจสอบความเรียบร้อยร่วมกันทุกหน้าที่ ที่มีมิติ</li>
-                                <li>ในการดำเนินการปรับปรุงระบบ ควบคุมความปลอดภัยและมาตราฐานการปฏิบัติงานในพื้นที่</li>
-                            </ol>
-                        </div>
-                    </div>
-                </div>
-            `;
-            window.print();
-            setTimeout(() => { printArea.innerHTML = ''; }, 1000);
-        }
-
-        function toggleTheme() {
-            document.documentElement.classList.toggle('dark');
-            const isDark = document.documentElement.classList.contains('dark');
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            updateThemeIcon(isDark);
-            if (!document.getElementById('chartModal').classList.contains('hidden')) updateChart();
-        }
-
-        function updateThemeIcon(isDark) {
-            const icon = document.getElementById('themeIcon');
-            if (isDark) { icon.className = 'fa-solid fa-sun text-2xl text-yellow-400 group-hover:rotate-45 transition-transform'; } 
-            else { icon.className = 'fa-solid fa-moon text-2xl text-indigo-600 group-hover:rotate-12 transition-transform'; }
-        }
-
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark'); updateThemeIcon(true);
-        } else { updateThemeIcon(false); }
-
-        function openImageModal(src) {
-            const modal = document.getElementById('imageModal');
-            const img = document.getElementById('fullSizeImage');
-            img.src = src;
-            modal.classList.remove('hidden');
-            setTimeout(() => { modal.classList.remove('opacity-0'); img.classList.remove('scale-95'); img.classList.add('scale-100'); }, 10);
-        }
-
-        function closeImageModal() {
-            const modal = document.getElementById('imageModal');
-            const img = document.getElementById('fullSizeImage');
-            modal.classList.add('opacity-0'); img.classList.remove('scale-100'); img.classList.add('scale-95');
-            setTimeout(() => { modal.classList.add('hidden'); img.src = ''; }, 300);
-        }
-
-        try {
-            let savedRequests = localStorage.getItem('kaizenRequests');
-            if (savedRequests) requests = JSON.parse(savedRequests);
-            if (!Array.isArray(requests)) requests = [];
-        } catch (e) {
-            console.error("Local Storage Error:", e);
-            requests = [];
-            localStorage.removeItem('kaizenRequests');
-        }
-
-        function compressImageForSheet(file, callback) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    const MAX_SIZE = 400; let width = img.width; let height = img.height;
-                    if (width > height) { if (width > MAX_SIZE) { height = Math.round((height * MAX_SIZE) / width); width = MAX_SIZE; } } 
-                    else { if (height > MAX_SIZE) { width = Math.round((width * MAX_SIZE) / height); height = MAX_SIZE; } }
-                    canvas.width = width; canvas.height = height;
-                    const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
-                    const dataUrl = canvas.toDataURL('image/jpeg', 0.4);
-                    if (dataUrl.length > 49000) {
-                        const canvas2 = document.createElement('canvas'); canvas2.width = width * 0.7; canvas2.height = height * 0.7;
-                        canvas2.getContext('2d').drawImage(canvas, 0, 0, canvas2.width, canvas2.height);
-                        callback(canvas2.toDataURL('image/jpeg', 0.3));
-                    } else { callback(dataUrl); }
-                }; img.src = event.target.result;
-            }; reader.readAsDataURL(file);
-        }
-
-        function previewImageName(input, uploadId, previewId, nameDisplayId) {
-            if(input.files && input.files[0]) {
-                document.getElementById(uploadId).classList.add('hidden');
-                document.getElementById(previewId).classList.remove('hidden');
-                document.getElementById(nameDisplayId).innerText = input.files[0].name;
-            }
-        }
-
         function selectRole(role) {
             document.getElementById('loginRole').value = role;
             
@@ -1100,11 +876,11 @@
                 if (currentPin.length === 4) {
                     const numpadBtns = document.querySelectorAll('#numpad button');
                     numpadBtns.forEach(b => b.disabled = true);
-                    document.getElementById('pinDotsContainer').classList.add('animate-pulse');
                     
+                    // หน่วงเวลาเล็กน้อยให้รู้สึกเสถียร
                     setTimeout(() => {
                         loginWithPin();
-                    }, 150);
+                    }, 300);
                 }
             }
         }
@@ -1139,34 +915,30 @@
             const role = document.getElementById('loginRole').value;
             const errorMsg = document.getElementById('loginError');
 
-            const formData = new URLSearchParams();
-            formData.append('action', 'login');
-            formData.append('role', role);
-            formData.append('password', currentPin);
+            if (FAST_PINS[role] && FAST_PINS[role] === currentPin) {
+                currentRole = role;
+                localStorage.setItem('kzRole', role); 
+                showMainApp(); 
+                
+                const formData = new URLSearchParams();
+                formData.append('action', 'login');
+                formData.append('role', role);
+                formData.append('password', currentPin);
 
-            fetch(SCRIPT_URL, { method: 'POST', body: formData })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    currentRole = role;
-                    localStorage.setItem('kzRole', role); 
-                    localStorage.setItem('kzToken', data.token);
-                    showMainApp();
-                } else {
-                    errorMsg.classList.remove('hidden');
-                    triggerShake();
-                }
-            })
-            .catch(err => {
-                showToast('error', 'ข้อผิดพลาด', 'เชื่อมต่อระบบ Login ไม่ได้');
-                console.error(err);
-                triggerShake();
-            })
-            .finally(() => {
-                document.getElementById('pinDotsContainer').classList.remove('animate-pulse');
+                fetch(SCRIPT_URL, { method: 'POST', body: formData })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        localStorage.setItem('kzToken', data.token);
+                    }
+                }).catch(err => console.error(err));
+
                 const numpadBtns = document.querySelectorAll('#numpad button');
                 numpadBtns.forEach(b => b.disabled = false);
-            });
+            } else {
+                errorMsg.classList.remove('hidden');
+                triggerShake();
+            }
         }
 
         function triggerShake() {
@@ -1176,6 +948,8 @@
                 dotsContainer.classList.remove('animate-shake');
                 currentPin = ''; 
                 updatePinDisplay();
+                const numpadBtns = document.querySelectorAll('#numpad button');
+                numpadBtns.forEach(b => b.disabled = false);
             }, 300);
         }
 
@@ -1202,6 +976,10 @@
             } else {
                 document.getElementById('employeeView').classList.add('hidden');
                 document.getElementById('boardView').classList.remove('hidden');
+                
+                if (requests && requests.length > 0) {
+                    renderTasks();
+                }
                 fetchTasksFromServer();
             }
         }
@@ -1225,16 +1003,12 @@
             </div>`;
         }
 
+        // ⚡ Smart Sync: อัปเดตข้อมูลแบบอัจฉริยะ (เสถียรและเร็ว)
         function fetchTasksFromServer() {
             const refreshIcon = document.getElementById('refreshIcon');
-            const taskList = document.getElementById('taskList');
             if (refreshIcon) refreshIcon.classList.add('fa-spin');
 
-            if (requests.length === 0) {
-                taskList.innerHTML = getSkeletonHTML() + getSkeletonHTML() + getSkeletonHTML() + getSkeletonHTML();
-            } else {
-                renderTasks(); 
-            }
+            const oldDataStr = localStorage.getItem('kaizenRequests');
 
             fetch(SCRIPT_URL)
                 .then(response => {
@@ -1244,21 +1018,21 @@
                 .then(data => {
                     if (data.error) return;
                     
-                    if (Array.isArray(data)) requests = data;
-                    else if (data && Array.isArray(data.data)) requests = data.data;
-                    else requests = [];
+                    let newDataStr = JSON.stringify(data);
+                    
+                    // เช็คว่าข้อมูลใหม่ที่ดึงมา เหมือนหรือต่างจากของเดิมในเครื่อง
+                    // ถ้าเหมือนเดิมเป๊ะ จะไม่ยอมวาดหน้าจอใหม่ให้กระตุก
+                    if (oldDataStr !== newDataStr) {
+                        if (Array.isArray(data)) requests = data;
+                        else if (data && Array.isArray(data.data)) requests = data.data;
+                        else requests = [];
 
-                    localStorage.setItem('kaizenRequests', JSON.stringify(requests)); 
-                    renderTasks();
+                        localStorage.setItem('kaizenRequests', newDataStr); 
+                        renderTasks();
+                    }
                 })
                 .catch(error => {
                     console.error("Fetch Error:", error);
-                    try {
-                        let saved = localStorage.getItem('kaizenRequests');
-                        requests = saved ? JSON.parse(saved) : [];
-                        if (!Array.isArray(requests)) requests = [];
-                    } catch(e) { requests = []; }
-                    renderTasks();
                 })
                 .finally(() => {
                     if (refreshIcon) refreshIcon.classList.remove('fa-spin');
@@ -1275,11 +1049,10 @@
                 return; 
             }
 
-            btn.innerHTML = '<i class="fa-solid fa-atom fa-spin text-2xl"></i> กำลังแปลงเป็น 3D...';
+            btn.innerHTML = '<i class="fa-solid fa-atom fa-spin text-2xl"></i> กำลังอัปโหลด...';
             btn.disabled = true;
 
             compressImageForSheet(imageInput.files[0], function(base64Data) {
-                btn.innerHTML = '<i class="fa-solid fa-rocket fa-bounce text-2xl"></i> กำลังพุ่งขึ้นคลาวด์...';
                 processSubmission(base64Data);
             });
         }
@@ -1318,19 +1091,17 @@
             requests.unshift(newTask);
             localStorage.setItem('kaizenRequests', JSON.stringify(requests));
 
+            showToast('success', 'ส่งงานสำเร็จ!', 'ระบบกำลังซิงค์ข้อมูลเบื้องหลัง...');
+            document.getElementById('kaizenForm').reset();
+            document.getElementById('uploadUI').classList.remove('hidden');
+            document.getElementById('previewUI').classList.add('hidden');
+            document.getElementById('fileNameDisplay').innerText = '';
+            document.getElementById('submitBtn').innerHTML = '<i class="fa-solid fa-paper-plane text-2xl"></i> ส่งข้อมูลเข้าสู่ระบบ';
+            document.getElementById('submitBtn').disabled = false;
+
+            // ส่งข้อมูลไปเซิร์ฟเวอร์แบบเงียบๆ
             fetch(SCRIPT_URL, { method: 'POST', body: formData })
-            .then(() => {
-                showToast('success', 'ส่งงานสำเร็จ!', 'บันทึกข้อมูลเข้าสู่ระบบเรียบร้อยแล้ว');
-                document.getElementById('kaizenForm').reset();
-                document.getElementById('uploadUI').classList.remove('hidden');
-                document.getElementById('previewUI').classList.add('hidden');
-                document.getElementById('fileNameDisplay').innerText = '';
-            })
-            .catch(() => { showToast('error', 'ล้มเหลว', 'เกิดข้อผิดพลาดทางระบบ แต่บันทึกไว้ในเครื่องแล้ว'); })
-            .finally(() => {
-                document.getElementById('submitBtn').innerHTML = '<i class="fa-solid fa-paper-plane text-2xl"></i> ส่งข้อมูลเข้าสู่ระบบ';
-                document.getElementById('submitBtn').disabled = false;
-            });
+            .catch(() => { showToast('error', 'ล้มเหลว', 'เกิดข้อผิดพลาดทางอินเทอร์เน็ต'); });
         }
 
         function openApproveModal(id) { document.getElementById('modalApproveJobId').value = id; document.getElementById('approveModal').classList.remove('hidden'); }
@@ -1720,13 +1491,10 @@
 
                     let mobileBadge = `<span class="${badgeColor} px-3 py-1 rounded-xl text-xs font-extrabold shadow-sm flex items-center gap-1.5"><i class="fa-solid fa-layer-group text-[10px]"></i> ${stepText}</span>`;
 
-                    let thumbnailHtml = '';
-                    if (status === 'completed' && req.afterImageBase64 && req.afterImageBase64 !== '-') {
-                        thumbnailHtml = `<img src="${req.afterImageBase64}" class="object-cover w-full h-full">`;
-                    } else if (isBeforeValid) {
+                    // 🖼️ ตั้งค่า Thumbnail การ์ด: เอา loading="lazy" ออก และโชว์เฉพาะรูป Before เสมอ
+                    let thumbnailHtml = `<i class="fa-solid fa-image text-3xl text-slate-300"></i>`;
+                    if (isBeforeValid) {
                         thumbnailHtml = `<img src="${beforeImgSrc}" class="object-cover w-full h-full">`;
-                    } else {
-                        thumbnailHtml = `<i class="fa-solid fa-image text-3xl text-slate-300"></i>`;
                     }
 
                     let cardHTML = `
