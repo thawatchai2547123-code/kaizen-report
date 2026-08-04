@@ -2,13 +2,20 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kaizen Report - Premium 3D UI (Advanced Secure Version)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kaizen Report - Premium 3D UI (Responsive)</title>
     <!-- Tailwind & Config for Dark Mode -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
+            theme: {
+                extend: {
+                    screens: {
+                        'xs': '380px',
+                    }
+                }
+            }
         }
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -62,7 +69,7 @@
         html.dark .ambient-orb { mix-blend-mode: screen; opacity: 0.15; }
         html.dark .bg-slate-900\/40 { background-color: rgba(0, 0, 0, 0.75); }
 
-        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar { width: 6px; sm:width: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         html.dark ::-webkit-scrollbar-thumb { background: #475569; }
@@ -86,7 +93,14 @@
         .ambient-orb { position: fixed; border-radius: 50%; filter: blur(60px); opacity: 0.4; pointer-events: none; z-index: -1; animation: moveOrb 15s infinite alternate ease-in-out; }
 
         @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        .toast-enter { animation: slideInRight 0.4s cubic-bezier(0.25, 1, 0.3, 1) forwards; }
+        @keyframes slideInUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        /* Mobile-first animation logic for toasts */
+        .toast-enter { animation: slideInUp 0.4s cubic-bezier(0.25, 1, 0.3, 1) forwards; }
+        @media (min-width: 640px) {
+            .toast-enter { animation: slideInRight 0.4s cubic-bezier(0.25, 1, 0.3, 1) forwards; }
+        }
+
         .drag-over { border-color: #3b82f6 !important; background-color: rgba(59, 130, 246, 0.1) !important; transform: scale(1.02); }
 
         /* การสั่นเวลาใส่ PIN ผิด */
@@ -107,76 +121,78 @@
 <body class="text-slate-800 antialiased relative">
 
     <div id="printArea" class="hidden print:block bg-white text-black font-sans"></div>
-    <div id="toastContainer" class="fixed top-6 right-6 z-[100] flex flex-col gap-3 pointer-events-none"></div>
+    
+    <!-- ปรับ Toast Container ให้เหมาะสมกับจอมือถือ (อยู่ตรงกลางด้านบน/ล่างตามความเหมาะสม หรือเต็มจอ) -->
+    <div id="toastContainer" class="fixed top-4 left-4 right-4 sm:left-auto sm:top-6 sm:right-6 z-[100] flex flex-col gap-3 pointer-events-none items-center sm:items-end"></div>
 
     <div class="ambient-orb bg-blue-300 w-96 h-96 top-0 left-0 mix-blend-multiply"></div>
     <div class="ambient-orb bg-purple-300 w-[30rem] h-[30rem] bottom-0 right-0 mix-blend-multiply" style="animation-delay: -5s;"></div>
     <div class="ambient-orb bg-indigo-200 w-80 h-80 top-1/2 left-1/3 mix-blend-multiply" style="animation-delay: -10s;"></div>
 
-    <button onclick="toggleTheme()" class="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-white dark:bg-slate-800 text-slate-800 dark:text-white shadow-[0_10px_25px_rgba(0,0,0,0.1)] dark:shadow-[0_10px_25px_rgba(0,0,0,0.5)] border border-slate-200 dark:border-slate-700 flex items-center justify-center z-50 hover:scale-110 transition-transform duration-300 group print:hidden">
-        <i id="themeIcon" class="fa-solid fa-moon text-2xl group-hover:rotate-12 transition-transform"></i>
+    <button onclick="toggleTheme()" class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white dark:bg-slate-800 text-slate-800 dark:text-white shadow-[0_10px_25px_rgba(0,0,0,0.1)] dark:shadow-[0_10px_25px_rgba(0,0,0,0.5)] border border-slate-200 dark:border-slate-700 flex items-center justify-center z-50 hover:scale-110 transition-transform duration-300 group print:hidden">
+        <i id="themeIcon" class="fa-solid fa-moon text-xl sm:text-2xl group-hover:rotate-12 transition-transform"></i>
     </button>
 
     <!-- ================= หน้าจอเข้าสู่ระบบ ================= -->
     <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4 relative z-10">
-        <div class="glass-card p-8 md:p-12 rounded-[2.5rem] max-w-sm w-full relative overflow-hidden transition-all duration-300">
+        <div class="glass-card p-6 sm:p-8 md:p-12 rounded-[2rem] sm:rounded-[2.5rem] max-w-sm w-full relative overflow-hidden transition-all duration-300">
             <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-500 opacity-80"></div>
             
-            <div class="text-center mb-8 relative">
-                <div class="inline-block p-4 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-3xl shadow-sm mb-5 border border-white/80 dark:border-slate-700/80">
-                    <img src="https://www.satpcl.co.th/themes/default/assets/static/images/logo.png" alt="Logo" class="w-40 drop-shadow-sm">
+            <div class="text-center mb-6 sm:mb-8 relative">
+                <div class="inline-block p-3 sm:p-4 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-3xl shadow-sm mb-4 sm:mb-5 border border-white/80 dark:border-slate-700/80">
+                    <img src="https://www.satpcl.co.th/themes/default/assets/static/images/logo.png" alt="Logo" class="w-32 sm:w-40 drop-shadow-sm">
                 </div>
-                <h2 class="text-2xl font-extrabold mb-1 text-slate-800 dark:text-white">
+                <h2 class="text-xl sm:text-2xl font-extrabold mb-1 text-slate-800 dark:text-white">
                     <i class="fa-solid fa-layer-group text-blue-500 mr-2"></i>Kaizen System
                 </h2>
             </div>
             
             <div class="space-y-6">
-                <!-- แถบเลือกสิทธิ์การเข้าใช้งาน -->
+                <!-- แถบเลือกสิทธิ์การเข้าใช้งาน (ปรับขนาดฟอนต์บนมือถือ) -->
                 <div class="flex justify-center">
                     <div class="flex p-1 bg-slate-100/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl w-full border border-white/50 dark:border-slate-700">
-                        <button onclick="selectRole('employee')" id="tab-employee" class="flex-1 py-3 rounded-xl text-[13px] font-extrabold bg-white dark:bg-slate-600 shadow-sm text-blue-600 dark:text-white transition-all">พนักงาน</button>
-                        <button onclick="selectRole('manager')" id="tab-manager" class="flex-1 py-3 rounded-xl text-[13px] font-extrabold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all">หัวหน้าแผนก</button>
-                        <button onclick="selectRole('shop')" id="tab-shop" class="flex-1 py-3 rounded-xl text-[13px] font-extrabold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all">ผู้ปฏิบัติงาน</button>
+                        <button onclick="selectRole('employee')" id="tab-employee" class="flex-1 py-2 sm:py-3 rounded-xl text-[11px] xs:text-[12px] sm:text-[13px] font-extrabold bg-white dark:bg-slate-600 shadow-sm text-blue-600 dark:text-white transition-all">พนักงาน</button>
+                        <button onclick="selectRole('manager')" id="tab-manager" class="flex-1 py-2 sm:py-3 rounded-xl text-[11px] xs:text-[12px] sm:text-[13px] font-extrabold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all">หัวหน้าแผนก</button>
+                        <button onclick="selectRole('shop')" id="tab-shop" class="flex-1 py-2 sm:py-3 rounded-xl text-[11px] xs:text-[12px] sm:text-[13px] font-extrabold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all">ผู้ปฏิบัติงาน</button>
                     </div>
                 </div>
                 <input type="hidden" id="loginRole" value="employee">
 
                 <!-- โซนพนักงาน -->
                 <div id="employeeLoginArea" class="animate-[fadeIn_0.3s_ease-out]">
-                    <p class="text-center text-xs font-bold text-slate-500 dark:text-slate-400 mb-6 px-2 leading-relaxed">เข้าใช้งานเพื่อแจ้งงานและติดตามสถานะงานของคุณ โดยไม่ต้องใช้รหัสผ่าน</p>
-                    <button onclick="loginEmployee()" class="btn-3d-blue w-full text-white font-extrabold text-lg py-4 px-4 rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-95">
+                    <p class="text-center text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 mb-6 px-2 leading-relaxed">เข้าใช้งานเพื่อแจ้งงานและติดตามสถานะงานของคุณ โดยไม่ต้องใช้รหัสผ่าน</p>
+                    <button onclick="loginEmployee()" class="btn-3d-blue w-full text-white font-extrabold text-base sm:text-lg py-3.5 sm:py-4 px-4 rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-95">
                         เข้าสู่ระบบ <i class="fa-solid fa-arrow-right-to-bracket text-lg"></i>
                     </button>
                 </div>
 
                 <!-- โซนแป้นพิมพ์ PIN -->
                 <div id="pinLoginArea" class="hidden flex flex-col items-center animate-[fadeIn_0.3s_ease-out]">
-                    <p class="text-slate-500 dark:text-slate-400 font-extrabold mb-4 text-[13px] tracking-wide">กรุณากดรหัส PIN 4 หลัก</p>
+                    <p class="text-slate-500 dark:text-slate-400 font-extrabold mb-4 text-[12px] sm:text-[13px] tracking-wide">กรุณากดรหัส PIN 4 หลัก</p>
                     
-                    <div id="pinDotsContainer" class="flex gap-4 mb-6 h-6 items-center">
+                    <div id="pinDotsContainer" class="flex gap-4 mb-5 sm:mb-6 h-6 items-center">
                         <div id="pin-1" class="w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700 border-2 border-slate-300 dark:border-slate-600 transition-all duration-200"></div>
                         <div id="pin-2" class="w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700 border-2 border-slate-300 dark:border-slate-600 transition-all duration-200"></div>
                         <div id="pin-3" class="w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700 border-2 border-slate-300 dark:border-slate-600 transition-all duration-200"></div>
                         <div id="pin-4" class="w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700 border-2 border-slate-300 dark:border-slate-600 transition-all duration-200"></div>
                     </div>
 
-                    <div id="numpad" class="grid grid-cols-3 gap-3 w-full max-w-[240px] mx-auto">
-                        <button onclick="pressPin('1')" class="h-14 rounded-2xl bg-white dark:bg-slate-700 shadow-sm border border-slate-100 dark:border-slate-600 text-2xl font-extrabold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-600 active:scale-95 transition-all">1</button>
-                        <button onclick="pressPin('2')" class="h-14 rounded-2xl bg-white dark:bg-slate-700 shadow-sm border border-slate-100 dark:border-slate-600 text-2xl font-extrabold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-600 active:scale-95 transition-all">2</button>
-                        <button onclick="pressPin('3')" class="h-14 rounded-2xl bg-white dark:bg-slate-700 shadow-sm border border-slate-100 dark:border-slate-600 text-2xl font-extrabold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-600 active:scale-95 transition-all">3</button>
-                        <button onclick="pressPin('4')" class="h-14 rounded-2xl bg-white dark:bg-slate-700 shadow-sm border border-slate-100 dark:border-slate-600 text-2xl font-extrabold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-600 active:scale-95 transition-all">4</button>
-                        <button onclick="pressPin('5')" class="h-14 rounded-2xl bg-white dark:bg-slate-700 shadow-sm border border-slate-100 dark:border-slate-600 text-2xl font-extrabold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-600 active:scale-95 transition-all">5</button>
-                        <button onclick="pressPin('6')" class="h-14 rounded-2xl bg-white dark:bg-slate-700 shadow-sm border border-slate-100 dark:border-slate-600 text-2xl font-extrabold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-600 active:scale-95 transition-all">6</button>
-                        <button onclick="pressPin('7')" class="h-14 rounded-2xl bg-white dark:bg-slate-700 shadow-sm border border-slate-100 dark:border-slate-600 text-2xl font-extrabold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-600 active:scale-95 transition-all">7</button>
-                        <button onclick="pressPin('8')" class="h-14 rounded-2xl bg-white dark:bg-slate-700 shadow-sm border border-slate-100 dark:border-slate-600 text-2xl font-extrabold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-600 active:scale-95 transition-all">8</button>
-                        <button onclick="pressPin('9')" class="h-14 rounded-2xl bg-white dark:bg-slate-700 shadow-sm border border-slate-100 dark:border-slate-600 text-2xl font-extrabold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-600 active:scale-95 transition-all">9</button>
-                        <div class="h-14"></div> 
-                        <button onclick="pressPin('0')" class="h-14 rounded-2xl bg-white dark:bg-slate-700 shadow-sm border border-slate-100 dark:border-slate-600 text-2xl font-extrabold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-600 active:scale-95 transition-all">0</button>
-                        <button onclick="deletePin()" class="h-14 rounded-2xl bg-red-50 dark:bg-red-900/30 border border-red-100 dark:border-red-800 text-red-500 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 active:scale-95 transition-all flex items-center justify-center text-xl"><i class="fa-solid fa-delete-left"></i></button>
+                    <div id="numpad" class="grid grid-cols-3 gap-2 sm:gap-3 w-full max-w-[240px] mx-auto">
+                        <button onclick="pressPin('1')" class="h-12 sm:h-14 rounded-2xl bg-white dark:bg-slate-700 shadow-sm border border-slate-100 dark:border-slate-600 text-xl sm:text-2xl font-extrabold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-600 active:scale-95 transition-all">1</button>
+                        <button onclick="pressPin('2')" class="h-12 sm:h-14 rounded-2xl bg-white dark:bg-slate-700 shadow-sm border border-slate-100 dark:border-slate-600 text-xl sm:text-2xl font-extrabold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-600 active:scale-95 transition-all">2</button>
+                        <button onclick="pressPin('3')" class="h-12 sm:h-14 rounded-2xl bg-white dark:bg-slate-700 shadow-sm border border-slate-100 dark:border-slate-600 text-xl sm:text-2xl font-extrabold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-600 active:scale-95 transition-all">3</button>
+                        <button onclick="pressPin('4')" class="h-12 sm:h-14 rounded-2xl bg-white dark:bg-slate-700 shadow-sm border border-slate-100 dark:border-slate-600 text-xl sm:text-2xl font-extrabold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-600 active:scale-95 transition-all">4</button>
+                        <button onclick="pressPin('5')" class="h-12 sm:h-14 rounded-2xl bg-white dark:bg-slate-700 shadow-sm border border-slate-100 dark:border-slate-600 text-xl sm:text-2xl font-extrabold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-600 active:scale-95 transition-all">5</button>
+                        <button onclick="pressPin('6')" class="h-12 sm:h-14 rounded-2xl bg-white dark:bg-slate-700 shadow-sm border border-slate-100 dark:border-slate-600 text-xl sm:text-2xl font-extrabold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-600 active:scale-95 transition-all">6</button>
+                        <button onclick="pressPin('7')" class="h-12 sm:h-14 rounded-2xl bg-white dark:bg-slate-700 shadow-sm border border-slate-100 dark:border-slate-600 text-xl sm:text-2xl font-extrabold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-600 active:scale-95 transition-all">7</button>
+                        <button onclick="pressPin('8')" class="h-12 sm:h-14 rounded-2xl bg-white dark:bg-slate-700 shadow-sm border border-slate-100 dark:border-slate-600 text-xl sm:text-2xl font-extrabold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-600 active:scale-95 transition-all">8</button>
+                        <button onclick="pressPin('9')" class="h-12 sm:h-14 rounded-2xl bg-white dark:bg-slate-700 shadow-sm border border-slate-100 dark:border-slate-600 text-xl sm:text-2xl font-extrabold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-600 active:scale-95 transition-all">9</button>
+                        <div class="h-12 sm:h-14"></div> 
+                        <button onclick="pressPin('0')" class="h-12 sm:h-14 rounded-2xl bg-white dark:bg-slate-700 shadow-sm border border-slate-100 dark:border-slate-600 text-xl sm:text-2xl font-extrabold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-600 active:scale-95 transition-all">0</button>
+                        <button onclick="deletePin()" class="h-12 sm:h-14 rounded-2xl bg-red-50 dark:bg-red-900/30 border border-red-100 dark:border-red-800 text-red-500 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 active:scale-95 transition-all flex items-center justify-center text-lg sm:text-xl"><i class="fa-solid fa-delete-left"></i></button>
                     </div>
 
-                    <p id="loginError" class="text-red-500 text-xs mt-6 text-center hidden bg-red-50/80 dark:bg-red-900/40 backdrop-blur-md p-2.5 rounded-xl font-bold border border-red-100 dark:border-red-800 shadow-sm w-full">
+                    <p id="loginError" class="text-red-500 text-[11px] sm:text-xs mt-5 text-center hidden bg-red-50/80 dark:bg-red-900/40 backdrop-blur-md p-2 rounded-xl font-bold border border-red-100 dark:border-red-800 shadow-sm w-full max-w-[240px]">
                         <i class="fa-solid fa-circle-exclamation mr-1"></i> รหัส PIN ไม่ถูกต้อง
                     </p>
                 </div>
@@ -186,51 +202,51 @@
 
     <!-- ================= หน้าต่างระบบหลัก ================= -->
     <div id="mainApp" class="hidden">
-        <nav class="glass-card sticky top-4 mx-4 md:mx-auto max-w-6xl z-40 rounded-2xl">
-            <div class="flex justify-between items-center p-4">
-                <div class="flex items-center gap-4">
-                    <div class="bg-gradient-to-br from-blue-500 to-indigo-600 p-2.5 rounded-xl shadow-[0_5px_15px_rgba(59,130,246,0.3)] border border-blue-400 text-white"><i class="fa-solid fa-cubes text-xl"></i></div>
-                    <h1 class="text-xl font-extrabold hidden sm:block text-slate-800 tracking-tight">KAIZEN <span class="text-blue-500">3D</span></h1>
+        <nav class="glass-card sticky top-2 sm:top-4 mx-3 sm:mx-4 md:mx-auto max-w-6xl z-40 rounded-2xl">
+            <div class="flex justify-between items-center p-3 sm:p-4">
+                <div class="flex items-center gap-3 sm:gap-4">
+                    <div class="bg-gradient-to-br from-blue-500 to-indigo-600 p-2 sm:p-2.5 rounded-xl shadow-[0_5px_15px_rgba(59,130,246,0.3)] border border-blue-400 text-white"><i class="fa-solid fa-cubes text-lg sm:text-xl"></i></div>
+                    <h1 class="text-lg sm:text-xl font-extrabold hidden sm:block text-slate-800 tracking-tight">KAIZEN <span class="text-blue-500">3D</span></h1>
                 </div>
-                <div class="flex items-center gap-3">
-                    <div class="bg-white/60 backdrop-blur-md px-4 py-2 rounded-xl text-sm font-extrabold shadow-sm border border-white flex items-center gap-2 text-slate-600">
-                        <span class="relative flex h-2.5 w-2.5"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span></span>
+                <div class="flex items-center gap-2 sm:gap-3">
+                    <div class="bg-white/60 backdrop-blur-md px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold shadow-sm border border-white flex items-center gap-2 text-slate-600">
+                        <span class="relative flex h-2 w-2 sm:h-2.5 sm:w-2.5"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 sm:h-2.5 sm:w-2.5 bg-green-500"></span></span>
                         <span id="displayRole"></span>
                     </div>
-                    <button onclick="logout()" class="text-sm font-bold bg-white/60 backdrop-blur-md text-slate-600 hover:text-red-600 px-4 py-2 rounded-xl shadow-sm border border-white hover:border-red-100 hover:bg-red-50 transition-all flex items-center gap-2">
-                        <i class="fa-solid fa-power-off"></i> <span class="hidden sm:inline">ออก</span>
+                    <button onclick="logout()" class="text-xs sm:text-sm font-bold bg-white/60 backdrop-blur-md text-slate-600 hover:text-red-600 px-3 sm:px-4 py-2 rounded-xl shadow-sm border border-white hover:border-red-100 hover:bg-red-50 transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-power-off"></i> <span class="hidden sm:inline">ออกระบบ</span>
                     </button>
                 </div>
             </div>
         </nav>
 
-        <main class="max-w-6xl mx-auto mt-6 p-4 mb-20 relative z-10">
+        <main class="max-w-6xl mx-auto mt-4 sm:mt-6 p-3 sm:p-4 mb-24 sm:mb-20 relative z-10">
             <!-- ================= 1. มุมมองพนักงาน ================= -->
             <div id="employeeView" class="hidden animate-[fadeIn_0.5s_ease-out] max-w-4xl mx-auto">
-                <div class="glass-card p-8 md:p-12 rounded-[2.5rem] relative overflow-hidden">
-                    <div class="text-center mb-10 relative z-10">
-                        <h2 class="text-3xl font-extrabold text-slate-800 flex justify-center items-center gap-4">
-                            <span class="bg-white text-blue-600 w-14 h-14 rounded-2xl flex items-center justify-center shadow-[0_10px_25px_-5px_rgba(59,130,246,0.2)] border border-blue-50"><i class="fa-solid fa-pen-nib text-2xl"></i></span>
+                <div class="glass-card p-5 sm:p-8 md:p-12 rounded-[2rem] sm:rounded-[2.5rem] relative overflow-hidden">
+                    <div class="text-center mb-6 sm:mb-10 relative z-10">
+                        <h2 class="text-xl sm:text-2xl md:text-3xl font-extrabold text-slate-800 flex justify-center items-center gap-3 sm:gap-4">
+                            <span class="bg-white text-blue-600 w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-[0_10px_25px_-5px_rgba(59,130,246,0.2)] border border-blue-50"><i class="fa-solid fa-pen-nib text-lg sm:text-2xl"></i></span>
                             ฟอร์มแจ้งงาน Kaizen
                         </h2>
                     </div>
 
-                    <form id="kaizenForm" onsubmit="submitRequest(event)" class="space-y-8 relative z-10">
-                        <div class="bg-white/40 backdrop-blur-sm p-7 rounded-[2rem] border border-white shadow-[0_8px_30px_rgba(0,0,0,0.02)]">
-                            <h3 class="text-base font-extrabold text-slate-800 mb-6 flex items-center gap-3 tracking-wide"><i class="fa-solid fa-address-card text-blue-500 text-xl"></i> ข้อมูลเบื้องต้น</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <form id="kaizenForm" onsubmit="submitRequest(event)" class="space-y-6 sm:space-y-8 relative z-10">
+                        <div class="bg-white/40 backdrop-blur-sm p-4 sm:p-7 rounded-[1.5rem] sm:rounded-[2rem] border border-white shadow-[0_8px_30px_rgba(0,0,0,0.02)]">
+                            <h3 class="text-sm sm:text-base font-extrabold text-slate-800 mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3 tracking-wide"><i class="fa-solid fa-address-card text-blue-500 text-lg sm:text-xl"></i> ข้อมูลเบื้องต้น</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                                 <div>
-                                    <label class="block text-sm font-extrabold text-slate-500 mb-2 ml-1 uppercase">ชื่อผู้แจ้ง / รหัสพนักงาน <span class="text-red-500">*</span></label>
+                                    <label class="block text-[11px] sm:text-sm font-extrabold text-slate-500 mb-1.5 sm:mb-2 ml-1 uppercase">ชื่อผู้แจ้ง / รหัส <span class="text-red-500">*</span></label>
                                     <div class="relative">
                                         <i class="fa-solid fa-user-astronaut absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                                        <input type="text" id="reqName" required placeholder="เช่น นายสมบูรณ์ / 00001" class="input-3d pl-11 p-3.5 rounded-xl w-full text-base font-bold text-slate-700">
+                                        <input type="text" id="reqName" required placeholder="เช่น นายสมบูรณ์ / 00001" class="input-3d pl-10 sm:pl-11 p-3 sm:p-3.5 rounded-xl w-full text-sm sm:text-base font-bold text-slate-700">
                                     </div>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-extrabold text-slate-500 mb-2 ml-1 uppercase">แผนกของคุณ <span class="text-red-500">*</span></label>
+                                    <label class="block text-[11px] sm:text-sm font-extrabold text-slate-500 mb-1.5 sm:mb-2 ml-1 uppercase">แผนกของคุณ <span class="text-red-500">*</span></label>
                                     <div class="relative">
                                         <i class="fa-solid fa-sitemap absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 z-10"></i>
-                                        <select id="reqDept" required class="input-3d pl-11 p-3.5 rounded-xl w-full text-base font-bold text-slate-700 appearance-none cursor-pointer relative z-0">
+                                        <select id="reqDept" required class="input-3d pl-10 sm:pl-11 p-3 sm:p-3.5 rounded-xl w-full text-sm sm:text-base font-bold text-slate-700 appearance-none cursor-pointer relative z-0">
                                             <option value="" disabled selected>-- เลือกแผนก --</option>
                                             <option value="Production Engineering (PE)">Production Engineering (PE)</option>
                                             <option value="Production Forging (PF)">Production Forging (PF)</option>
@@ -248,73 +264,73 @@
                                     </div>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-extrabold text-slate-500 mb-2 ml-1 uppercase">พื้นที่หน้างาน <span class="text-red-500">*</span></label>
+                                    <label class="block text-[11px] sm:text-sm font-extrabold text-slate-500 mb-1.5 sm:mb-2 ml-1 uppercase">พื้นที่หน้างาน <span class="text-red-500">*</span></label>
                                     <div class="relative">
                                         <i class="fa-solid fa-map-location-dot absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                                        <input type="text" id="reqArea" required placeholder="เช่น F-line" class="input-3d pl-11 p-3.5 rounded-xl w-full text-base font-bold text-slate-700">
+                                        <input type="text" id="reqArea" required placeholder="เช่น F-line" class="input-3d pl-10 sm:pl-11 p-3 sm:p-3.5 rounded-xl w-full text-sm sm:text-base font-bold text-slate-700">
                                     </div>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-extrabold text-slate-500 mb-2 ml-1 uppercase">ประเภทงานที่แจ้ง <span class="text-red-500">*</span></label>
-                                    <div class="grid grid-cols-2 gap-3">
+                                    <label class="block text-[11px] sm:text-sm font-extrabold text-slate-500 mb-1.5 sm:mb-2 ml-1 uppercase">ประเภทงานที่แจ้ง <span class="text-red-500">*</span></label>
+                                    <div class="grid grid-cols-2 gap-2 sm:gap-3">
                                         <label class="cursor-pointer relative group">
                                             <input type="radio" name="jobType" value="Program" class="peer hidden" required>
-                                            <div class="bg-white/80 border border-slate-200 rounded-xl py-2.5 px-2 text-center peer-checked:bg-blue-500 peer-checked:border-blue-500 peer-checked:text-white text-base font-extrabold text-slate-500 shadow-sm transition-all duration-300"><i class="fa-solid fa-microchip mb-1 block text-lg opacity-80"></i> Program</div>
+                                            <div class="bg-white/80 border border-slate-200 rounded-xl py-2 sm:py-2.5 px-1 sm:px-2 text-center peer-checked:bg-blue-500 peer-checked:border-blue-500 peer-checked:text-white text-sm sm:text-base font-extrabold text-slate-500 shadow-sm transition-all duration-300"><i class="fa-solid fa-microchip mb-1 block text-base sm:text-lg opacity-80"></i> Program</div>
                                         </label>
                                         <label class="cursor-pointer relative group">
                                             <input type="radio" name="jobType" value="Tooling" class="peer hidden">
-                                            <div class="bg-white/80 border border-slate-200 rounded-xl py-2.5 px-2 text-center peer-checked:bg-blue-500 peer-checked:border-blue-500 peer-checked:text-white text-base font-extrabold text-slate-500 shadow-sm transition-all duration-300"><i class="fa-solid fa-toolbox mb-1 block text-lg opacity-80"></i> Tooling</div>
+                                            <div class="bg-white/80 border border-slate-200 rounded-xl py-2 sm:py-2.5 px-1 sm:px-2 text-center peer-checked:bg-blue-500 peer-checked:border-blue-500 peer-checked:text-white text-sm sm:text-base font-extrabold text-slate-500 shadow-sm transition-all duration-300"><i class="fa-solid fa-toolbox mb-1 block text-base sm:text-lg opacity-80"></i> Tooling</div>
                                         </label>
                                         <label class="cursor-pointer relative group">
                                             <input type="radio" name="jobType" value="Equipment" class="peer hidden">
-                                            <div class="bg-white/80 border border-slate-200 rounded-xl py-2.5 px-2 text-center peer-checked:bg-blue-500 peer-checked:border-blue-500 peer-checked:text-white text-base font-extrabold text-slate-500 shadow-sm transition-all duration-300"><i class="fa-solid fa-gears mb-1 block text-lg opacity-80"></i> Equipment</div>
+                                            <div class="bg-white/80 border border-slate-200 rounded-xl py-2 sm:py-2.5 px-1 sm:px-2 text-center peer-checked:bg-blue-500 peer-checked:border-blue-500 peer-checked:text-white text-sm sm:text-base font-extrabold text-slate-500 shadow-sm transition-all duration-300"><i class="fa-solid fa-gears mb-1 block text-base sm:text-lg opacity-80"></i> Equipment</div>
                                         </label>
                                         <label class="cursor-pointer relative group">
                                             <input type="radio" name="jobType" value="Jig fixture" class="peer hidden">
-                                            <div class="bg-white/80 border border-slate-200 rounded-xl py-2.5 px-2 text-center peer-checked:bg-blue-500 peer-checked:border-blue-500 peer-checked:text-white text-base font-extrabold text-slate-500 shadow-sm transition-all duration-300"><i class="fa-solid fa-ruler-combined mb-1 block text-lg opacity-80"></i> Jig fixture</div>
+                                            <div class="bg-white/80 border border-slate-200 rounded-xl py-2 sm:py-2.5 px-1 sm:px-2 text-center peer-checked:bg-blue-500 peer-checked:border-blue-500 peer-checked:text-white text-sm sm:text-base font-extrabold text-slate-500 shadow-sm transition-all duration-300"><i class="fa-solid fa-ruler-combined mb-1 block text-base sm:text-lg opacity-80"></i> Jig fixture</div>
                                         </label>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="space-y-6">
+                        <div class="space-y-4 sm:space-y-6">
                             <div>
-                                <label class="block text-sm font-extrabold text-slate-500 mb-2 ml-1 uppercase">หัวข้อเรื่องที่ขอปรับปรุง <span class="text-red-500">*</span></label>
+                                <label class="block text-[11px] sm:text-sm font-extrabold text-slate-500 mb-1.5 sm:mb-2 ml-1 uppercase">หัวข้อเรื่องที่ขอปรับปรุง <span class="text-red-500">*</span></label>
                                 <div class="relative">
                                     <i class="fa-solid fa-highlighter absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                                    <input type="text" id="reqTitle" required placeholder="เช่น ทำถาดรองถังน้ำมันใหม่" class="input-3d pl-11 p-4 rounded-xl w-full text-lg font-bold text-slate-800">
+                                    <input type="text" id="reqTitle" required placeholder="เช่น ทำถาดรองถังน้ำมันใหม่" class="input-3d pl-11 p-3.5 sm:p-4 rounded-xl w-full text-base sm:text-lg font-bold text-slate-800">
                                 </div>
                             </div>
 
                             <div>
-                                <label class="block text-sm font-extrabold text-slate-500 mb-2 ml-1 uppercase">อธิบายรายละเอียดปัญหา / ข้อเสนอแนะ</label>
-                                <textarea id="reqDesc" placeholder="อธิบายให้ชัดเจน..." class="input-3d w-full p-5 rounded-xl text-base h-32 resize-none font-bold text-slate-800 leading-relaxed"></textarea>
+                                <label class="block text-[11px] sm:text-sm font-extrabold text-slate-500 mb-1.5 sm:mb-2 ml-1 uppercase">อธิบายรายละเอียดปัญหา / ข้อเสนอแนะ</label>
+                                <textarea id="reqDesc" placeholder="อธิบายให้ชัดเจน..." class="input-3d w-full p-4 sm:p-5 rounded-xl text-sm sm:text-base h-28 sm:h-32 resize-none font-bold text-slate-800 leading-relaxed"></textarea>
                             </div>
 
-                            <div class="bg-blue-50/50 backdrop-blur-sm p-6 rounded-[2rem] border border-blue-100/50">
-                                <h3 class="text-base font-extrabold text-slate-800 mb-4 ml-1 flex items-center gap-2">
-                                    <i class="fa-solid fa-camera-retro text-blue-500 text-xl"></i> ถ่ายรูปสภาพปัจจุบัน (Before) <span class="text-red-500">*</span>
+                            <div class="bg-blue-50/50 backdrop-blur-sm p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] border border-blue-100/50">
+                                <h3 class="text-sm sm:text-base font-extrabold text-slate-800 mb-3 sm:mb-4 ml-1 flex items-center gap-2">
+                                    <i class="fa-solid fa-camera-retro text-blue-500 text-lg sm:text-xl"></i> ถ่ายรูปสภาพปัจจุบัน (Before) <span class="text-red-500">*</span>
                                 </h3>
-                                <div id="uploadContainerBefore" class="input-3d bg-white/80 border-2 border-dashed border-blue-200 rounded-[1.5rem] p-8 text-center cursor-pointer relative group overflow-hidden transition-colors">
+                                <div id="uploadContainerBefore" class="input-3d bg-white/80 border-2 border-dashed border-blue-200 rounded-[1.25rem] sm:rounded-[1.5rem] p-6 sm:p-8 text-center cursor-pointer relative group overflow-hidden transition-colors">
                                     <input type="file" id="reqImage" required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" accept="image/png, image/jpeg, image/webp" onchange="previewImageName(this, 'uploadUI', 'previewUI', 'fileNameDisplay')">
                                     <div id="uploadUI" class="group-hover:scale-105 transition-transform duration-300 pointer-events-none">
-                                        <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 shadow-[0_4px_10px_rgba(59,130,246,0.2)]"><i class="fa-solid fa-cloud-arrow-up text-2xl"></i></div>
-                                        <h4 class="font-extrabold text-slate-700 text-lg">แตะ หรือ ลากรูปมาวางที่นี่</h4>
-                                        <p class="text-sm text-slate-400 font-bold mt-1">(ระบบจะย่อขนาดไฟล์ให้อัตโนมัติ)</p>
+                                        <div class="w-12 h-12 sm:w-16 sm:h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3 shadow-[0_4px_10px_rgba(59,130,246,0.2)]"><i class="fa-solid fa-cloud-arrow-up text-xl sm:text-2xl"></i></div>
+                                        <h4 class="font-extrabold text-slate-700 text-sm sm:text-lg">แตะ หรือ ลากรูปมาวางที่นี่</h4>
+                                        <p class="text-[10px] sm:text-sm text-slate-400 font-bold mt-1">(ระบบจะย่อขนาดไฟล์ให้อัตโนมัติ)</p>
                                     </div>
                                     <div id="previewUI" class="hidden flex flex-col items-center pointer-events-none">
-                                        <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-3 shadow-[0_4px_10px_rgba(34,197,94,0.2)]"><i class="fa-solid fa-image text-2xl"></i></div>
-                                        <p class="text-base font-extrabold text-green-600 mb-1">แนบไฟล์สำเร็จ!</p>
-                                        <p id="fileNameDisplay" class="text-sm font-bold text-slate-500 bg-white px-3 py-1 rounded-lg border border-slate-100"></p>
+                                        <div class="w-12 h-12 sm:w-16 sm:h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3 shadow-[0_4px_10px_rgba(34,197,94,0.2)]"><i class="fa-solid fa-image text-xl sm:text-2xl"></i></div>
+                                        <p class="text-sm sm:text-base font-extrabold text-green-600 mb-1">แนบไฟล์สำเร็จ!</p>
+                                        <p id="fileNameDisplay" class="text-xs sm:text-sm font-bold text-slate-500 bg-white px-3 py-1 rounded-lg border border-slate-100 truncate max-w-[200px]"></p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="pt-4">
-                            <button type="submit" id="submitBtn" class="btn-3d-blue w-full text-white font-extrabold py-4 px-6 rounded-2xl flex justify-center items-center gap-3 text-xl tracking-wide">
-                                <i class="fa-solid fa-paper-plane text-2xl"></i> ส่งข้อมูลเข้าสู่ระบบ
+                        <div class="pt-2 sm:pt-4">
+                            <button type="submit" id="submitBtn" class="btn-3d-blue w-full text-white font-extrabold py-3.5 sm:py-4 px-6 rounded-2xl flex justify-center items-center gap-2 sm:gap-3 text-lg sm:text-xl tracking-wide">
+                                <i class="fa-solid fa-paper-plane text-xl sm:text-2xl"></i> ส่งข้อมูลเข้าสู่ระบบ
                             </button>
                         </div>
                     </form>
@@ -323,64 +339,64 @@
 
             <!-- ================= 2. มุมมองกระดานงาน (Grid View) ================= -->
             <div id="boardView" class="hidden animate-[fadeIn_0.5s_ease-out]">
-                <div class="glass-card p-5 px-6 rounded-[2rem] mb-6 flex flex-col sm:flex-row justify-between items-center gap-4 relative overflow-hidden">
-                    <h2 class="text-2xl font-extrabold text-slate-800 flex items-center gap-3 relative z-10">
-                        <div class="bg-gradient-to-br from-indigo-500 to-blue-600 w-12 h-12 rounded-xl text-white flex items-center justify-center shadow-md"><i class="fa-solid fa-layer-group text-xl"></i></div>
-                        กระดานงาน (Workflow)
+                <div class="glass-card p-4 sm:p-5 sm:px-6 rounded-[1.5rem] sm:rounded-[2rem] mb-4 sm:mb-6 flex flex-col md:flex-row justify-between items-center gap-4 relative overflow-hidden">
+                    <h2 class="text-xl sm:text-2xl font-extrabold text-slate-800 flex items-center gap-3 relative z-10 w-full md:w-auto">
+                        <div class="bg-gradient-to-br from-indigo-500 to-blue-600 w-10 h-10 sm:w-12 sm:h-12 rounded-xl text-white flex items-center justify-center shadow-md shrink-0"><i class="fa-solid fa-layer-group text-lg sm:text-xl"></i></div>
+                        กระดานงาน
                     </h2>
-                    <div class="flex items-center gap-2 relative z-10 w-full sm:w-auto">
-                        <button id="managerChartBtn" onclick="openChartModal()" class="hidden w-full sm:w-auto text-base bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-5 py-2.5 rounded-xl font-extrabold transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group active:scale-95">
-                            <i class="fa-solid fa-chart-pie"></i> สถิติ
+                    <div class="grid grid-cols-2 sm:flex sm:items-center gap-2 relative z-10 w-full md:w-auto">
+                        <button id="managerChartBtn" onclick="openChartModal()" class="hidden w-full sm:w-auto text-sm sm:text-base bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-4 sm:px-5 py-2.5 rounded-xl font-extrabold transition-all shadow-sm flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95">
+                            <i class="fa-solid fa-chart-pie"></i> <span class="truncate">สถิติ</span>
                         </button>
-                        <button id="exportBtn" onclick="exportToCSV()" class="hidden w-full sm:w-auto text-base bg-gradient-to-r from-emerald-500 to-green-600 text-white px-5 py-2.5 rounded-xl font-extrabold transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group active:scale-95">
-                            <i class="fa-solid fa-file-excel"></i> Export
+                        <button id="exportBtn" onclick="exportToCSV()" class="hidden w-full sm:w-auto text-sm sm:text-base bg-gradient-to-r from-emerald-500 to-green-600 text-white px-4 sm:px-5 py-2.5 rounded-xl font-extrabold transition-all shadow-sm flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95">
+                            <i class="fa-solid fa-file-excel"></i> <span class="truncate">Export</span>
                         </button>
-                        <button id="printSummaryBtn" onclick="openPrintSummaryModal()" class="hidden w-full sm:w-auto text-base bg-gradient-to-r from-sky-500 to-teal-500 text-white px-5 py-2.5 rounded-xl font-extrabold transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group active:scale-95">
-                            <i class="fa-solid fa-print"></i> พิมพ์สรุป
+                        <button id="printSummaryBtn" onclick="openPrintSummaryModal()" class="hidden w-full sm:w-auto text-sm sm:text-base bg-gradient-to-r from-sky-500 to-teal-500 text-white px-4 sm:px-5 py-2.5 rounded-xl font-extrabold transition-all shadow-sm flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95">
+                            <i class="fa-solid fa-print"></i> <span class="truncate">พิมพ์สรุป</span>
                         </button>
-                        <!-- เปลี่ยนปุ่มเป็น forceRefresh เพื่อป้องกันปัญหา Cache เก่าขัดแย้ง -->
-                        <button onclick="forceRefresh()" id="refreshBtn" class="w-full sm:w-auto text-base bg-white/80 backdrop-blur-sm text-blue-600 px-5 py-2.5 rounded-xl border border-blue-100 hover:border-blue-300 font-extrabold transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group active:scale-95">
-                            <i id="refreshIcon" class="fa-solid fa-arrows-rotate text-blue-500 transition-transform duration-500"></i> อัปเดต
+                        <!-- เปลี่ยนปุ่มเป็น forceRefresh -->
+                        <button onclick="forceRefresh()" id="refreshBtn" class="col-span-2 sm:col-span-1 w-full sm:w-auto text-sm sm:text-base bg-white/80 backdrop-blur-sm text-blue-600 px-4 sm:px-5 py-2.5 rounded-xl border border-blue-100 font-extrabold transition-all shadow-sm flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95">
+                            <i id="refreshIcon" class="fa-solid fa-arrows-rotate text-blue-500 transition-transform duration-500"></i> อัปเดตข้อมูล
                         </button>
                     </div>
                 </div>
 
                 <!-- 📊 สรุปสถานะงาน (Status Counters) -->
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 mb-6 relative z-10">
-                    <div class="glass-card p-3 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors border-b-4 border-slate-300 dark:border-slate-600" onclick="document.getElementById('filterStatus').value='all'; applyFilters();">
-                        <span class="text-slate-500 dark:text-slate-400 text-xs font-bold mb-1">งานทั้งหมด</span>
-                        <span id="count-all" class="text-2xl font-extrabold text-slate-700 dark:text-slate-200">0</span>
+                <div class="grid grid-cols-3 md:grid-cols-6 gap-2 sm:gap-3 mb-4 sm:mb-6 relative z-10">
+                    <div class="glass-card p-2 sm:p-3 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors border-b-4 border-slate-300 dark:border-slate-600" onclick="document.getElementById('filterStatus').value='all'; applyFilters();">
+                        <span class="text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-bold mb-0.5 sm:mb-1">งานทั้งหมด</span>
+                        <span id="count-all" class="text-lg sm:text-2xl font-extrabold text-slate-700 dark:text-slate-200">0</span>
                     </div>
-                    <div class="glass-card p-3 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-colors border-b-4 border-yellow-400" onclick="document.getElementById('filterStatus').value='pending'; applyFilters();">
-                        <span class="text-yellow-600 dark:text-yellow-500 text-xs font-bold mb-1"><i class="fa-regular fa-hourglass-half"></i> รออนุมัติ</span>
-                        <span id="count-pending" class="text-2xl font-extrabold text-yellow-700 dark:text-yellow-400">0</span>
+                    <div class="glass-card p-2 sm:p-3 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-colors border-b-4 border-yellow-400" onclick="document.getElementById('filterStatus').value='pending'; applyFilters();">
+                        <span class="text-yellow-600 dark:text-yellow-500 text-[10px] sm:text-xs font-bold mb-0.5 sm:mb-1 flex items-center gap-1"><i class="fa-regular fa-hourglass-half hidden xs:inline"></i>รออนุมัติ</span>
+                        <span id="count-pending" class="text-lg sm:text-2xl font-extrabold text-yellow-700 dark:text-yellow-400">0</span>
                     </div>
-                    <div class="glass-card p-3 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors border-b-4 border-blue-400" onclick="document.getElementById('filterStatus').value='approved'; applyFilters();">
-                        <span class="text-blue-600 dark:text-blue-500 text-xs font-bold mb-1"><i class="fa-solid fa-user-gear"></i> รอรับงาน</span>
-                        <span id="count-approved" class="text-2xl font-extrabold text-blue-700 dark:text-blue-400">0</span>
+                    <div class="glass-card p-2 sm:p-3 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors border-b-4 border-blue-400" onclick="document.getElementById('filterStatus').value='approved'; applyFilters();">
+                        <span class="text-blue-600 dark:text-blue-500 text-[10px] sm:text-xs font-bold mb-0.5 sm:mb-1 flex items-center gap-1"><i class="fa-solid fa-user-gear hidden xs:inline"></i>รอรับงาน</span>
+                        <span id="count-approved" class="text-lg sm:text-2xl font-extrabold text-blue-700 dark:text-blue-400">0</span>
                     </div>
-                    <div class="glass-card p-3 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors border-b-4 border-indigo-400" onclick="document.getElementById('filterStatus').value='inprogress'; applyFilters();">
-                        <span class="text-indigo-600 dark:text-indigo-500 text-xs font-bold mb-1"><i class="fa-solid fa-cog"></i> กำลังทำ</span>
-                        <span id="count-inprogress" class="text-2xl font-extrabold text-indigo-700 dark:text-indigo-400">0</span>
+                    <div class="glass-card p-2 sm:p-3 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors border-b-4 border-indigo-400" onclick="document.getElementById('filterStatus').value='inprogress'; applyFilters();">
+                        <span class="text-indigo-600 dark:text-indigo-500 text-[10px] sm:text-xs font-bold mb-0.5 sm:mb-1 flex items-center gap-1"><i class="fa-solid fa-cog hidden xs:inline"></i>กำลังทำ</span>
+                        <span id="count-inprogress" class="text-lg sm:text-2xl font-extrabold text-indigo-700 dark:text-indigo-400">0</span>
                     </div>
-                    <div class="glass-card p-3 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors border-b-4 border-green-400" onclick="document.getElementById('filterStatus').value='completed'; applyFilters();">
-                        <span class="text-green-600 dark:text-green-500 text-xs font-bold mb-1"><i class="fa-solid fa-check"></i> เสร็จสิ้น</span>
-                        <span id="count-completed" class="text-2xl font-extrabold text-green-700 dark:text-green-400">0</span>
+                    <div class="glass-card p-2 sm:p-3 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors border-b-4 border-green-400" onclick="document.getElementById('filterStatus').value='completed'; applyFilters();">
+                        <span class="text-green-600 dark:text-green-500 text-[10px] sm:text-xs font-bold mb-0.5 sm:mb-1 flex items-center gap-1"><i class="fa-solid fa-check hidden xs:inline"></i>เสร็จสิ้น</span>
+                        <span id="count-completed" class="text-lg sm:text-2xl font-extrabold text-green-700 dark:text-green-400">0</span>
                     </div>
-                    <div class="glass-card p-3 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors border-b-4 border-red-400" onclick="document.getElementById('filterStatus').value='rejected'; applyFilters();">
-                        <span class="text-red-500 dark:text-red-400 text-xs font-bold mb-1"><i class="fa-solid fa-ban"></i> ไม่อนุมัติ</span>
-                        <span id="count-rejected" class="text-2xl font-extrabold text-red-600 dark:text-red-400">0</span>
+                    <div class="glass-card p-2 sm:p-3 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors border-b-4 border-red-400" onclick="document.getElementById('filterStatus').value='rejected'; applyFilters();">
+                        <span class="text-red-500 dark:text-red-400 text-[10px] sm:text-xs font-bold mb-0.5 sm:mb-1 flex items-center gap-1"><i class="fa-solid fa-ban hidden xs:inline"></i>ไม่อนุมัติ</span>
+                        <span id="count-rejected" class="text-lg sm:text-2xl font-extrabold text-red-600 dark:text-red-400">0</span>
                     </div>
                 </div>
 
                 <!-- 🔍 แถบค้นหาและตัวกรองขั้นสูง -->
-                <div class="glass-card p-4 rounded-[1.5rem] mb-6 flex flex-col md:flex-row gap-3 items-center relative z-10">
+                <div class="glass-card p-3 sm:p-4 rounded-[1.25rem] sm:rounded-[1.5rem] mb-4 sm:mb-6 flex flex-col md:flex-row gap-2 sm:gap-3 items-center relative z-10">
                     <div class="relative w-full md:flex-1">
-                        <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <input type="text" id="searchInput" placeholder="ค้นหาชื่อผู้แจ้ง, หัวข้องาน..." class="input-3d pl-10 pr-4 py-2.5 rounded-xl text-sm font-bold w-full text-slate-700" oninput="applyFilters()">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                        <input type="text" id="searchInput" placeholder="ค้นหาชื่อผู้แจ้ง, หัวข้องาน..." class="input-3d pl-9 sm:pl-10 pr-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold w-full text-slate-700" oninput="applyFilters()">
                     </div>
-                    <div class="flex flex-wrap gap-2 w-full md:w-auto">
-                        <select id="filterStatus" class="input-3d px-3 py-2.5 rounded-xl text-xs font-bold text-slate-700" onchange="applyFilters()">
+                    <div class="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 w-full md:w-auto">
+                        <select id="filterStatus" class="input-3d px-2 sm:px-3 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-bold text-slate-700" onchange="applyFilters()">
                             <option value="all">ทุกสถานะ</option>
                             <option value="pending">รออนุมัติ</option>
                             <option value="approved">รอรับงาน</option>
@@ -388,7 +404,7 @@
                             <option value="completed">ปิดงานแล้ว</option>
                             <option value="rejected">ไม่อนุมัติ</option>
                         </select>
-                        <select id="filterDept" class="input-3d px-3 py-2.5 rounded-xl text-xs font-bold text-slate-700" onchange="applyFilters()">
+                        <select id="filterDept" class="input-3d px-2 sm:px-3 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-bold text-slate-700" onchange="applyFilters()">
                             <option value="all">ทุกแผนก</option>
                             <option value="Production Engineering (PE)">PE</option>
                             <option value="Production Forging (PF)">PF</option>
@@ -399,14 +415,14 @@
                             <option value="Quality Assurance (QA)">QA</option>
                             <option value="Maintenance (MT)">MT</option>
                         </select>
-                        <select id="filterJobType" class="input-3d px-3 py-2.5 rounded-xl text-xs font-bold text-slate-700" onchange="applyFilters()">
+                        <select id="filterJobType" class="input-3d px-2 sm:px-3 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-bold text-slate-700" onchange="applyFilters()">
                             <option value="all">ทุกประเภทงาน</option>
                             <option value="Program">Program</option>
                             <option value="Tooling">Tooling</option>
                             <option value="Equipment">Equipment</option>
                             <option value="Jig fixture">Jig fixture</option>
                         </select>
-                        <select id="filterDate" class="input-3d px-3 py-2.5 rounded-xl text-xs font-bold text-slate-700" onchange="applyFilters()">
+                        <select id="filterDate" class="input-3d px-2 sm:px-3 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-bold text-slate-700" onchange="applyFilters()">
                             <option value="all">ทุกช่วงเวลา</option>
                             <option value="today">วันนี้</option>
                             <option value="week">สัปดาห์นี้</option>
@@ -416,118 +432,118 @@
                 </div>
 
                 <!-- พื้นที่แสดงการ์ดงานและแถวรายละเอียดแบบขยาย -->
-                <div id="taskList" class="flex flex-col gap-4 relative z-10"></div>
+                <div id="taskList" class="flex flex-col gap-3 sm:gap-4 relative z-10"></div>
                 
-                <div id="pagination" class="flex justify-center gap-2 mt-8 mb-4 relative z-10"></div>
+                <div id="pagination" class="flex justify-center flex-wrap gap-2 mt-6 sm:mt-8 mb-4 relative z-10"></div>
             </div>
         </main>
     </div>
 
     <!-- ================= Modals ================= -->
     <div id="approveModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4 hidden z-[70] transition-opacity">
-        <div class="glass-card rounded-[2rem] max-w-sm w-full p-8 shadow-[0_30px_60px_rgba(0,0,0,0.2)] border border-white relative">
+        <div class="glass-card rounded-[1.5rem] sm:rounded-[2rem] max-w-sm w-full p-6 sm:p-8 shadow-[0_30px_60px_rgba(0,0,0,0.2)] border border-white relative">
             <button onclick="closeApproveModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-slate-100/50 rounded-full text-slate-500 hover:bg-slate-200 transition-colors"><i class="fa-solid fa-xmark"></i></button>
-            <div class="text-center mb-6">
-                <div class="w-16 h-16 bg-gradient-to-br from-green-400 to-green-500 text-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-[0_10px_20px_rgba(34,197,94,0.3)]"><i class="fa-solid fa-clipboard-check text-2xl"></i></div>
-                <h3 class="text-2xl font-extrabold text-slate-800">อนุมัติงาน</h3>
-                <p class="text-sm text-slate-500 mt-1 font-bold">ระบุความเร่งด่วนของงานนี้</p>
+            <div class="text-center mb-5 sm:mb-6">
+                <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-green-400 to-green-500 text-white rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-[0_10px_20px_rgba(34,197,94,0.3)]"><i class="fa-solid fa-clipboard-check text-xl sm:text-2xl"></i></div>
+                <h3 class="text-xl sm:text-2xl font-extrabold text-slate-800">อนุมัติงาน</h3>
+                <p class="text-xs sm:text-sm text-slate-500 mt-1 font-bold">ระบุความเร่งด่วนของงานนี้</p>
             </div>
             <input type="hidden" id="modalApproveJobId">
-            <div class="mb-6">
-                <div class="grid grid-cols-2 gap-3 h-14">
+            <div class="mb-5 sm:mb-6">
+                <div class="grid grid-cols-2 gap-2 sm:gap-3 h-12 sm:h-14">
                     <label class="cursor-pointer group h-full">
                         <input type="radio" name="priorityLevel" value="งานปกติ" class="peer hidden" checked>
-                        <div class="bg-white/60 border border-slate-200 rounded-xl h-full flex items-center justify-center text-center peer-checked:bg-blue-50 peer-checked:border-blue-500 peer-checked:text-blue-700 text-base font-extrabold text-slate-500 transition-all shadow-sm">
+                        <div class="bg-white/60 border border-slate-200 rounded-xl h-full flex items-center justify-center text-center peer-checked:bg-blue-50 peer-checked:border-blue-500 peer-checked:text-blue-700 text-sm sm:text-base font-extrabold text-slate-500 transition-all shadow-sm">
                             <span>งานปกติ</span>
                         </div>
                     </label>
                     <label class="cursor-pointer group h-full">
                         <input type="radio" name="priorityLevel" value="งานเร่งด่วน" class="peer hidden">
-                        <div class="bg-white/60 border border-slate-200 rounded-xl h-full flex items-center justify-center text-center peer-checked:bg-red-50 peer-checked:border-red-500 peer-checked:text-red-700 text-base font-extrabold text-slate-500 transition-all shadow-sm">
+                        <div class="bg-white/60 border border-slate-200 rounded-xl h-full flex items-center justify-center text-center peer-checked:bg-red-50 peer-checked:border-red-500 peer-checked:text-red-700 text-sm sm:text-base font-extrabold text-slate-500 transition-all shadow-sm">
                             <span>งานเร่งด่วน!</span>
                         </div>
                     </label>
                 </div>
             </div>
-            <div class="flex gap-3">
-                <button onclick="closeApproveModal()" class="w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-extrabold py-3 rounded-xl text-base transition-colors">ยกเลิก</button>
-                <button onclick="confirmApproval()" class="w-2/3 btn-3d-green text-white font-extrabold py-3 rounded-xl text-base flex items-center justify-center gap-2"><i class="fa-solid fa-check"></i> ยืนยัน</button>
+            <div class="flex gap-2 sm:gap-3">
+                <button onclick="closeApproveModal()" class="w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-extrabold py-2.5 sm:py-3 rounded-xl text-sm sm:text-base transition-colors">ยกเลิก</button>
+                <button onclick="confirmApproval()" class="w-2/3 btn-3d-green text-white font-extrabold py-2.5 sm:py-3 rounded-xl text-sm sm:text-base flex items-center justify-center gap-2"><i class="fa-solid fa-check"></i> ยืนยัน</button>
             </div>
         </div>
     </div>
 
     <div id="completeModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4 hidden z-[70] transition-opacity">
-        <div class="glass-card rounded-[2rem] max-w-md w-full p-8 shadow-[0_30px_60px_rgba(0,0,0,0.2)] border border-white relative">
+        <div class="glass-card rounded-[1.5rem] sm:rounded-[2rem] max-w-md w-full p-6 sm:p-8 shadow-[0_30px_60px_rgba(0,0,0,0.2)] border border-white relative">
             <button onclick="closeCompleteModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-slate-100/50 rounded-full text-slate-500 hover:bg-slate-200 transition-colors"><i class="fa-solid fa-xmark"></i></button>
-            <div class="text-center mb-6">
-                <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-[0_10px_20px_rgba(59,130,246,0.3)]"><i class="fa-solid fa-flag-checkered text-2xl"></i></div>
-                <h3 class="text-2xl font-extrabold text-slate-800">ส่งรายงานปิดงาน</h3>
-                <p class="text-sm text-slate-500 mt-1 font-bold">ถ่ายรูปผลงานที่ทำเสร็จแล้ว (After)</p>
+            <div class="text-center mb-5 sm:mb-6">
+                <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-[0_10px_20px_rgba(59,130,246,0.3)]"><i class="fa-solid fa-flag-checkered text-xl sm:text-2xl"></i></div>
+                <h3 class="text-xl sm:text-2xl font-extrabold text-slate-800">ส่งรายงานปิดงาน</h3>
+                <p class="text-xs sm:text-sm text-slate-500 mt-1 font-bold">ถ่ายรูปผลงานที่ทำเสร็จแล้ว (After)</p>
             </div>
             <input type="hidden" id="modalJobId">
-            <div id="uploadContainerAfter" class="input-3d bg-white/60 border-2 border-dashed border-blue-200 rounded-[1.5rem] p-6 text-center cursor-pointer relative mb-6 hover:border-blue-400 group overflow-hidden transition-colors">
+            <div id="uploadContainerAfter" class="input-3d bg-white/60 border-2 border-dashed border-blue-200 rounded-[1.25rem] sm:rounded-[1.5rem] p-5 sm:p-6 text-center cursor-pointer relative mb-5 sm:mb-6 hover:border-blue-400 group overflow-hidden transition-colors">
                 <input type="file" id="afterImageInput" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" accept="image/png, image/jpeg, image/webp" onchange="previewImageName(this, 'modalUploadUI', 'modalPreviewUI', 'modalFileName')">
                 <div id="modalUploadUI" class="group-hover:scale-105 transition-transform duration-300 pointer-events-none">
-                    <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-2 shadow-sm"><i class="fa-solid fa-camera-retro text-2xl"></i></div>
-                    <p class="text-sm text-slate-700 font-extrabold">แตะ หรือ ลากรูป After มาวาง</p>
+                    <div class="w-12 h-12 sm:w-16 sm:h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-2 shadow-sm"><i class="fa-solid fa-camera-retro text-xl sm:text-2xl"></i></div>
+                    <p class="text-xs sm:text-sm text-slate-700 font-extrabold">แตะ หรือ ลากรูป After มาวาง</p>
                 </div>
                 <div id="modalPreviewUI" class="hidden flex flex-col items-center pointer-events-none">
-                    <div class="w-16 h-16 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-2 shadow-sm"><i class="fa-solid fa-circle-check text-2xl"></i></div>
-                    <p class="text-base font-extrabold text-green-600 mb-1">ภาพพร้อมส่ง!</p>
-                    <p id="modalFileName" class="text-sm font-bold text-slate-500 bg-white px-2 py-1 rounded border border-slate-100 max-w-[200px] truncate"></p>
+                    <div class="w-12 h-12 sm:w-16 sm:h-16 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-2 shadow-sm"><i class="fa-solid fa-circle-check text-xl sm:text-2xl"></i></div>
+                    <p class="text-sm sm:text-base font-extrabold text-green-600 mb-1">ภาพพร้อมส่ง!</p>
+                    <p id="modalFileName" class="text-xs sm:text-sm font-bold text-slate-500 bg-white px-2 py-1 rounded border border-slate-100 max-w-[200px] truncate"></p>
                 </div>
             </div>
-            <div class="flex gap-3">
-                <button onclick="closeCompleteModal()" class="w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-extrabold py-3 rounded-xl text-base transition-colors">ยกเลิก</button>
-                <button onclick="submitCompletedJob()" id="btnSubmitCompleted" class="w-2/3 btn-3d-blue text-white font-extrabold py-3 rounded-xl text-base flex justify-center items-center gap-2"><i class="fa-solid fa-paper-plane"></i> ปิดงาน</button>
+            <div class="flex gap-2 sm:gap-3">
+                <button onclick="closeCompleteModal()" class="w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-extrabold py-2.5 sm:py-3 rounded-xl text-sm sm:text-base transition-colors">ยกเลิก</button>
+                <button onclick="submitCompletedJob()" id="btnSubmitCompleted" class="w-2/3 btn-3d-blue text-white font-extrabold py-2.5 sm:py-3 rounded-xl text-sm sm:text-base flex justify-center items-center gap-2"><i class="fa-solid fa-paper-plane"></i> ปิดงาน</button>
             </div>
         </div>
     </div>
 
     <div id="printSummaryModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4 hidden z-[70] transition-opacity">
-        <div class="glass-card rounded-[2rem] max-w-sm w-full p-6 sm:p-8 shadow-[0_30px_60px_rgba(0,0,0,0.2)] border border-white relative">
+        <div class="glass-card rounded-[1.5rem] sm:rounded-[2rem] max-w-sm w-full p-6 sm:p-8 shadow-[0_30px_60px_rgba(0,0,0,0.2)] border border-white relative">
             <button onclick="closePrintSummaryModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-slate-100/50 rounded-full text-slate-500 hover:bg-slate-200 transition-colors"><i class="fa-solid fa-xmark"></i></button>
-            <div class="text-center mb-6">
-                <div class="w-16 h-16 bg-gradient-to-br from-sky-500 to-teal-500 text-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-[0_10px_20px_rgba(14,165,233,0.3)]"><i class="fa-solid fa-print text-2xl"></i></div>
-                <h3 class="text-2xl font-extrabold text-slate-800">พิมพ์รายงานสรุป</h3>
-                <p class="text-sm text-slate-500 mt-1 font-bold">เลือกเดือนที่ต้องการพิมพ์รายการที่เสร็จสิ้นแล้ว</p>
+            <div class="text-center mb-5 sm:mb-6">
+                <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-sky-500 to-teal-500 text-white rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-[0_10px_20px_rgba(14,165,233,0.3)]"><i class="fa-solid fa-print text-xl sm:text-2xl"></i></div>
+                <h3 class="text-xl sm:text-2xl font-extrabold text-slate-800">พิมพ์รายงานสรุป</h3>
+                <p class="text-xs sm:text-sm text-slate-500 mt-1 font-bold">เลือกเดือนที่ต้องการพิมพ์รายการที่เสร็จสิ้นแล้ว</p>
             </div>
-            <div class="mb-6">
-                <select id="printMonthSelect" class="input-3d px-4 py-3 rounded-xl text-base font-bold text-slate-700 outline-none cursor-pointer w-full">
+            <div class="mb-5 sm:mb-6">
+                <select id="printMonthSelect" class="input-3d px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-bold text-slate-700 outline-none cursor-pointer w-full">
                     <!-- จะถูกเติมข้อมูลจาก JS -->
                 </select>
             </div>
-            <button onclick="executePrintSummary()" class="btn-3d-blue w-full text-white font-extrabold py-3 rounded-xl text-base flex justify-center items-center gap-2"><i class="fa-solid fa-print"></i> ดำเนินการพิมพ์</button>
+            <button onclick="executePrintSummary()" class="btn-3d-blue w-full text-white font-extrabold py-2.5 sm:py-3 rounded-xl text-sm sm:text-base flex justify-center items-center gap-2"><i class="fa-solid fa-print"></i> ดำเนินการพิมพ์</button>
         </div>
     </div>
 
     <div id="chartModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4 hidden z-[70] transition-opacity">
-        <div class="glass-card rounded-[2rem] max-w-2xl w-full p-6 sm:p-8 shadow-[0_30px_60px_rgba(0,0,0,0.2)] border border-white relative">
+        <div class="glass-card rounded-[1.5rem] sm:rounded-[2rem] max-w-2xl w-full p-5 sm:p-8 shadow-[0_30px_60px_rgba(0,0,0,0.2)] border border-white relative">
             <button onclick="closeChartModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-slate-100/50 rounded-full text-slate-500 hover:bg-slate-200 transition-colors"><i class="fa-solid fa-xmark"></i></button>
-            <div class="text-center mb-6">
-                <h3 class="text-2xl font-extrabold text-slate-800"><i class="fa-solid fa-chart-column text-indigo-500 mr-2"></i>รายงานสถิติงาน Kaizen</h3>
+            <div class="text-center mb-4 sm:mb-6">
+                <h3 class="text-lg sm:text-2xl font-extrabold text-slate-800"><i class="fa-solid fa-chart-column text-indigo-500 mr-2"></i>รายงานสถิติงาน Kaizen</h3>
             </div>
-            <div class="flex flex-col sm:flex-row justify-between gap-3 mb-4">
-                <select id="chartModeSelect" onchange="updateChart()" class="input-3d px-4 py-2 rounded-xl text-base font-bold text-slate-700 outline-none cursor-pointer w-full sm:w-auto">
+            <div class="flex flex-col sm:flex-row justify-between gap-2 sm:gap-3 mb-4">
+                <select id="chartModeSelect" onchange="updateChart()" class="input-3d px-3 py-2 rounded-xl text-sm sm:text-base font-bold text-slate-700 outline-none cursor-pointer w-full sm:w-auto">
                     <option value="overview">📊 ภาพรวม (รับเข้า/เสร็จสิ้น)</option>
                     <option value="jobType">🧩 แยกตามประเภทงาน (Job Type)</option>
                 </select>
-                <select id="chartMonthSelect" onchange="updateChart()" class="input-3d px-4 py-2 rounded-xl text-base font-bold text-slate-700 outline-none cursor-pointer w-full sm:w-auto">
+                <select id="chartMonthSelect" onchange="updateChart()" class="input-3d px-3 py-2 rounded-xl text-sm sm:text-base font-bold text-slate-700 outline-none cursor-pointer w-full sm:w-auto">
                     <option value="all">ทั้งหมด (All Time)</option>
                 </select>
             </div>
-            <div class="bg-white/50 p-4 rounded-2xl border border-white shadow-inner relative h-64 sm:h-80 w-full">
+            <div class="bg-white/50 p-2 sm:p-4 rounded-xl sm:rounded-2xl border border-white shadow-inner relative h-56 sm:h-80 w-full">
                 <canvas id="kaizenChart"></canvas>
             </div>
         </div>
     </div>
 
     <div id="imageModal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[80] transition-opacity duration-300 opacity-0" onclick="closeImageModal()">
-        <button onclick="closeImageModal()" class="absolute top-6 right-6 w-12 h-12 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors z-[80] backdrop-blur-md border border-white/20">
-            <i class="fa-solid fa-xmark text-2xl"></i>
+        <button onclick="closeImageModal()" class="absolute top-4 right-4 sm:top-6 sm:right-6 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors z-[80] backdrop-blur-md border border-white/20">
+            <i class="fa-solid fa-xmark text-xl sm:text-2xl"></i>
         </button>
         <div class="relative max-w-5xl w-full max-h-[90vh] flex justify-center items-center" onclick="event.stopPropagation()">
-            <img id="fullSizeImage" src="" class="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 transform scale-95 transition-transform duration-300">
+            <img id="fullSizeImage" src="" class="max-w-full max-h-[85vh] object-contain rounded-xl sm:rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 transform scale-95 transition-transform duration-300">
         </div>
     </div>
 
@@ -654,7 +670,6 @@
                 const isBeforeValid = beforeImgSrc && beforeImgSrc !== '-' && String(beforeImgSrc).length > 100 && String(beforeImgSrc).toLowerCase() !== 'null';
                 const isAfterValid = afterImgSrc && afterImgSrc !== '-' && String(afterImgSrc).length > 100 && String(afterImgSrc).toLowerCase() !== 'null';
 
-                // โค้ดรูปภาพ (ถ้ามีจะแสดงรูป ถ้าไม่มีจะขีดแดช)
                 const beforeImgHtml = isBeforeValid ? `<img src="${beforeImgSrc}" style="max-width: 100%; max-height: 120px; object-fit: contain; border-radius: 4px;">` : '<span style="color: #999;">-</span>';
                 const afterImgHtml = isAfterValid ? `<img src="${afterImgSrc}" style="max-width: 100%; max-height: 120px; object-fit: contain; border-radius: 4px;">` : '<span style="color: #999;">-</span>';
 
@@ -729,17 +744,8 @@
             `;
             
             closePrintSummaryModal();
-            
-            // หน่วงเวลา 800ms ให้เบราว์เซอร์ Render รูปภาพ Base64 ให้เสร็จก่อนเรียกหน้าต่างพิมพ์
-            setTimeout(() => { 
-                window.print(); 
-            }, 800);
-
-            // เคลียร์หน้าจอหลังจากผู้ใช้กด พิมพ์ หรือ ยกเลิก เสร็จแล้วเท่านั้น (แก้ปัญหารูปหาย)
-            window.onafterprint = () => {
-                printArea.innerHTML = '';
-                window.onafterprint = null;
-            };
+            setTimeout(() => { window.print(); }, 800);
+            window.onafterprint = () => { printArea.innerHTML = ''; window.onafterprint = null; };
         }
 
         function exportToCSV() {
@@ -804,8 +810,8 @@
                 colors = 'bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-900/40 dark:border-yellow-700 dark:text-yellow-100';
                 icon = '<div class="w-10 h-10 bg-yellow-100 dark:bg-yellow-800 rounded-full flex items-center justify-center text-yellow-500 dark:text-yellow-300 shrink-0"><i class="fa-solid fa-info"></i></div>';
             }
-            toast.className = `toast-enter flex items-start p-4 mb-2 rounded-2xl shadow-lg border ${colors} backdrop-blur-md max-w-sm w-full transition-all duration-300`;
-            toast.innerHTML = `${icon}<div class="ml-3"><h4 class="font-extrabold text-sm">${title}</h4><p class="text-xs mt-0.5 opacity-80 font-bold">${message}</p></div>`;
+            toast.className = `toast-enter flex items-start p-3 sm:p-4 mb-2 rounded-xl sm:rounded-2xl shadow-lg border ${colors} backdrop-blur-md w-full sm:max-w-sm transition-all duration-300`;
+            toast.innerHTML = `${icon}<div class="ml-3"><h4 class="font-extrabold text-xs sm:text-sm">${title}</h4><p class="text-[10px] sm:text-xs mt-0.5 opacity-80 font-bold">${message}</p></div>`;
             container.appendChild(toast);
             setTimeout(() => { toast.classList.add('opacity-0', 'translate-x-full'); setTimeout(() => toast.remove(), 300); }, 3500);
         }
@@ -1003,16 +1009,8 @@
                 </div>
             `;
             
-            // หน่วงเวลา 500ms ให้เบราว์เซอร์ Render รูปภาพเสร็จก่อนเรียกหน้าต่างพิมพ์
-            setTimeout(() => { 
-                window.print(); 
-            }, 500);
-
-            // เคลียร์หน้าจอหลังจากพิมพ์เสร็จ
-            window.onafterprint = () => {
-                printArea.innerHTML = '';
-                window.onafterprint = null;
-            };
+            setTimeout(() => { window.print(); }, 500);
+            window.onafterprint = () => { printArea.innerHTML = ''; window.onafterprint = null; };
         }
 
         function toggleTheme() {
@@ -1025,8 +1023,8 @@
 
         function updateThemeIcon(isDark) {
             const icon = document.getElementById('themeIcon');
-            if (isDark) { icon.className = 'fa-solid fa-sun text-2xl text-yellow-400 group-hover:rotate-45 transition-transform'; } 
-            else { icon.className = 'fa-solid fa-moon text-2xl text-indigo-600 group-hover:rotate-12 transition-transform'; }
+            if (isDark) { icon.className = 'fa-solid fa-sun text-xl sm:text-2xl text-yellow-400 group-hover:rotate-45 transition-transform'; } 
+            else { icon.className = 'fa-solid fa-moon text-xl sm:text-2xl text-indigo-600 group-hover:rotate-12 transition-transform'; }
         }
 
         const savedTheme = localStorage.getItem('theme');
@@ -1094,9 +1092,9 @@
             ['employee', 'manager', 'shop'].forEach(r => {
                 const tab = document.getElementById('tab-' + r);
                 if (r === role) {
-                    tab.className = "flex-1 py-3 rounded-xl text-[13px] font-extrabold bg-white dark:bg-slate-600 shadow-sm text-blue-600 dark:text-white transition-all";
+                    tab.className = "flex-1 py-2 sm:py-3 rounded-xl text-[11px] xs:text-[12px] sm:text-[13px] font-extrabold bg-white dark:bg-slate-600 shadow-sm text-blue-600 dark:text-white transition-all";
                 } else {
-                    tab.className = "flex-1 py-3 rounded-xl text-[13px] font-extrabold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all";
+                    tab.className = "flex-1 py-2 sm:py-3 rounded-xl text-[11px] xs:text-[12px] sm:text-[13px] font-extrabold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all";
                 }
             });
 
@@ -1146,9 +1144,9 @@
             for (let i = 1; i <= 4; i++) {
                 const dot = document.getElementById('pin-' + i);
                 if (i <= currentPin.length) {
-                    dot.className = "w-3.5 h-3.5 rounded-full bg-blue-500 border-2 border-blue-600 transition-all duration-200 scale-125 shadow-sm";
+                    dot.className = "w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-blue-500 border-2 border-blue-600 transition-all duration-200 scale-125 shadow-sm";
                 } else {
-                    dot.className = "w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700 border-2 border-slate-300 dark:border-slate-600 transition-all duration-200";
+                    dot.className = "w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-slate-200 dark:bg-slate-700 border-2 border-slate-300 dark:border-slate-600 transition-all duration-200";
                 }
             }
         }
@@ -1254,7 +1252,7 @@
             if (refreshIcon) refreshIcon.classList.add('fa-spin');
 
             if (requests.length === 0) {
-                taskList.innerHTML = getSkeletonHTML() + getSkeletonHTML() + getSkeletonHTML() + getSkeletonHTML();
+                taskList.innerHTML = getSkeletonHTML() + getSkeletonHTML() + getSkeletonHTML();
             } else {
                 renderTasks(); 
             }
@@ -1300,11 +1298,11 @@
                 return; 
             }
 
-            btn.innerHTML = '<i class="fa-solid fa-atom fa-spin text-2xl"></i> กำลังแปลงเป็น 3D...';
+            btn.innerHTML = '<i class="fa-solid fa-atom fa-spin text-xl sm:text-2xl"></i> กำลังแปลงเป็น 3D...';
             btn.disabled = true;
 
             compressImageForSheet(imageInput.files[0], function(base64Data) {
-                btn.innerHTML = '<i class="fa-solid fa-rocket fa-bounce text-2xl"></i> กำลังพุ่งขึ้นคลาวด์...';
+                btn.innerHTML = '<i class="fa-solid fa-rocket fa-bounce text-xl sm:text-2xl"></i> กำลังพุ่งขึ้นคลาวด์...';
                 processSubmission(base64Data);
             });
         }
@@ -1353,7 +1351,7 @@
             })
             .catch(() => { showToast('error', 'ล้มเหลว', 'เกิดข้อผิดพลาดทางระบบ แต่บันทึกไว้ในเครื่องแล้ว'); })
             .finally(() => {
-                document.getElementById('submitBtn').innerHTML = '<i class="fa-solid fa-paper-plane text-2xl"></i> ส่งข้อมูลเข้าสู่ระบบ';
+                document.getElementById('submitBtn').innerHTML = '<i class="fa-solid fa-paper-plane text-xl sm:text-2xl"></i> ส่งข้อมูลเข้าสู่ระบบ';
                 document.getElementById('submitBtn').disabled = false;
             });
         }
@@ -1444,7 +1442,7 @@
                 showToast('warning', 'เตือน', 'กรุณาแนบภาพผลงาน (After) ก่อนปิดงานครับ'); return;
             }
 
-            btn.innerHTML = '<i class="fa-solid fa-atom fa-spin text-xl"></i> ประมวลผล...'; btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-atom fa-spin text-lg sm:text-xl"></i> ประมวลผล...'; btn.disabled = true;
             compressImageForSheet(imageInput.files[0], function(base64Data) { saveCompletedJob(id, base64Data); });
         }
 
@@ -1583,7 +1581,7 @@
             kaizenChartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: { labels: ['ภาพรวมงาน Kaizen'], datasets: [{ label: 'งานที่รับเข้ามา (Total)', data: [incoming], backgroundColor: 'rgba(59, 130, 246, 0.85)', borderColor: 'rgb(59, 130, 246)', borderWidth: 1, borderRadius: 6, barPercentage: 0.6 }, { label: 'งานที่เสร็จแล้ว (Completed)', data: [completed], backgroundColor: 'rgba(34, 197, 94, 0.85)', borderColor: 'rgb(34, 197, 94)', borderWidth: 1, borderRadius: 6, barPercentage: 0.6 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: textColor, font: { family: 'Prompt', size: 14, weight: 'bold' } } } }, scales: { y: { beginAtZero: true, ticks: { color: textColor, stepSize: 1, font: { family: 'Prompt', size: 13, weight: 'bold' } }, grid: { color: gridColor } }, x: { ticks: { color: textColor, font: { family: 'Prompt', size: 15, weight: 'bold' } }, grid: { display: false } } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: textColor, font: { family: 'Prompt', size: 12, weight: 'bold' } } } }, scales: { y: { beginAtZero: true, ticks: { color: textColor, stepSize: 1, font: { family: 'Prompt', size: 11, weight: 'bold' } }, grid: { color: gridColor } }, x: { ticks: { color: textColor, font: { family: 'Prompt', size: 13, weight: 'bold' } }, grid: { display: false } } } }
             });
         }
 
@@ -1596,7 +1594,7 @@
             kaizenChartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: { labels: ['Program', 'Tooling', 'Equipment', 'Jig fixture'], datasets: [{ label: 'จำนวนงาน (รายการ)', data: [program, tooling, equipment, jig], backgroundColor: ['rgba(168, 85, 247, 0.85)', 'rgba(234, 179, 8, 0.85)', 'rgba(239, 68, 68, 0.85)', 'rgba(14, 165, 233, 0.85)'], borderColor: ['rgb(168, 85, 247)', 'rgb(234, 179, 8)', 'rgb(239, 68, 68)', 'rgb(14, 165, 233)'], borderWidth: 1, borderRadius: 8, barPercentage: 0.55 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { color: textColor, stepSize: 1, font: { family: 'Prompt', size: 13, weight: 'bold' } }, grid: { color: gridColor } }, x: { ticks: { color: textColor, font: { family: 'Prompt', size: 14, weight: 'bold' } }, grid: { display: false } } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { color: textColor, stepSize: 1, font: { family: 'Prompt', size: 11, weight: 'bold' } }, grid: { color: gridColor } }, x: { ticks: { color: textColor, font: { family: 'Prompt', size: 11, weight: 'bold' } }, grid: { display: false } } } }
             });
         }
 
@@ -1607,12 +1605,12 @@
             const totalPages = Math.ceil(totalItems / itemsPerPage);
             const pagContainer = document.getElementById('pagination');
             if(totalPages <= 1) { pagContainer.innerHTML = ''; return; }
-            let html = `<button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/80 backdrop-blur-sm text-slate-600 shadow-sm border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"><i class="fa-solid fa-chevron-left"></i></button>`;
+            let html = `<button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl bg-white/80 backdrop-blur-sm text-slate-600 shadow-sm border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-xs sm:text-base"><i class="fa-solid fa-chevron-left"></i></button>`;
             for(let i = 1; i <= totalPages; i++) {
-                if(i === currentPage) html += `<button class="w-10 h-10 flex items-center justify-center rounded-xl bg-blue-500 text-white shadow-md font-extrabold transform scale-110 transition-all">${i}</button>`;
-                else html += `<button onclick="changePage(${i})" class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/80 backdrop-blur-sm text-slate-600 shadow-sm border border-slate-200 hover:bg-slate-50 font-bold transition-all">${i}</button>`;
+                if(i === currentPage) html += `<button class="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl bg-blue-500 text-white shadow-md font-extrabold transform scale-110 transition-all text-xs sm:text-base">${i}</button>`;
+                else html += `<button onclick="changePage(${i})" class="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl bg-white/80 backdrop-blur-sm text-slate-600 shadow-sm border border-slate-200 hover:bg-slate-50 font-bold transition-all text-xs sm:text-base">${i}</button>`;
             }
-            html += `<button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/80 backdrop-blur-sm text-slate-600 shadow-sm border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"><i class="fa-solid fa-chevron-right"></i></button>`;
+            html += `<button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl bg-white/80 backdrop-blur-sm text-slate-600 shadow-sm border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-xs sm:text-base"><i class="fa-solid fa-chevron-right"></i></button>`;
             pagContainer.innerHTML = html;
         }
 
@@ -1688,7 +1686,7 @@
             document.getElementById('count-rejected').innerText = countRejected;
 
             if(filteredRequests.length === 0) {
-                taskList.innerHTML = '<div class="glass-card p-12 rounded-[2rem] text-center text-slate-500 w-full"><div class="w-20 h-20 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-inner"><i class="fa-solid fa-box-open text-5xl text-slate-400"></i></div><p class="text-2xl font-extrabold">ไม่พบข้อมูล</p><p class="text-base mt-2 text-slate-400 font-bold">ลองเปลี่ยนคำค้นหา หรือเงื่อนไขตัวกรองใหม่</p></div>';
+                taskList.innerHTML = '<div class="glass-card p-8 sm:p-12 rounded-[1.5rem] sm:rounded-[2rem] text-center text-slate-500 w-full"><div class="w-16 h-16 sm:w-20 sm:h-20 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-inner"><i class="fa-solid fa-box-open text-4xl sm:text-5xl text-slate-400"></i></div><p class="text-xl sm:text-2xl font-extrabold">ไม่พบข้อมูล</p><p class="text-sm sm:text-base mt-2 text-slate-400 font-bold">ลองเปลี่ยนคำค้นหา หรือเงื่อนไขตัวกรองใหม่</p></div>';
                 document.getElementById('pagination').innerHTML = '';
                 return;
             }
@@ -1734,37 +1732,37 @@
                     const isBeforeValid = beforeImgSrc && beforeImgSrc !== '-' && String(beforeImgSrc).length > 100 && String(beforeImgSrc).toLowerCase() !== 'null';
 
                     let stepNum = 1;
-                    let stepText = 'ขั้นตอน 1/4: รออนุมัติ';
+                    let stepText = 'รออนุมัติ';
                     let badgeColor = 'bg-yellow-100/90 text-yellow-700';
 
-                    if(status === 'pending') { stepNum = 1; stepText = 'ขั้นตอน 1/4: รออนุมัติ'; badgeColor = 'bg-yellow-100/90 text-yellow-700'; }
-                    else if(status === 'approved') { stepNum = 2; stepText = 'ขั้นตอน 2/4: รอรับงาน'; badgeColor = 'bg-blue-100/90 text-blue-700'; }
-                    else if(status === 'inprogress') { stepNum = 3; stepText = 'ขั้นตอน 3/4: กำลังทำ'; badgeColor = 'bg-indigo-100/90 text-indigo-700'; }
-                    else if(status === 'completed') { stepNum = 4; stepText = 'ขั้นตอน 4/4: เสร็จสิ้น'; badgeColor = 'bg-green-100/90 text-green-700'; }
+                    if(status === 'pending') { stepNum = 1; stepText = 'รออนุมัติ'; badgeColor = 'bg-yellow-100/90 text-yellow-700'; }
+                    else if(status === 'approved') { stepNum = 2; stepText = 'รอรับงาน'; badgeColor = 'bg-blue-100/90 text-blue-700'; }
+                    else if(status === 'inprogress') { stepNum = 3; stepText = 'กำลังทำ'; badgeColor = 'bg-indigo-100/90 text-indigo-700'; }
+                    else if(status === 'completed') { stepNum = 4; stepText = 'เสร็จสิ้น'; badgeColor = 'bg-green-100/90 text-green-700'; }
                     else if(status === 'rejected') { stepNum = 0; stepText = 'ไม่อนุมัติ'; badgeColor = 'bg-red-100/90 text-red-700'; }
 
-                    let mobileBadge = `<span class="${badgeColor} px-3 py-1 rounded-xl text-xs font-extrabold shadow-sm flex items-center gap-1.5"><i class="fa-solid fa-layer-group text-[10px]"></i> ${stepText}</span>`;
+                    let mobileBadge = `<span class="${badgeColor} px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-extrabold shadow-sm flex items-center gap-1 sm:gap-1.5 shrink-0"><i class="fa-solid fa-layer-group text-[9px] sm:text-[10px]"></i> ${stepText}</span>`;
 
                     let cardHTML = `
-                        <div onclick="toggleTaskExpand('${reqId}')" class="glass-card p-5 rounded-3xl cursor-pointer hover:scale-[1.01] transition-all duration-300 flex flex-col md:flex-row items-center gap-5 relative border-2 ${priority === 'งานเร่งด่วน' ? 'border-red-400 shadow-[0_10px_20px_rgba(239,68,68,0.15)]' : 'border-transparent'}">
-                            ${priority === 'งานเร่งด่วน' ? `<div class="absolute -top-2.5 left-6 z-10 bg-red-500 text-white text-[10px] px-2.5 py-0.5 rounded-full font-bold shadow-sm animate-pulse flex items-center gap-1"><i class="fa-solid fa-siren-on"></i> ด่วน!</div>` : ''}
+                        <div onclick="toggleTaskExpand('${reqId}')" class="glass-card p-4 sm:p-5 rounded-[1.25rem] sm:rounded-[1.5rem] md:rounded-3xl cursor-pointer hover:scale-[1.01] transition-all duration-300 flex items-center gap-3 sm:gap-5 relative border-2 ${priority === 'งานเร่งด่วน' ? 'border-red-400 shadow-[0_10px_20px_rgba(239,68,68,0.15)]' : 'border-transparent'}">
+                            ${priority === 'งานเร่งด่วน' ? `<div class="absolute -top-2.5 left-4 sm:left-6 z-10 bg-red-500 text-white text-[9px] sm:text-[10px] px-2 sm:px-2.5 py-0.5 rounded-full font-bold shadow-sm animate-pulse flex items-center gap-1"><i class="fa-solid fa-siren-on"></i> ด่วน!</div>` : ''}
                             
-                            <div class="w-24 h-24 shrink-0 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center overflow-hidden relative shadow-inner">
-                                ${isBeforeValid ? `<img src="${beforeImgSrc}" class="object-cover w-full h-full">` : `<i class="fa-solid fa-image text-3xl text-slate-300"></i>`}
+                            <div class="w-16 h-16 sm:w-24 sm:h-24 shrink-0 bg-slate-100 dark:bg-slate-800 rounded-xl sm:rounded-2xl flex items-center justify-center overflow-hidden relative shadow-inner">
+                                ${isBeforeValid ? `<img src="${beforeImgSrc}" class="object-cover w-full h-full">` : `<i class="fa-solid fa-image text-2xl sm:text-3xl text-slate-300"></i>`}
                             </div>
 
-                            <div class="flex-1 min-w-0 text-center md:text-left">
-                                <div class="flex flex-col md:flex-row md:items-center gap-2 mb-1">
-                                    <h4 class="text-lg font-extrabold text-slate-800 truncate">${title}</h4>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-1 overflow-hidden">
+                                    <h4 class="text-sm sm:text-lg font-extrabold text-slate-800 truncate">${title}</h4>
                                     ${mobileBadge}
                                 </div>
-                                <p class="text-xs text-slate-500 font-bold mb-1"><i class="fa-solid fa-user-astronaut opacity-70 mr-1"></i> ผู้แจ้ง: ${requester} | <i class="fa-regular fa-clock opacity-70 ml-2 mr-1"></i> ${formatThaiDateTime(beforeTime)}</p>
-                                <p class="text-xs text-slate-400 font-bold"><i class="fa-solid fa-fingerprint opacity-70 mr-1"></i> ID: ${reqId}</p>
+                                <p class="text-[10px] sm:text-xs text-slate-500 font-bold mb-0.5 sm:mb-1 truncate"><i class="fa-solid fa-user-astronaut opacity-70 mr-1"></i> ${requester} <span class="hidden xs:inline">|</span> <i class="fa-regular fa-clock opacity-70 ml-0 xs:ml-1 mr-1 mt-1 xs:mt-0"></i> ${formatThaiDateTime(beforeTime)}</p>
+                                <p class="text-[9px] sm:text-xs text-slate-400 font-bold"><i class="fa-solid fa-fingerprint opacity-70 mr-1"></i> ID: ${reqId}</p>
                             </div>
 
-                            <div class="shrink-0">
-                                <div class="w-10 h-10 rounded-full bg-white/80 shadow-sm border border-slate-200 flex items-center justify-center text-blue-600 transition-transform ${expandedJobId === reqId ? 'rotate-180 bg-blue-500 text-white' : ''}">
-                                    <i class="fa-solid fa-chevron-down"></i>
+                            <div class="shrink-0 pl-1">
+                                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/80 shadow-sm border border-slate-200 flex items-center justify-center text-blue-600 transition-transform ${expandedJobId === reqId ? 'rotate-180 bg-blue-500 text-white' : ''}">
+                                    <i class="fa-solid fa-chevron-down text-sm sm:text-base"></i>
                                 </div>
                             </div>
                         </div>`;
@@ -1797,134 +1795,136 @@
                             const l34 = stepNum >= 4 ? 'bg-green-600' : 'bg-slate-200';
 
                             stepperHTML = `
-                                <div class="bg-white/60 p-5 rounded-2xl border border-white shadow-sm mb-6">
+                                <div class="bg-white/60 p-3 sm:p-5 rounded-2xl border border-white shadow-sm mb-4 sm:mb-6">
                                     <div class="flex items-center justify-between max-w-xl mx-auto relative">
-                                        <div class="absolute left-6 right-6 top-1/2 -translate-y-1/2 h-1 bg-slate-200 z-0"></div>
-                                        <div class="absolute left-6 right-6 top-1/2 -translate-y-1/2 flex justify-between z-0">
+                                        <div class="absolute left-4 sm:left-6 right-4 sm:right-6 top-1/2 -translate-y-1/2 h-1 bg-slate-200 z-0"></div>
+                                        <div class="absolute left-4 sm:left-6 right-4 sm:right-6 top-1/2 -translate-y-1/2 flex justify-between z-0">
                                             <div class="h-1 flex-1 ${l12}"></div>
                                             <div class="h-1 flex-1 ${l23}"></div>
                                             <div class="h-1 flex-1 ${l34}"></div>
                                         </div>
 
                                         <div class="relative z-10 flex flex-col items-center">
-                                            <div class="w-10 h-10 rounded-full flex items-center justify-center font-extrabold text-sm border-2 ${s1} shadow-md"><i class="fa-solid fa-file-signature"></i></div>
-                                            <span class="text-[11px] font-extrabold mt-1.5 ${stepNum >= 1 ? 'text-blue-600' : 'text-slate-400'}">รออนุมัติ</span>
+                                            <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-extrabold text-xs sm:text-sm border-2 ${s1} shadow-md"><i class="fa-solid fa-file-signature"></i></div>
+                                            <span class="text-[9px] sm:text-[11px] font-extrabold mt-1 sm:mt-1.5 ${stepNum >= 1 ? 'text-blue-600' : 'text-slate-400'}">รออนุมัติ</span>
                                         </div>
                                         <div class="relative z-10 flex flex-col items-center">
-                                            <div class="w-10 h-10 rounded-full flex items-center justify-center font-extrabold text-sm border-2 ${s2} shadow-md"><i class="fa-solid fa-user-gear"></i></div>
-                                            <span class="text-[11px] font-extrabold mt-1.5 ${stepNum >= 2 ? 'text-blue-600' : 'text-slate-400'}">รอรับงาน</span>
+                                            <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-extrabold text-xs sm:text-sm border-2 ${s2} shadow-md"><i class="fa-solid fa-user-gear"></i></div>
+                                            <span class="text-[9px] sm:text-[11px] font-extrabold mt-1 sm:mt-1.5 ${stepNum >= 2 ? 'text-blue-600' : 'text-slate-400'}">รอรับงาน</span>
                                         </div>
                                         <div class="relative z-10 flex flex-col items-center">
-                                            <div class="w-10 h-10 rounded-full flex items-center justify-center font-extrabold text-sm border-2 ${s3} shadow-md"><i class="fa-solid fa-cog ${stepNum === 3 ? 'fa-spin' : ''}"></i></div>
-                                            <span class="text-[11px] font-extrabold mt-1.5 ${stepNum >= 3 ? 'text-blue-600' : 'text-slate-400'}">กำลังทำ</span>
+                                            <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-extrabold text-xs sm:text-sm border-2 ${s3} shadow-md"><i class="fa-solid fa-cog ${stepNum === 3 ? 'fa-spin' : ''}"></i></div>
+                                            <span class="text-[9px] sm:text-[11px] font-extrabold mt-1 sm:mt-1.5 ${stepNum >= 3 ? 'text-blue-600' : 'text-slate-400'}">กำลังทำ</span>
                                         </div>
                                         <div class="relative z-10 flex flex-col items-center">
-                                            <div class="w-10 h-10 rounded-full flex items-center justify-center font-extrabold text-sm border-2 ${s4} shadow-md"><i class="fa-solid fa-check"></i></div>
-                                            <span class="text-[11px] font-extrabold mt-1.5 ${stepNum >= 4 ? 'text-green-600' : 'text-slate-400'}">เสร็จสิ้น</span>
+                                            <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-extrabold text-xs sm:text-sm border-2 ${s4} shadow-md"><i class="fa-solid fa-check"></i></div>
+                                            <span class="text-[9px] sm:text-[11px] font-extrabold mt-1 sm:mt-1.5 ${stepNum >= 4 ? 'text-green-600' : 'text-slate-400'}">เสร็จสิ้น</span>
                                         </div>
                                     </div>
                                 </div>
                             `;
                         } else {
                             stepperHTML = `
-                                <div class="bg-red-50 p-4 rounded-2xl border border-red-200 shadow-sm mb-6 text-center">
-                                    <span class="text-red-600 font-extrabold text-sm inline-flex items-center gap-2"><i class="fa-solid fa-ban text-lg"></i> คำขอนี้ถูกปฏิเสธ (ไม่อนุมัติ)</span>
+                                <div class="bg-red-50 p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-red-200 shadow-sm mb-4 sm:mb-6 text-center">
+                                    <span class="text-red-600 font-extrabold text-xs sm:text-sm inline-flex items-center gap-1.5 sm:gap-2"><i class="fa-solid fa-ban text-base sm:text-lg"></i> คำขอนี้ถูกปฏิเสธ (ไม่อนุมัติ)</span>
                                 </div>
                             `;
                         }
 
                         let taskComments = req.comments || [];
                         let commentsHTML = taskComments.map(c => `
-                            <div class="bg-white/80 p-3 rounded-xl border border-slate-100 shadow-xs mb-2">
+                            <div class="bg-white/80 p-2.5 sm:p-3 rounded-lg sm:rounded-xl border border-slate-100 shadow-xs mb-2">
                                 <div class="flex justify-between items-center mb-1">
-                                    <span class="text-xs font-extrabold text-blue-600"><i class="fa-solid fa-user-circle mr-1"></i> ${c.user}</span>
-                                    <span class="text-[10px] text-slate-400 font-bold">${c.time}</span>
+                                    <span class="text-[10px] sm:text-xs font-extrabold text-blue-600"><i class="fa-solid fa-user-circle mr-1"></i> ${c.user}</span>
+                                    <span class="text-[9px] sm:text-[10px] text-slate-400 font-bold">${c.time}</span>
                                 </div>
-                                <p class="text-xs text-slate-700 font-bold">${escapeHTML(c.text)}</p>
+                                <p class="text-[11px] sm:text-xs text-slate-700 font-bold">${escapeHTML(c.text)}</p>
                             </div>
-                        `).join('') || '<p class="text-xs text-slate-400 italic text-center py-2">ยังไม่มีความคิดเห็นหรือประวัติการพูดคุย</p>';
+                        `).join('') || '<p class="text-[11px] sm:text-xs text-slate-400 italic text-center py-2">ยังไม่มีความคิดเห็นหรือประวัติการพูดคุย</p>';
 
                         cardHTML += `
-                            <div class="glass-card p-6 md:p-8 rounded-[2.5rem] relative overflow-hidden animate-[fadeIn_0.3s_ease-out] border-2 border-blue-200/60 shadow-xl my-2">
-                                <div class="absolute top-0 left-0 w-2.5 h-full ${accentColor} opacity-90"></div>
+                            <div class="glass-card p-4 sm:p-6 md:p-8 rounded-[1.5rem] sm:rounded-[2rem] md:rounded-[2.5rem] relative overflow-hidden animate-[fadeIn_0.3s_ease-out] border-2 border-blue-200/60 shadow-xl my-2">
+                                <div class="absolute top-0 left-0 w-2 sm:w-2.5 h-full ${accentColor} opacity-90"></div>
                                 
-                                <div class="flex flex-col md:flex-row justify-between items-start gap-4 mb-4 pl-3">
-                                    <div>
-                                        <div class="flex items-center gap-3 mb-2">
-                                            <h3 class="text-2xl font-extrabold text-slate-800">${title}</h3>
-                                            <span class="bg-slate-900 text-white text-xs px-3 py-1 rounded-xl font-extrabold shadow-sm"><i class="fa-solid fa-bars-progress text-blue-400 mr-1"></i> ${stepText}</span>
+                                <div class="flex flex-col justify-between items-start gap-3 sm:gap-4 mb-4 pl-2 sm:pl-3">
+                                    <div class="w-full">
+                                        <div class="flex flex-col xs:flex-row xs:items-center justify-between gap-2 sm:gap-3 mb-2 w-full">
+                                            <h3 class="text-lg sm:text-2xl font-extrabold text-slate-800 break-words flex-1">${title}</h3>
+                                            <span class="bg-slate-900 text-white text-[10px] sm:text-xs px-2 sm:px-3 py-1 rounded-lg sm:rounded-xl font-extrabold shadow-sm shrink-0 self-start xs:self-auto"><i class="fa-solid fa-bars-progress text-blue-400 mr-1"></i> ${stepText}</span>
                                         </div>
-                                        <div class="flex flex-wrap gap-2 items-center">
-                                            <span class="text-xs bg-white/80 text-slate-600 px-3 py-1 rounded-lg font-bold border border-white shadow-sm"><i class="fa-solid fa-sitemap mr-1"></i> ${department}</span>
-                                            <span class="text-xs bg-white/80 text-red-500 px-3 py-1 rounded-lg font-bold border border-white shadow-sm"><i class="fa-solid fa-map-pin mr-1"></i> ${area}</span>
-                                            <span class="text-xs bg-blue-50 text-blue-600 px-3 py-1 rounded-lg font-extrabold border border-blue-100 shadow-sm"><i class="fa-solid fa-microchip mr-1"></i> ${jobType}</span>
+                                        <div class="flex flex-wrap gap-1.5 sm:gap-2 items-center mt-2 xs:mt-0">
+                                            <span class="text-[10px] sm:text-xs bg-white/80 text-slate-600 px-2 sm:px-3 py-0.5 sm:py-1 rounded-md sm:rounded-lg font-bold border border-white shadow-sm"><i class="fa-solid fa-sitemap mr-1"></i> ${department}</span>
+                                            <span class="text-[10px] sm:text-xs bg-white/80 text-red-500 px-2 sm:px-3 py-0.5 sm:py-1 rounded-md sm:rounded-lg font-bold border border-white shadow-sm"><i class="fa-solid fa-map-pin mr-1"></i> ${area}</span>
+                                            <span class="text-[10px] sm:text-xs bg-blue-50 text-blue-600 px-2 sm:px-3 py-0.5 sm:py-1 rounded-md sm:rounded-lg font-extrabold border border-blue-100 shadow-sm"><i class="fa-solid fa-microchip mr-1"></i> ${jobType}</span>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div class="pl-3 mb-6">
+                                <div class="pl-2 sm:pl-3 mb-4 sm:mb-6">
                                     ${stepperHTML}
 
-                                    <div class="bg-white/50 p-5 rounded-2xl border border-white shadow-inner mb-6">
-                                        <p class="text-sm text-slate-700 whitespace-pre-wrap font-bold leading-relaxed">${desc}</p>
+                                    <div class="bg-white/50 p-3 sm:p-5 rounded-xl sm:rounded-2xl border border-white shadow-inner mb-4 sm:mb-6">
+                                        <p class="text-xs sm:text-sm text-slate-700 whitespace-pre-wrap font-bold leading-relaxed">${desc}</p>
                                     </div>
 
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-5 mb-4 sm:mb-6">
                                         ${isBeforeValid ? `
-                                            <div class="bg-white/70 p-4 rounded-2xl border border-white shadow-sm">
-                                                <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
-                                                    <span class="text-xs font-extrabold text-slate-700"><i class="fa-solid fa-clock-rotate-left text-blue-500 mr-1"></i> ภาพก่อนทำ (Before)</span>
-                                                    <span class="text-[10px] text-slate-400 font-bold">${formatThaiDateTime(beforeTime)}</span>
+                                            <div class="bg-white/70 p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-white shadow-sm">
+                                                <div class="flex flex-wrap justify-between items-center mb-2 sm:mb-3 pb-1.5 sm:pb-2 border-b border-slate-100 gap-1">
+                                                    <span class="text-[11px] sm:text-xs font-extrabold text-slate-700"><i class="fa-solid fa-clock-rotate-left text-blue-500 mr-1"></i> ภาพก่อนทำ (Before)</span>
+                                                    <span class="text-[9px] sm:text-[10px] text-slate-400 font-bold">${formatThaiDateTime(beforeTime)}</span>
                                                 </div>
-                                                <div class="overflow-hidden rounded-xl bg-slate-900 h-48 flex items-center justify-center cursor-pointer group" onclick="openImageModal('${beforeImgSrc}')">
+                                                <div class="overflow-hidden rounded-lg sm:rounded-xl bg-slate-900 h-32 sm:h-48 flex items-center justify-center cursor-pointer group" onclick="openImageModal('${beforeImgSrc}')">
                                                     <img src="${beforeImgSrc}" class="h-full w-full object-contain group-hover:scale-105 transition-transform">
                                                 </div>
                                             </div>
                                         ` : ''}
 
                                         ${isAfterValid ? `
-                                            <div class="bg-green-50/70 p-4 rounded-2xl border border-green-100 shadow-sm">
-                                                <div class="flex justify-between items-center mb-3 pb-2 border-b border-green-100/50">
-                                                    <span class="text-xs font-extrabold text-green-700"><i class="fa-solid fa-wand-magic-sparkles text-green-500 mr-1"></i> ภาพหลังทำ (After)</span>
-                                                    <span class="text-[10px] text-green-600 font-bold">${formatThaiDateTime(completedTime)}</span>
+                                            <div class="bg-green-50/70 p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-green-100 shadow-sm">
+                                                <div class="flex flex-wrap justify-between items-center mb-2 sm:mb-3 pb-1.5 sm:pb-2 border-b border-green-100/50 gap-1">
+                                                    <span class="text-[11px] sm:text-xs font-extrabold text-green-700"><i class="fa-solid fa-wand-magic-sparkles text-green-500 mr-1"></i> ภาพหลังทำ (After)</span>
+                                                    <span class="text-[9px] sm:text-[10px] text-green-600 font-bold">${formatThaiDateTime(completedTime)}</span>
                                                 </div>
-                                                <div class="overflow-hidden rounded-xl bg-slate-900 h-48 flex items-center justify-center cursor-pointer group" onclick="openImageModal('${afterImgSrc}')">
+                                                <div class="overflow-hidden rounded-lg sm:rounded-xl bg-slate-900 h-32 sm:h-48 flex items-center justify-center cursor-pointer group" onclick="openImageModal('${afterImgSrc}')">
                                                     <img src="${afterImgSrc}" class="h-full w-full object-contain group-hover:scale-105 transition-transform">
                                                 </div>
                                             </div>
                                         ` : ''}
                                     </div>
 
-                                    <div class="bg-white/40 p-5 rounded-2xl border border-white shadow-inner">
-                                        <h4 class="text-xs font-extrabold text-slate-700 mb-3 flex items-center gap-2"><i class="fa-solid fa-comments text-blue-500"></i> พูดคุย / อัปเดตความคืบหน้างานนี้</h4>
-                                        <div class="max-h-48 overflow-y-auto mb-3 pr-1 hide-scrollbar">
+                                    <div class="bg-white/40 p-3 sm:p-5 rounded-xl sm:rounded-2xl border border-white shadow-inner">
+                                        <h4 class="text-[11px] sm:text-xs font-extrabold text-slate-700 mb-2 sm:mb-3 flex items-center gap-1.5 sm:gap-2"><i class="fa-solid fa-comments text-blue-500"></i> พูดคุย / อัปเดต</h4>
+                                        <div class="max-h-32 sm:max-h-48 overflow-y-auto mb-2 sm:mb-3 pr-1 hide-scrollbar">
                                             ${commentsHTML}
                                         </div>
-                                        <div class="flex gap-2" onclick="event.stopPropagation()">
-                                            <input type="text" id="commentInput-${reqId}" placeholder="พิมพ์ข้อความอัปเดต หรือสอบถาม..." class="input-3d px-4 py-2.5 rounded-xl text-xs font-bold w-full text-slate-700" onkeydown="if(event.key==='Enter') addComment('${reqId}')">
-                                            <button onclick="addComment('${reqId}')" class="btn-3d-blue text-white px-4 py-2.5 rounded-xl text-xs font-extrabold shrink-0 flex items-center gap-1.5"><i class="fa-solid fa-paper-plane"></i> ส่ง</button>
+                                        <div class="flex gap-1.5 sm:gap-2" onclick="event.stopPropagation()">
+                                            <input type="text" id="commentInput-${reqId}" placeholder="พิมพ์ข้อความ..." class="input-3d px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold w-full text-slate-700" onkeydown="if(event.key==='Enter') addComment('${reqId}')">
+                                            <button onclick="addComment('${reqId}')" class="btn-3d-blue text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-extrabold shrink-0 flex items-center gap-1 sm:gap-1.5"><i class="fa-solid fa-paper-plane"></i> ส่ง</button>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div class="flex flex-wrap items-center gap-3 pl-3 pt-4 border-t border-slate-200/60">
-                                    <button onclick="printReport('${reqId}')" class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-4 py-2.5 rounded-xl text-xs font-extrabold shadow-sm flex items-center gap-2"><i class="fa-solid fa-print"></i> พิมพ์ใบรายงาน</button>
+                                <div class="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 sm:gap-3 pl-2 sm:pl-3 pt-3 sm:pt-4 border-t border-slate-200/60 w-full">
+                                    <button onclick="printReport('${reqId}')" class="w-full sm:w-auto bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-4 py-2 sm:py-2.5 rounded-xl text-xs font-extrabold shadow-sm flex justify-center items-center gap-2"><i class="fa-solid fa-print"></i> พิมพ์ใบรายงาน</button>
                         `;
 
                         if (currentRole === 'manager') {
                             if (status === 'pending') {
-                                cardHTML += `<button onclick="openApproveModal('${reqId}')" class="btn-3d-green text-white px-5 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2"><i class="fa-solid fa-thumbs-up"></i> อนุมัติ</button>
-                                             <button onclick="rejectRequest('${reqId}')" class="btn-3d-red text-white px-5 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2"><i class="fa-solid fa-thumbs-down"></i> ไม่อนุมัติ</button>`;
+                                cardHTML += `<div class="grid grid-cols-2 gap-2 sm:flex sm:gap-3 w-full sm:w-auto">
+                                                <button onclick="openApproveModal('${reqId}')" class="btn-3d-green text-white px-4 py-2 sm:py-2.5 rounded-xl text-xs font-extrabold flex justify-center items-center gap-1.5 sm:gap-2"><i class="fa-solid fa-thumbs-up"></i> อนุมัติ</button>
+                                                <button onclick="rejectRequest('${reqId}')" class="btn-3d-red text-white px-4 py-2 sm:py-2.5 rounded-xl text-xs font-extrabold flex justify-center items-center gap-1.5 sm:gap-2"><i class="fa-solid fa-thumbs-down"></i> ไม่อนุมัติ</button>
+                                             </div>`;
                             }
-                            cardHTML += `<button onclick="deleteRequest('${reqId}')" class="ml-auto bg-white hover:bg-red-50 text-slate-500 hover:text-red-500 border border-slate-200 px-4 py-2.5 rounded-xl text-xs font-extrabold shadow-sm flex items-center gap-2"><i class="fa-solid fa-trash-can"></i> ลบ</button>`;
+                            cardHTML += `<button onclick="deleteRequest('${reqId}')" class="w-full sm:w-auto sm:ml-auto mt-2 sm:mt-0 bg-white hover:bg-red-50 text-slate-500 hover:text-red-500 border border-slate-200 px-4 py-2 sm:py-2.5 rounded-xl text-xs font-extrabold shadow-sm flex justify-center items-center gap-2"><i class="fa-solid fa-trash-can"></i> ลบ</button>`;
                         }
                         
                         if (currentRole === 'shop' && status === 'approved') {
-                            cardHTML += `<button onclick="changeStatus('${reqId}', 'inprogress')" class="btn-3d-blue text-white px-5 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2 ml-auto"><i class="fa-solid fa-hand-holding-hand"></i> รับงานนี้มาทำ</button>`;
+                            cardHTML += `<button onclick="changeStatus('${reqId}', 'inprogress')" class="w-full sm:w-auto mt-2 sm:mt-0 btn-3d-blue text-white px-4 py-2 sm:py-2.5 rounded-xl text-xs font-extrabold flex justify-center items-center gap-2 sm:ml-auto"><i class="fa-solid fa-hand-holding-hand"></i> รับงานนี้มาทำ</button>`;
                         }
                         
                         if (currentRole === 'shop' && status === 'inprogress') {
-                            cardHTML += `<button onclick="openCompleteModal('${reqId}')" class="btn-3d-green text-white px-5 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2 ml-auto"><i class="fa-solid fa-camera-retro"></i> ส่งผลงาน (ถ่ายรูป After)</button>`;
+                            cardHTML += `<button onclick="openCompleteModal('${reqId}')" class="w-full sm:w-auto mt-2 sm:mt-0 btn-3d-green text-white px-4 py-2 sm:py-2.5 rounded-xl text-xs font-extrabold flex justify-center items-center gap-2 sm:ml-auto"><i class="fa-solid fa-camera-retro"></i> ส่งผลงาน</button>`;
                         }
 
                         cardHTML += `</div></div>`;
