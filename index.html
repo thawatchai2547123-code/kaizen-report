@@ -79,6 +79,17 @@
         .glass-card { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(255, 255, 255, 0.9); box-shadow: 0 30px 60px -15px rgba(15, 23, 42, 0.08), 0 15px 25px -5px rgba(15, 23, 42, 0.04), inset 0 1px 2px rgba(255, 255, 255, 1); transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease; }
         .input-3d { background: rgba(255, 255, 255, 0.9); box-shadow: inset 0 2px 5px rgba(15, 23, 42, 0.04), inset 0 0 0 1px rgba(226, 232, 240, 0.8); border: none; transition: all 0.3s ease; }
         .input-3d:focus { background: #ffffff; box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.02), 0 0 0 4px rgba(59, 130, 246, 0.15), inset 0 0 0 1px #3b82f6; outline: none; }
+        
+        /* ------------------ FIX THAI FONT RENDERING ------------------ */
+        input, textarea, .input-3d {
+            letter-spacing: normal !important;
+            text-rendering: optimizeLegibility !important;
+            font-feature-settings: "kern" 1, "liga" 1, "clig" 1, "calt" 1 !important;
+            -webkit-font-smoothing: antialiased !important;
+            -moz-osx-font-smoothing: grayscale !important;
+        }
+        /* ------------------------------------------------------------- */
+
         .btn-3d-blue { background: linear-gradient(135deg, #2563eb, #3b82f6); box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3); border: 1px solid rgba(37, 99, 235, 0.5); transition: all 0.3s ease; }
         .btn-3d-blue:hover { transform: translateY(-2px); box-shadow: 0 15px 25px -5px rgba(37, 99, 235, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4); }
         .btn-3d-blue:active { transform: translateY(1px); box-shadow: 0 5px 10px -5px rgba(37, 99, 235, 0.4); }
@@ -122,7 +133,7 @@
 
     <div id="printArea" class="hidden print:block bg-white text-black font-sans"></div>
     
-    <!-- ปรับ Toast Container ให้เหมาะสมกับจอมือถือ (อยู่ตรงกลางด้านบน/ล่างตามความเหมาะสม หรือเต็มจอ) -->
+    <!-- ปรับ Toast Container ให้เหมาะสมกับจอมือถือ -->
     <div id="toastContainer" class="fixed top-4 left-4 right-4 sm:left-auto sm:top-6 sm:right-6 z-[100] flex flex-col gap-3 pointer-events-none items-center sm:items-end"></div>
 
     <div class="ambient-orb bg-blue-300 w-96 h-96 top-0 left-0 mix-blend-multiply"></div>
@@ -299,7 +310,6 @@
                                 <label class="block text-[11px] sm:text-sm font-extrabold text-slate-500 mb-1.5 sm:mb-2 ml-1 uppercase">หัวข้อเรื่องที่ขอปรับปรุง <span class="text-red-500">*</span></label>
                                 <div class="relative">
                                     <i class="fa-solid fa-highlighter absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                                    <!-- แก้ไขคลาสของ input ตรงนี้ เพิ่ม sm:pl-12 และแยก padding ไม่ให้ทับกัน -->
                                     <input type="text" id="reqTitle" required placeholder="เช่น ทำถาดรองถังน้ำมันใหม่" class="input-3d pl-11 sm:pl-12 py-3.5 sm:py-4 pr-3.5 sm:pr-4 rounded-xl w-full text-base sm:text-lg font-bold text-slate-800">
                                 </div>
                             </div>
@@ -355,7 +365,10 @@
                         <button id="printSummaryBtn" onclick="openPrintSummaryModal()" class="hidden w-full sm:w-auto text-sm sm:text-base bg-gradient-to-r from-sky-500 to-teal-500 text-white px-4 sm:px-5 py-2.5 rounded-xl font-extrabold transition-all shadow-sm flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95">
                             <i class="fa-solid fa-print"></i> <span class="truncate">พิมพ์สรุป</span>
                         </button>
-                        <!-- เปลี่ยนปุ่มเป็น forceRefresh -->
+                        <!-- 📅 ปุ่มปฏิทินใหม่ (ใช้ร่วมกันได้ทุกคนในหน้าบอร์ด) -->
+                        <button onclick="openCalendarModal()" class="w-full sm:w-auto text-sm sm:text-base bg-gradient-to-r from-rose-400 to-pink-500 text-white px-4 sm:px-5 py-2.5 rounded-xl font-extrabold transition-all shadow-sm flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95">
+                            <i class="fa-regular fa-calendar-days"></i> <span class="truncate">ปฏิทิน</span>
+                        </button>
                         <button onclick="forceRefresh()" id="refreshBtn" class="col-span-2 sm:col-span-1 w-full sm:w-auto text-sm sm:text-base bg-white/80 backdrop-blur-sm text-blue-600 px-4 sm:px-5 py-2.5 rounded-xl border border-blue-100 font-extrabold transition-all shadow-sm flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95">
                             <i id="refreshIcon" class="fa-solid fa-arrows-rotate text-blue-500 transition-transform duration-500"></i> อัปเดตข้อมูล
                         </button>
@@ -432,6 +445,14 @@
                     </div>
                 </div>
 
+                <!-- 📌 ป้ายบอกสถานะกำลังกรองจากปฏิทิน (ซ่อนอยู่ จะแสดงเมื่อกดจากปฏิทิน) -->
+                <div id="activeDateFilterBadge" class="hidden items-center justify-between mb-4 bg-gradient-to-r from-pink-50 to-rose-50 dark:from-pink-900/20 dark:to-rose-900/20 border border-pink-200 dark:border-pink-800 text-pink-700 dark:text-pink-300 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold w-full sm:max-w-md shadow-sm relative z-10 transition-all">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-regular fa-calendar-check text-base"></i> กรองวันที่: <span id="activeDateText" class="underline decoration-pink-300 underline-offset-2"></span>
+                    </div>
+                    <button onclick="clearDateFilter()" class="bg-white/80 dark:bg-slate-800 hover:bg-pink-100 dark:hover:bg-pink-900/50 w-6 h-6 rounded-full flex items-center justify-center transition-colors shadow-sm"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+
                 <!-- พื้นที่แสดงการ์ดงานและแถวรายละเอียดแบบขยาย -->
                 <div id="taskList" class="flex flex-col gap-3 sm:gap-4 relative z-10"></div>
                 
@@ -501,7 +522,37 @@
         </div>
     </div>
 
+    <!-- 📅 โมดอลปฏิทิน (เพิ่มใหม่) -->
+    <div id="calendarModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4 hidden z-[70] transition-opacity">
+        <div class="glass-card rounded-[1.5rem] sm:rounded-[2rem] max-w-sm w-full p-5 sm:p-6 shadow-[0_30px_60px_rgba(0,0,0,0.2)] border border-white relative">
+            <button onclick="closeCalendarModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-slate-100/50 dark:bg-slate-800/50 rounded-full text-slate-500 hover:bg-slate-200 transition-colors"><i class="fa-solid fa-xmark"></i></button>
+            
+            <div class="text-center mb-4 flex justify-between items-center px-2">
+                <button onclick="changeCalMonth(-1)" class="w-8 h-8 flex items-center justify-center bg-white dark:bg-slate-700 rounded-full shadow-sm text-slate-600 dark:text-slate-300 hover:bg-blue-50 transition-colors"><i class="fa-solid fa-chevron-left"></i></button>
+                <h3 id="calMonthYear" class="text-base sm:text-lg font-extrabold text-slate-800 dark:text-slate-100">เดือน ปี</h3>
+                <button onclick="changeCalMonth(1)" class="w-8 h-8 flex items-center justify-center bg-white dark:bg-slate-700 rounded-full shadow-sm text-slate-600 dark:text-slate-300 hover:bg-blue-50 transition-colors"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+
+            <!-- วันในสัปดาห์ -->
+            <div class="grid grid-cols-7 gap-1 mb-2 text-center text-[10px] sm:text-xs font-extrabold text-slate-400">
+                <div class="text-red-400">อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div class="text-indigo-400">ส</div>
+            </div>
+
+            <!-- ตารางวันที่ -->
+            <div id="calDaysGrid" class="grid grid-cols-7 gap-1 sm:gap-2 mb-4">
+                <!-- ข้อมูลวันที่จะถูกแทรกผ่าน JS -->
+            </div>
+
+            <div class="bg-white/50 dark:bg-slate-800/50 rounded-xl p-3 text-[10px] sm:text-xs font-bold text-slate-500 flex flex-col gap-1.5 border border-white dark:border-slate-700">
+                <p class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> มีงานแจ้งเข้ามาใหม่ (Created)</p>
+                <p class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-green-500"></span> มีการปิดงาน (Completed)</p>
+                <p class="mt-1 text-center italic opacity-80">*คลิกที่วันที่ เพื่อกรองดูงานในวันนั้น</p>
+            </div>
+        </div>
+    </div>
+
     <div id="printSummaryModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4 hidden z-[70] transition-opacity">
+        <!-- (โค้ด Modal หน้าพิมพ์เอกสารคงเดิม) -->
         <div class="glass-card rounded-[1.5rem] sm:rounded-[2rem] max-w-sm w-full p-6 sm:p-8 shadow-[0_30px_60px_rgba(0,0,0,0.2)] border border-white relative">
             <button onclick="closePrintSummaryModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-slate-100/50 rounded-full text-slate-500 hover:bg-slate-200 transition-colors"><i class="fa-solid fa-xmark"></i></button>
             <div class="text-center mb-5 sm:mb-6">
@@ -519,6 +570,7 @@
     </div>
 
     <div id="chartModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4 hidden z-[70] transition-opacity">
+        <!-- (โค้ด Modal หน้า Chart คงเดิม) -->
         <div class="glass-card rounded-[1.5rem] sm:rounded-[2rem] max-w-2xl w-full p-5 sm:p-8 shadow-[0_30px_60px_rgba(0,0,0,0.2)] border border-white relative">
             <button onclick="closeChartModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-slate-100/50 rounded-full text-slate-500 hover:bg-slate-200 transition-colors"><i class="fa-solid fa-xmark"></i></button>
             <div class="text-center mb-4 sm:mb-6">
@@ -540,6 +592,7 @@
     </div>
 
     <div id="imageModal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[80] transition-opacity duration-300 opacity-0" onclick="closeImageModal()">
+        <!-- (โค้ด Modal รูปภาพคงเดิม) -->
         <button onclick="closeImageModal()" class="absolute top-4 right-4 sm:top-6 sm:right-6 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors z-[80] backdrop-blur-md border border-white/20">
             <i class="fa-solid fa-xmark text-xl sm:text-2xl"></i>
         </button>
@@ -560,6 +613,11 @@
         let expandedJobId = null; 
         let currentPin = ''; 
         
+        // 📌 ตัวแปรสำหรับปฏิทิน
+        let currentCalMonth = new Date().getMonth();
+        let currentCalYear = new Date().getFullYear();
+        let selectedCalendarDate = null; // ตัวแปรเก็บวันที่ที่กดเลือกจากปฏิทิน
+
         const FAST_PINS = { manager: '1234', shop: '5678' }; 
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -595,7 +653,136 @@
             fetchTasksFromServer();
         }
 
-        // 🖨️ ฟังก์ชันพิมพ์รายงานสรุป (Print Summary Modal) - อัปเดตใหม่
+        // ================= 📅 ฟังก์ชันระบบปฏิทิน =================
+        function openCalendarModal() {
+            document.getElementById('calendarModal').classList.remove('hidden');
+            renderCalendar(currentCalMonth, currentCalYear);
+        }
+
+        function closeCalendarModal() {
+            document.getElementById('calendarModal').classList.add('hidden');
+        }
+
+        function changeCalMonth(offset) {
+            currentCalMonth += offset;
+            if(currentCalMonth < 0) { currentCalMonth = 11; currentCalYear--; }
+            else if(currentCalMonth > 11) { currentCalMonth = 0; currentCalYear++; }
+            renderCalendar(currentCalMonth, currentCalYear);
+        }
+
+        function renderCalendar(month, year) {
+            const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+            document.getElementById('calMonthYear').innerText = `${monthNames[month]} ${year + 543}`;
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            const grid = document.getElementById('calDaysGrid');
+            grid.innerHTML = '';
+
+            // สร้าง Object เพื่อนับจำนวนงานที่ถูกสร้างและปิดจบในแต่ละวันของเดือนนั้นๆ
+            let dateCounts = {};
+            if (Array.isArray(requests)) {
+                requests.forEach(req => {
+                    if(!req) return;
+                    
+                    // นับงานที่รับเข้า (Created)
+                    if (req.createdAt && req.createdAt !== '-') {
+                        let c = new Date(req.createdAt);
+                        if(!isNaN(c)) {
+                            let k = `${c.getFullYear()}-${c.getMonth()}-${c.getDate()}`;
+                            if(!dateCounts[k]) dateCounts[k] = {in:0, out:0};
+                            dateCounts[k].in++;
+                        }
+                    }
+                    
+                    // นับงานที่เสร็จสิ้น (Completed)
+                    if (req.completedAt && req.completedAt !== '-') {
+                        let f = new Date(req.completedAt);
+                        if(!isNaN(f)) {
+                            let k = `${f.getFullYear()}-${f.getMonth()}-${f.getDate()}`;
+                            if(!dateCounts[k]) dateCounts[k] = {in:0, out:0};
+                            dateCounts[k].out++;
+                        }
+                    }
+                });
+            }
+
+            const today = new Date();
+            const isCurrentMonth = today.getMonth() === month && today.getFullYear() === year;
+
+            // ช่องว่างก่อนวันที่ 1
+            for (let i = 0; i < firstDay; i++) {
+                grid.innerHTML += `<div class="aspect-square"></div>`;
+            }
+
+            // สร้างปุ่มวันที่
+            for (let i = 1; i <= daysInMonth; i++) {
+                let key = `${year}-${month}-${i}`;
+                let hasIn = dateCounts[key] && dateCounts[key].in > 0;
+                let hasOut = dateCounts[key] && dateCounts[key].out > 0;
+                
+                let isToday = isCurrentMonth && today.getDate() === i;
+                let isSelected = selectedCalendarDate && selectedCalendarDate.getFullYear() === year && selectedCalendarDate.getMonth() === month && selectedCalendarDate.getDate() === i;
+
+                let baseClass = "aspect-square flex flex-col items-center justify-center rounded-xl sm:rounded-2xl cursor-pointer transition-all hover:bg-slate-100 dark:hover:bg-slate-700 relative border-2 border-transparent ";
+                
+                if (isSelected) {
+                    baseClass += " bg-pink-50 border-pink-400 text-pink-700 dark:bg-pink-900/30 dark:border-pink-500 font-extrabold ";
+                } else if (isToday) {
+                    baseClass += " bg-slate-50 border-slate-300 dark:bg-slate-800 dark:border-slate-500 text-slate-800 dark:text-slate-100 font-bold ";
+                } else {
+                    baseClass += " text-slate-700 dark:text-slate-300 font-bold bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 shadow-sm ";
+                }
+
+                let dotsHtml = `<div class="flex gap-1 mt-0.5 h-1.5">`;
+                if (hasIn) dotsHtml += `<div class="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-sm"></div>`;
+                if (hasOut) dotsHtml += `<div class="w-1.5 h-1.5 rounded-full bg-green-500 shadow-sm"></div>`;
+                dotsHtml += `</div>`;
+
+                grid.innerHTML += `
+                    <div class="${baseClass}" onclick="selectCalendarDate(${year}, ${month}, ${i})">
+                        <span class="text-[11px] sm:text-sm">${i}</span>
+                        ${dotsHtml}
+                    </div>
+                `;
+            }
+        }
+
+        // เมื่อผู้ใช้กดเลือกวันที่จากปฏิทิน
+        function selectCalendarDate(y, m, d) {
+            selectedCalendarDate = new Date(y, m, d);
+            document.getElementById('filterDate').value = 'all'; // รีเซ็ต Dropdown ปกติ
+            
+            closeCalendarModal();
+            updateActiveDateBadge();
+            applyFilters();
+            
+            showToast('success', 'กรองวันที่', `กำลังแสดงงานของวันที่ ${d}/${m+1}/${y+543}`);
+        }
+
+        // ยกเลิกการกรองด้วยปฏิทิน
+        function clearDateFilter() {
+            selectedCalendarDate = null;
+            updateActiveDateBadge();
+            applyFilters();
+        }
+
+        // อัปเดต UI แถบป้ายแจ้งเตือนว่ากำลังกรองวันที่อยู่
+        function updateActiveDateBadge() {
+            const badge = document.getElementById('activeDateFilterBadge');
+            if(selectedCalendarDate) {
+                badge.classList.remove('hidden');
+                badge.classList.add('flex');
+                document.getElementById('activeDateText').innerText = selectedCalendarDate.toLocaleDateString('th-TH', {day:'numeric', month:'short', year:'numeric'});
+            } else {
+                badge.classList.add('hidden');
+                badge.classList.remove('flex');
+            }
+        }
+        // =========================================================
+
+        // 🖨️ ฟังก์ชันพิมพ์รายงานสรุป (Print Summary Modal)
         function openPrintSummaryModal() {
             document.getElementById('printSummaryModal').classList.remove('hidden');
             const select = document.getElementById('printMonthSelect');
@@ -625,7 +812,6 @@
             document.getElementById('printSummaryModal').classList.add('hidden');
         }
 
-        // 🖨️ รูปแบบใหม่ (มีรูป Before/After และคำอธิบาย)
         function executePrintSummary() {
             const selectedMonth = document.getElementById('printMonthSelect').value;
             const printArea = document.getElementById('printArea');
@@ -1645,6 +1831,7 @@
                 const dept = String(req.department || req.Department || '');
                 const jobType = String(req.jobType || req['Job Type'] || req.JobType || '');
                 const dateStr = req.createdAt || req.Timestamp || '';
+                const compStr = req.completedAt || '';
 
                 const matchSearch = title.includes(searchText) || requester.includes(searchText);
                 const matchStatus = filterStatus === 'all' || status === filterStatus;
@@ -1652,7 +1839,27 @@
                 const matchJobType = filterJobType === 'all' || jobType.toLowerCase().includes(filterJobType.toLowerCase());
 
                 let matchDate = true;
-                if (dateStr && dateStr !== '-') {
+                
+                // ตรวจสอบวันที่จากการคลิกใน Calendar
+                if (selectedCalendarDate) {
+                    let createdMatch = false;
+                    let completedMatch = false;
+                    
+                    if (dateStr && dateStr !== '-') {
+                        let d = new Date(dateStr);
+                        if (!isNaN(d)) createdMatch = d.toDateString() === selectedCalendarDate.toDateString();
+                    }
+                    
+                    if (compStr && compStr !== '-') {
+                        let d = new Date(compStr);
+                        if (!isNaN(d)) completedMatch = d.toDateString() === selectedCalendarDate.toDateString();
+                    }
+                    
+                    // งานนั้นต้องเกิดขึ้นในวันนั้น หรือเสร็จในวันนั้น
+                    matchDate = createdMatch || completedMatch;
+                } 
+                // ตรวจสอบวันที่จาก Dropdown ปกติ
+                else if (dateStr && dateStr !== '-') {
                     const reqDate = new Date(dateStr);
                     const now = new Date();
                     if (!isNaN(reqDate)) {
