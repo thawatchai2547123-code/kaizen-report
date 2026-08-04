@@ -136,8 +136,8 @@
                 <div class="flex justify-center">
                     <div class="flex p-1 bg-slate-100/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl w-full border border-white/50 dark:border-slate-700">
                         <button onclick="selectRole('employee')" id="tab-employee" class="flex-1 py-3 rounded-xl text-[13px] font-extrabold bg-white dark:bg-slate-600 shadow-sm text-blue-600 dark:text-white transition-all">พนักงาน</button>
-                        <button onclick="selectRole('manager')" id="tab-manager" class="flex-1 py-3 rounded-xl text-[13px] font-extrabold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all">หัวหน้า</button>
-                        <button onclick="selectRole('shop')" id="tab-shop" class="flex-1 py-3 rounded-xl text-[13px] font-extrabold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all">ช่างซ่อม</button>
+                        <button onclick="selectRole('manager')" id="tab-manager" class="flex-1 py-3 rounded-xl text-[13px] font-extrabold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all">หัวหน้าแผนก</button>
+                        <button onclick="selectRole('shop')" id="tab-shop" class="flex-1 py-3 rounded-xl text-[13px] font-extrabold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all">ผู้ปฏิบัติงาน</button>
                     </div>
                 </div>
                 <input type="hidden" id="loginRole" value="employee">
@@ -729,8 +729,17 @@
             `;
             
             closePrintSummaryModal();
-            window.print();
-            setTimeout(() => { printArea.innerHTML = ''; }, 1000);
+            
+            // หน่วงเวลา 800ms ให้เบราว์เซอร์ Render รูปภาพ Base64 ให้เสร็จก่อนเรียกหน้าต่างพิมพ์
+            setTimeout(() => { 
+                window.print(); 
+            }, 800);
+
+            // เคลียร์หน้าจอหลังจากผู้ใช้กด พิมพ์ หรือ ยกเลิก เสร็จแล้วเท่านั้น (แก้ปัญหารูปหาย)
+            window.onafterprint = () => {
+                printArea.innerHTML = '';
+                window.onafterprint = null;
+            };
         }
 
         function exportToCSV() {
@@ -993,8 +1002,17 @@
                     </div>
                 </div>
             `;
-            window.print();
-            setTimeout(() => { printArea.innerHTML = ''; }, 1000);
+            
+            // หน่วงเวลา 500ms ให้เบราว์เซอร์ Render รูปภาพเสร็จก่อนเรียกหน้าต่างพิมพ์
+            setTimeout(() => { 
+                window.print(); 
+            }, 500);
+
+            // เคลียร์หน้าจอหลังจากพิมพ์เสร็จ
+            window.onafterprint = () => {
+                printArea.innerHTML = '';
+                window.onafterprint = null;
+            };
         }
 
         function toggleTheme() {
@@ -1188,7 +1206,7 @@
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
             
-            let roleName = currentRole === 'employee' ? 'ผู้แจ้งงาน' : currentRole === 'manager' ? 'หัวหน้าแผนก' : 'ช่างซ่อมบำรุง';
+            let roleName = currentRole === 'employee' ? 'ผู้แจ้งงาน' : currentRole === 'manager' ? 'หัวหน้าแผนก' : 'ผู้ปฏิบัติงาน';
             document.getElementById('displayRole').innerText = roleName;
 
             if (currentRole === 'manager') {
@@ -1475,7 +1493,7 @@
             const text = inputEl.value.trim();
             if(!text) return;
 
-            const userBadge = currentRole === 'manager' ? 'หัวหน้าแผนก' : currentRole === 'shop' ? 'ช่างซ่อมบำรุง' : 'พนักงาน';
+            const userBadge = currentRole === 'manager' ? 'หัวหน้าแผนก' : currentRole === 'shop' ? 'ผู้ปฏิบัติงาน' : 'พนักงาน';
             const nowStr = new Date().toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' });
 
             const newComment = {
