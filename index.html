@@ -154,7 +154,6 @@
             </div>
             
             <div class="space-y-6">
-                <!-- นำปุ่มพนักงานออก เหลือแค่หัวหน้ากับผู้ปฏิบัติงาน -->
                 <div class="flex justify-center">
                     <div class="flex p-1 bg-slate-100/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl w-full border border-white/50 dark:border-slate-700">
                         <button onclick="selectRole('manager')" id="tab-manager" class="flex-1 py-2 sm:py-3 rounded-xl text-[11px] xs:text-[12px] sm:text-[13px] font-extrabold bg-white dark:bg-slate-600 shadow-sm text-blue-600 dark:text-white transition-all">หัวหน้าแผนก</button>
@@ -209,7 +208,8 @@
                         <span class="relative flex h-2 w-2 sm:h-2.5 sm:w-2.5"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 sm:h-2.5 sm:w-2.5 bg-green-500"></span></span>
                         <span id="displayRole"></span>
                     </div>
-                    <button onclick="logout()" class="text-xs sm:text-sm font-bold bg-white/60 backdrop-blur-md text-slate-600 hover:text-red-600 px-3 sm:px-4 py-2 rounded-xl shadow-sm border border-white hover:border-red-100 hover:bg-red-50 transition-all flex items-center gap-2">
+                    <!-- ปุ่มออกระบบ (เพิ่ม id="logoutBtn") -->
+                    <button id="logoutBtn" onclick="logout()" class="text-xs sm:text-sm font-bold bg-white/60 backdrop-blur-md text-slate-600 hover:text-red-600 px-3 sm:px-4 py-2 rounded-xl shadow-sm border border-white hover:border-red-100 hover:bg-red-50 transition-all flex items-center gap-2">
                         <i class="fa-solid fa-power-off"></i> <span class="hidden sm:inline">ออกระบบ</span>
                     </button>
                 </div>
@@ -608,8 +608,8 @@
 
     <!-- ================= SCRIPT การทำงานทั้งหมด ================= -->
     <script>
-        // เปลี่ยนเป็น URL ของตัวเองหลังจาก Deploy แบบใหม่
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzl-_fHJJbw44NLxWHnzENtkDbBFWEqaSs6BZ8-FKSYDnctUwEGc3mj8z-uHwu1VvND/exec'; 
+        // ใช้ SCRIPT_URL ที่อัปเดตใหม่
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwDNxlq1CW6PELsHLQ90zkFalnwOaapssfTLW4wMoSz4fyIqCRtoUFRDbsUXQNchN5-/exec'; 
 
         let currentPage = 1;
         const itemsPerPage = 10;
@@ -632,13 +632,11 @@
             const savedRole = localStorage.getItem('kzRole');
             const savedToken = localStorage.getItem('kzToken');
             
-            // ถ้าเข้ามาผ่าน QR Code พารามิเตอร์ ?role=employee ให้ทะลุเข้าหน้าพนักงานทันที
             if (isEmployeeQR) {
                 currentRole = 'employee';
                 localStorage.setItem('kzRole', 'employee');
                 showMainApp();
             } 
-            // ถ้าเคยล็อกอินค้างไว้
             else if (savedRole && savedRole === 'employee') {
                 currentRole = 'employee';
                 showMainApp();
@@ -647,7 +645,6 @@
                 currentRole = savedRole;
                 showMainApp();
             } 
-            // ถ้าไม่มีอะไรเลย ให้เปิดหน้า Login สำหรับ Manager เป็นค่าเริ่มต้น
             else {
                 selectRole('manager'); 
             }
@@ -789,7 +786,6 @@
             }
         }
         
-        // ================= 📦 ระบบจัดเก็บและลบข้อมูล (Archive) =================
         function openArchiveModal() {
             document.getElementById('archiveModal').classList.remove('hidden');
             const select = document.getElementById('archiveMonthSelect');
@@ -803,7 +799,6 @@
             
             requests.forEach(req => {
                 if(!req || (req.status !== 'completed' && req.status !== 'rejected')) return;
-                // ปรับให้การจัดเก็บยึดตามวันที่แจ้งงาน (createdAt) เป็นหลัก เพื่อไม่ให้งานเก่าค้าง
                 let dateStr = req.createdAt || req.Timestamp || null;
                 if (dateStr && dateStr !== '-') { 
                     let d = new Date(dateStr); 
@@ -862,7 +857,7 @@
                 }
             })
             .catch(err => {
-                alert("Error การเชื่อมต่อ (โปรด Deploy โค้ด App Script อีกครั้ง): \n" + err.message);
+                alert("Error การเชื่อมต่อ (โปรดตรวจสอบการให้สิทธิ์ DriveApp อีกครั้ง): \n" + err.message);
                 showToast('error', 'การเชื่อมต่อขัดข้อง', 'โปรดลองตรวจสอบการ Deploy โค้ดของท่านอีกครั้ง');
             })
             .finally(() => {
@@ -870,7 +865,6 @@
                 btn.disabled = false;
             });
         }
-        // =========================================================
 
         function openPrintSummaryModal() {
             document.getElementById('printSummaryModal').classList.remove('hidden');
@@ -1383,7 +1377,6 @@
             currentPin = '';
             updatePinDisplay();
 
-            // ล็อกอินแบบใช้ปุ่มจะมีแค่ Manager กับ Shop จึงโชว์ช่องใส่ PIN เสมอ
             document.getElementById('loginScreen').classList.remove('hidden');
             pinArea.classList.remove('hidden');
         }
@@ -1473,6 +1466,17 @@
             let roleName = currentRole === 'employee' ? 'ผู้แจ้งงาน' : currentRole === 'manager' ? 'หัวหน้าแผนก' : 'ผู้ปฏิบัติงาน';
             document.getElementById('displayRole').innerText = roleName;
 
+            // เช็คว่าพนักงานสแกน QR Code เข้ามาหรือไม่
+            const urlParams = new URLSearchParams(window.location.search);
+            const isEmployeeQR = urlParams.get('role') === 'employee';
+
+            // บังคับซ่อนปุ่มออกระบบด้วย Style เพื่อป้องกัน Class ตีกัน สำหรับพนักงาน
+            if (currentRole === 'employee' || isEmployeeQR) {
+                document.getElementById('logoutBtn').style.display = 'none';
+            } else {
+                document.getElementById('logoutBtn').style.display = 'flex';
+            }
+
             if (currentRole === 'manager') {
                 document.getElementById('managerChartBtn').classList.remove('hidden');
                 document.getElementById('exportBtn').classList.remove('hidden');
@@ -1500,7 +1504,6 @@
             localStorage.removeItem('kzToken');
             localStorage.removeItem('kzRole'); 
             
-            // ถ้าล็อคอินมาจาก QR ให้เคลียร์ parameter บน URL ออกเพื่อป้องกันการ Auto-login
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.has('role')) {
                 window.location.href = window.location.pathname;
