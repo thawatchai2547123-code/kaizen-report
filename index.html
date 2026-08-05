@@ -133,7 +133,7 @@
 
     <div id="printArea" class="hidden print:block bg-white text-black font-sans"></div>
     
-    <!-- ปรับ Toast Container ให้เหมาะสมกับจอมือถือ -->
+    <!-- Toast Container -->
     <div id="toastContainer" class="fixed top-4 left-4 right-4 sm:left-auto sm:top-6 sm:right-6 z-[100] flex flex-col gap-3 pointer-events-none items-center sm:items-end"></div>
 
     <div class="ambient-orb bg-blue-300 w-96 h-96 top-0 left-0 mix-blend-multiply"></div>
@@ -159,7 +159,6 @@
             </div>
             
             <div class="space-y-6">
-                <!-- แถบเลือกสิทธิ์การเข้าใช้งาน (ปรับขนาดฟอนต์บนมือถือ) -->
                 <div class="flex justify-center">
                     <div class="flex p-1 bg-slate-100/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl w-full border border-white/50 dark:border-slate-700">
                         <button onclick="selectRole('employee')" id="tab-employee" class="flex-1 py-2 sm:py-3 rounded-xl text-[11px] xs:text-[12px] sm:text-[13px] font-extrabold bg-white dark:bg-slate-600 shadow-sm text-blue-600 dark:text-white transition-all">พนักงาน</button>
@@ -169,7 +168,6 @@
                 </div>
                 <input type="hidden" id="loginRole" value="employee">
 
-                <!-- โซนพนักงาน -->
                 <div id="employeeLoginArea" class="animate-[fadeIn_0.3s_ease-out]">
                     <p class="text-center text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 mb-6 px-2 leading-relaxed">เข้าใช้งานเพื่อแจ้งงานและติดตามสถานะงานของคุณ โดยไม่ต้องใช้รหัสผ่าน</p>
                     <button onclick="loginEmployee()" class="btn-3d-blue w-full text-white font-extrabold text-base sm:text-lg py-3.5 sm:py-4 px-4 rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-95">
@@ -177,7 +175,6 @@
                     </button>
                 </div>
 
-                <!-- โซนแป้นพิมพ์ PIN -->
                 <div id="pinLoginArea" class="hidden flex flex-col items-center animate-[fadeIn_0.3s_ease-out]">
                     <p class="text-slate-500 dark:text-slate-400 font-extrabold mb-4 text-[12px] sm:text-[13px] tracking-wide">กรุณากดรหัส PIN 4 หลัก</p>
                     
@@ -365,7 +362,12 @@
                         <button id="printSummaryBtn" onclick="openPrintSummaryModal()" class="hidden w-full sm:w-auto text-sm sm:text-base bg-gradient-to-r from-sky-500 to-teal-500 text-white px-4 sm:px-5 py-2.5 rounded-xl font-extrabold transition-all shadow-sm flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95">
                             <i class="fa-solid fa-print"></i> <span class="truncate">พิมพ์สรุป</span>
                         </button>
-                        <!-- 📅 ปุ่มปฏิทินใหม่ (ใช้ร่วมกันได้ทุกคนในหน้าบอร์ด) -->
+                        
+                        <!-- NEW: ปุ่มจัดเก็บและลบ (Archive) สำหรับ Manager -->
+                        <button id="archiveBtn" onclick="openArchiveModal()" class="hidden w-full sm:w-auto text-sm sm:text-base bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 sm:px-5 py-2.5 rounded-xl font-extrabold transition-all shadow-sm flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95">
+                            <i class="fa-solid fa-box-archive"></i> <span class="truncate">จัดเก็บ & ลบ</span>
+                        </button>
+
                         <button onclick="openCalendarModal()" class="w-full sm:w-auto text-sm sm:text-base bg-gradient-to-r from-rose-400 to-pink-500 text-white px-4 sm:px-5 py-2.5 rounded-xl font-extrabold transition-all shadow-sm flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95">
                             <i class="fa-regular fa-calendar-days"></i> <span class="truncate">ปฏิทิน</span>
                         </button>
@@ -445,7 +447,7 @@
                     </div>
                 </div>
 
-                <!-- 📌 ป้ายบอกสถานะกำลังกรองจากปฏิทิน (ซ่อนอยู่ จะแสดงเมื่อกดจากปฏิทิน) -->
+                <!-- 📌 ป้ายบอกสถานะกำลังกรองจากปฏิทิน -->
                 <div id="activeDateFilterBadge" class="hidden items-center justify-between mb-4 bg-gradient-to-r from-pink-50 to-rose-50 dark:from-pink-900/20 dark:to-rose-900/20 border border-pink-200 dark:border-pink-800 text-pink-700 dark:text-pink-300 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold w-full sm:max-w-md shadow-sm relative z-10 transition-all">
                     <div class="flex items-center gap-2">
                         <i class="fa-regular fa-calendar-check text-base"></i> กรองวันที่: <span id="activeDateText" class="underline decoration-pink-300 underline-offset-2"></span>
@@ -453,7 +455,6 @@
                     <button onclick="clearDateFilter()" class="bg-white/80 dark:bg-slate-800 hover:bg-pink-100 dark:hover:bg-pink-900/50 w-6 h-6 rounded-full flex items-center justify-center transition-colors shadow-sm"><i class="fa-solid fa-xmark"></i></button>
                 </div>
 
-                <!-- พื้นที่แสดงการ์ดงานและแถวรายละเอียดแบบขยาย -->
                 <div id="taskList" class="flex flex-col gap-3 sm:gap-4 relative z-10"></div>
                 
                 <div id="pagination" class="flex justify-center flex-wrap gap-2 mt-6 sm:mt-8 mb-4 relative z-10"></div>
@@ -503,7 +504,7 @@
                 <p class="text-xs sm:text-sm text-slate-500 mt-1 font-bold">ถ่ายรูปผลงานที่ทำเสร็จแล้ว (After)</p>
             </div>
             <input type="hidden" id="modalJobId">
-            <div id="uploadContainerAfter" class="input-3d bg-white/60 border-2 border-dashed border-blue-200 rounded-[1.25rem] sm:rounded-[1.5rem] p-5 sm:p-6 text-center cursor-pointer relative mb-5 sm:mb-6 hover:border-blue-400 group overflow-hidden transition-colors">
+            <div id="uploadContainerAfter" class="input-3d bg-white/60 border-2 dashed border-blue-200 rounded-[1.25rem] sm:rounded-[1.5rem] p-5 sm:p-6 text-center cursor-pointer relative mb-5 sm:mb-6 hover:border-blue-400 group overflow-hidden transition-colors">
                 <input type="file" id="afterImageInput" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" accept="image/png, image/jpeg, image/webp" onchange="previewImageName(this, 'modalUploadUI', 'modalPreviewUI', 'modalFileName')">
                 <div id="modalUploadUI" class="group-hover:scale-105 transition-transform duration-300 pointer-events-none">
                     <div class="w-12 h-12 sm:w-16 sm:h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-2 shadow-sm"><i class="fa-solid fa-camera-retro text-xl sm:text-2xl"></i></div>
@@ -522,25 +523,21 @@
         </div>
     </div>
 
-    <!-- 📅 โมดอลปฏิทิน (แก้ไขการซ้อนทับแล้ว) -->
+    <!-- 📅 โมดอลปฏิทิน -->
     <div id="calendarModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4 hidden z-[70] transition-opacity">
         <div class="glass-card rounded-[1.5rem] sm:rounded-[2rem] max-w-sm w-full p-5 sm:p-6 shadow-[0_30px_60px_rgba(0,0,0,0.2)] border border-white relative">
-            <!-- ตั้งปุ่มกากบาทให้มี z-index สูงและปรับตำแหน่ง -->
             <button onclick="closeCalendarModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-slate-100/80 dark:bg-slate-800/80 backdrop-blur-md rounded-full text-slate-500 hover:bg-slate-200 transition-colors z-20 shadow-sm"><i class="fa-solid fa-xmark"></i></button>
             
-            <!-- เพิ่ม margin-top (mt-8) เข้ามาเพื่อดันแถบเลือกเดือนลงมาให้พ้นปุ่มกากบาท -->
             <div class="text-center mb-4 mt-8 flex justify-between items-center px-1 sm:px-2 relative z-10">
                 <button onclick="changeCalMonth(-1)" class="w-8 h-8 flex items-center justify-center bg-white dark:bg-slate-700 rounded-full shadow-sm text-slate-600 dark:text-slate-300 hover:bg-blue-50 transition-colors"><i class="fa-solid fa-chevron-left"></i></button>
                 <h3 id="calMonthYear" class="text-base sm:text-lg font-extrabold text-slate-800 dark:text-slate-100">เดือน ปี</h3>
                 <button onclick="changeCalMonth(1)" class="w-8 h-8 flex items-center justify-center bg-white dark:bg-slate-700 rounded-full shadow-sm text-slate-600 dark:text-slate-300 hover:bg-blue-50 transition-colors"><i class="fa-solid fa-chevron-right"></i></button>
             </div>
 
-            <!-- วันในสัปดาห์ -->
             <div class="grid grid-cols-7 gap-1 mb-2 text-center text-[10px] sm:text-xs font-extrabold text-slate-400">
                 <div class="text-red-400">อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div class="text-indigo-400">ส</div>
             </div>
 
-            <!-- ตารางวันที่ -->
             <div id="calDaysGrid" class="grid grid-cols-7 gap-1 sm:gap-2 mb-4">
                 <!-- ข้อมูลวันที่จะถูกแทรกผ่าน JS -->
             </div>
@@ -553,8 +550,8 @@
         </div>
     </div>
 
+    <!-- 🖨️ พิมพ์สรุป -->
     <div id="printSummaryModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4 hidden z-[70] transition-opacity">
-        <!-- (โค้ด Modal หน้าพิมพ์เอกสารคงเดิม) -->
         <div class="glass-card rounded-[1.5rem] sm:rounded-[2rem] max-w-sm w-full p-6 sm:p-8 shadow-[0_30px_60px_rgba(0,0,0,0.2)] border border-white relative">
             <button onclick="closePrintSummaryModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-slate-100/50 rounded-full text-slate-500 hover:bg-slate-200 transition-colors"><i class="fa-solid fa-xmark"></i></button>
             <div class="text-center mb-5 sm:mb-6">
@@ -571,8 +568,26 @@
         </div>
     </div>
 
+    <!-- 📦 จัดเก็บ & ลบ (Archive Modal) -->
+    <div id="archiveModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4 hidden z-[70] transition-opacity">
+        <div class="glass-card rounded-[1.5rem] sm:rounded-[2rem] max-w-sm w-full p-6 sm:p-8 shadow-[0_30px_60px_rgba(0,0,0,0.2)] border border-white relative">
+            <button onclick="closeArchiveModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-slate-100/50 rounded-full text-slate-500 hover:bg-slate-200 transition-colors"><i class="fa-solid fa-xmark"></i></button>
+            <div class="text-center mb-5 sm:mb-6">
+                <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-orange-400 to-red-500 text-white rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-[0_10px_20px_rgba(249,115,22,0.3)]"><i class="fa-solid fa-box-archive text-xl sm:text-2xl"></i></div>
+                <h3 class="text-xl sm:text-2xl font-extrabold text-slate-800">จัดเก็บข้อมูลลงไฟล์ใหม่</h3>
+                <p class="text-xs sm:text-sm text-red-500 mt-1 font-bold">*ข้อมูลเดือนที่เลือกจะถูกย้ายไปไฟล์ใหม่และลบออกจากระบบนี้ทันที</p>
+            </div>
+            <div class="mb-5 sm:mb-6">
+                <select id="archiveMonthSelect" class="input-3d px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-bold text-slate-700 outline-none cursor-pointer w-full">
+                    <!-- ตัวเลือกจะถูกสร้างโดย Javascript -->
+                </select>
+            </div>
+            <button id="btnExecuteArchive" onclick="executeArchive()" class="btn-3d-red w-full text-white font-extrabold py-2.5 sm:py-3 rounded-xl text-sm sm:text-base flex justify-center items-center gap-2"><i class="fa-solid fa-bolt"></i> เริ่มจัดเก็บและลบข้อมูล</button>
+        </div>
+    </div>
+
+    <!-- 📈 สถิติ -->
     <div id="chartModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4 hidden z-[70] transition-opacity">
-        <!-- (โค้ด Modal หน้า Chart คงเดิม) -->
         <div class="glass-card rounded-[1.5rem] sm:rounded-[2rem] max-w-2xl w-full p-5 sm:p-8 shadow-[0_30px_60px_rgba(0,0,0,0.2)] border border-white relative">
             <button onclick="closeChartModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-slate-100/50 rounded-full text-slate-500 hover:bg-slate-200 transition-colors"><i class="fa-solid fa-xmark"></i></button>
             <div class="text-center mb-4 sm:mb-6">
@@ -593,8 +608,8 @@
         </div>
     </div>
 
+    <!-- 🖼️ ขยายรูปภาพ -->
     <div id="imageModal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[80] transition-opacity duration-300 opacity-0" onclick="closeImageModal()">
-        <!-- (โค้ด Modal รูปภาพคงเดิม) -->
         <button onclick="closeImageModal()" class="absolute top-4 right-4 sm:top-6 sm:right-6 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors z-[80] backdrop-blur-md border border-white/20">
             <i class="fa-solid fa-xmark text-xl sm:text-2xl"></i>
         </button>
@@ -605,7 +620,7 @@
 
     <!-- ================= SCRIPT การทำงานทั้งหมด ================= -->
     <script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzlMdzfuMysW3nv9jpxkZehxPQpVWFHVn87AwUCBHjKubW0J6cIXZ1Vg1W2y2NJa51R/exec'; 
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyfZA1TmfzGSdRvUyA_XI7thhVPnjeRiBDz09q4h8hW2BEfNWN4rzotIYYmB5IvIdDZ/exec'; 
 
         let currentPage = 1;
         const itemsPerPage = 10;
@@ -615,10 +630,9 @@
         let expandedJobId = null; 
         let currentPin = ''; 
         
-        // 📌 ตัวแปรสำหรับปฏิทิน
         let currentCalMonth = new Date().getMonth();
         let currentCalYear = new Date().getFullYear();
-        let selectedCalendarDate = null; // ตัวแปรเก็บวันที่ที่กดเลือกจากปฏิทิน
+        let selectedCalendarDate = null;
 
         const FAST_PINS = { manager: '1234', shop: '5678' }; 
 
@@ -655,7 +669,7 @@
             fetchTasksFromServer();
         }
 
-        // ================= 📅 ฟังก์ชันระบบปฏิทิน =================
+        // ================= 📅 ระบบปฏิทิน =================
         function openCalendarModal() {
             document.getElementById('calendarModal').classList.remove('hidden');
             renderCalendar(currentCalMonth, currentCalYear);
@@ -682,13 +696,10 @@
             const grid = document.getElementById('calDaysGrid');
             grid.innerHTML = '';
 
-            // สร้าง Object เพื่อนับจำนวนงานที่ถูกสร้างและปิดจบในแต่ละวันของเดือนนั้นๆ
             let dateCounts = {};
             if (Array.isArray(requests)) {
                 requests.forEach(req => {
                     if(!req) return;
-                    
-                    // นับงานที่รับเข้า (Created)
                     if (req.createdAt && req.createdAt !== '-') {
                         let c = new Date(req.createdAt);
                         if(!isNaN(c)) {
@@ -697,8 +708,6 @@
                             dateCounts[k].in++;
                         }
                     }
-                    
-                    // นับงานที่เสร็จสิ้น (Completed)
                     if (req.completedAt && req.completedAt !== '-') {
                         let f = new Date(req.completedAt);
                         if(!isNaN(f)) {
@@ -713,12 +722,10 @@
             const today = new Date();
             const isCurrentMonth = today.getMonth() === month && today.getFullYear() === year;
 
-            // ช่องว่างก่อนวันที่ 1
             for (let i = 0; i < firstDay; i++) {
                 grid.innerHTML += `<div class="aspect-square"></div>`;
             }
 
-            // สร้างปุ่มวันที่
             for (let i = 1; i <= daysInMonth; i++) {
                 let key = `${year}-${month}-${i}`;
                 let hasIn = dateCounts[key] && dateCounts[key].in > 0;
@@ -751,26 +758,21 @@
             }
         }
 
-        // เมื่อผู้ใช้กดเลือกวันที่จากปฏิทิน
         function selectCalendarDate(y, m, d) {
             selectedCalendarDate = new Date(y, m, d);
-            document.getElementById('filterDate').value = 'all'; // รีเซ็ต Dropdown ปกติ
-            
+            document.getElementById('filterDate').value = 'all'; 
             closeCalendarModal();
             updateActiveDateBadge();
             applyFilters();
-            
             showToast('success', 'กรองวันที่', `กำลังแสดงงานของวันที่ ${d}/${m+1}/${y+543}`);
         }
 
-        // ยกเลิกการกรองด้วยปฏิทิน
         function clearDateFilter() {
             selectedCalendarDate = null;
             updateActiveDateBadge();
             applyFilters();
         }
 
-        // อัปเดต UI แถบป้ายแจ้งเตือนว่ากำลังกรองวันที่อยู่
         function updateActiveDateBadge() {
             const badge = document.getElementById('activeDateFilterBadge');
             if(selectedCalendarDate) {
@@ -782,9 +784,79 @@
                 badge.classList.remove('flex');
             }
         }
+        
+        // ================= 📦 ระบบจัดเก็บและลบข้อมูล (Archive) =================
+        function openArchiveModal() {
+            document.getElementById('archiveModal').classList.remove('hidden');
+            const select = document.getElementById('archiveMonthSelect');
+            select.innerHTML = '<option value="" disabled selected>-- เลือกเดือนที่ต้องการจัดเก็บ --</option>';
+            
+            const months = new Set();
+            if (!Array.isArray(requests)) return;
+            
+            requests.forEach(req => {
+                if(!req || (req.status !== 'completed' && req.status !== 'rejected')) return;
+                let dateStr = req.completedAt || req.createdAt || req.Timestamp || null;
+                if (dateStr && dateStr !== '-') { 
+                    let d = new Date(dateStr); 
+                    if (!isNaN(d)) { months.add(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')); } 
+                }
+            });
+            
+            const sortedMonths = Array.from(months).sort().reverse();
+            const monthNames = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+            
+            if(sortedMonths.length === 0) {
+                select.innerHTML = '<option value="" disabled>ไม่มีข้อมูลที่จัดเก็บได้</option>';
+            } else {
+                sortedMonths.forEach(ym => {
+                    let parts = ym.split('-'); let y = parseInt(parts[0]) + 543; let m = parseInt(parts[1]) - 1;
+                    select.innerHTML += `<option value="${ym}">${monthNames[m]} ${y}</option>`;
+                });
+            }
+        }
+
+        function closeArchiveModal() { document.getElementById('archiveModal').classList.add('hidden'); }
+
+        function executeArchive() {
+            const month = document.getElementById('archiveMonthSelect').value;
+            if (!month) {
+                showToast('warning', 'แจ้งเตือน', 'กรุณาเลือกเดือนที่ต้องการจัดเก็บก่อน');
+                return;
+            }
+            
+            if (!confirm('ยืนยันการจัดเก็บ? ข้อมูลเดือนนี้จะถูกย้ายไปเซฟในไฟล์ใหม่ และลบออกจากระบบนี้ทันที (ไม่สามารถเรียกคืนได้)')) return;
+
+            const btn = document.getElementById('btnExecuteArchive');
+            btn.innerHTML = '<i class="fa-solid fa-atom fa-spin"></i> กำลังดำเนินการ...';
+            btn.disabled = true;
+
+            const formData = new URLSearchParams();
+            formData.append('action', 'archiveMonth');
+            formData.append('month', month);
+            formData.append('token', localStorage.getItem('kzToken') || '');
+
+            fetch(SCRIPT_URL, { method: 'POST', body: formData })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('success', 'จัดเก็บและลบสำเร็จ!', `ย้าย ${data.count} รายการไปไฟล์ "${data.filename}" แล้ว`);
+                    closeArchiveModal();
+                    forceRefresh(); 
+                } else {
+                    showToast('error', 'ข้อผิดพลาด', data.message || 'ไม่สามารถจัดเก็บข้อมูลได้');
+                }
+            })
+            .catch(err => {
+                showToast('error', 'การเชื่อมต่อขัดข้อง', 'โปรดลองใหม่อีกครั้ง');
+            })
+            .finally(() => {
+                btn.innerHTML = '<i class="fa-solid fa-bolt"></i> เริ่มจัดเก็บและลบข้อมูล';
+                btn.disabled = false;
+            });
+        }
         // =========================================================
 
-        // 🖨️ ฟังก์ชันพิมพ์รายงานสรุป (Print Summary Modal)
         function openPrintSummaryModal() {
             document.getElementById('printSummaryModal').classList.remove('hidden');
             const select = document.getElementById('printMonthSelect');
@@ -1389,6 +1461,7 @@
             }, 300);
         }
 
+        // ================= SHOW MAIN APP (UPDATED) =================
         function showMainApp() {
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
@@ -1396,14 +1469,17 @@
             let roleName = currentRole === 'employee' ? 'ผู้แจ้งงาน' : currentRole === 'manager' ? 'หัวหน้าแผนก' : 'ผู้ปฏิบัติงาน';
             document.getElementById('displayRole').innerText = roleName;
 
+            // ตรวจสอบ Role ว่าจะแสดงปุ่ม Archive หรือไม่
             if (currentRole === 'manager') {
                 document.getElementById('managerChartBtn').classList.remove('hidden');
                 document.getElementById('exportBtn').classList.remove('hidden');
                 document.getElementById('printSummaryBtn').classList.remove('hidden');
+                document.getElementById('archiveBtn').classList.remove('hidden');
             } else {
                 document.getElementById('managerChartBtn').classList.add('hidden');
                 document.getElementById('exportBtn').classList.add('hidden');
                 document.getElementById('printSummaryBtn').classList.add('hidden');
+                document.getElementById('archiveBtn').classList.add('hidden');
             }
 
             if(currentRole === 'employee') {
@@ -1842,7 +1918,6 @@
 
                 let matchDate = true;
                 
-                // ตรวจสอบวันที่จากการคลิกใน Calendar
                 if (selectedCalendarDate) {
                     let createdMatch = false;
                     let completedMatch = false;
@@ -1856,11 +1931,8 @@
                         let d = new Date(compStr);
                         if (!isNaN(d)) completedMatch = d.toDateString() === selectedCalendarDate.toDateString();
                     }
-                    
-                    // งานนั้นต้องเกิดขึ้นในวันนั้น หรือเสร็จในวันนั้น
                     matchDate = createdMatch || completedMatch;
                 } 
-                // ตรวจสอบวันที่จาก Dropdown ปกติ
                 else if (dateStr && dateStr !== '-') {
                     const reqDate = new Date(dateStr);
                     const now = new Date();
@@ -2145,7 +2217,7 @@
                 } catch (err) {
                     console.error("เกิดข้อผิดพลาดในการวาดการ์ด:", err);
                 }
-            }); // สิ้นสุด forEach
+            });
 
             renderPagination(sortedRequests.length);
         }
