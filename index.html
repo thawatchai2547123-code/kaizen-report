@@ -208,7 +208,7 @@
                         <span class="relative flex h-2 w-2 sm:h-2.5 sm:w-2.5"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 sm:h-2.5 sm:w-2.5 bg-green-500"></span></span>
                         <span id="displayRole"></span>
                     </div>
-                    <!-- ปุ่มออกระบบ (เพิ่ม id="logoutBtn") -->
+                    <!-- ปุ่มออกระบบ (จะถูกซ่อนสำหรับพนักงาน) -->
                     <button id="logoutBtn" onclick="logout()" class="text-xs sm:text-sm font-bold bg-white/60 backdrop-blur-md text-slate-600 hover:text-red-600 px-3 sm:px-4 py-2 rounded-xl shadow-sm border border-white hover:border-red-100 hover:bg-red-50 transition-all flex items-center gap-2">
                         <i class="fa-solid fa-power-off"></i> <span class="hidden sm:inline">ออกระบบ</span>
                     </button>
@@ -608,7 +608,6 @@
 
     <!-- ================= SCRIPT การทำงานทั้งหมด ================= -->
     <script>
-        // ใช้ SCRIPT_URL ที่อัปเดตใหม่
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyAMIG_h96D0SAtgmTXAC-1M7SMsZKfGVhv1TKjUYqLrxq5cqUv3kqjfLM-OggaWlBL/exec'; 
 
         let currentPage = 1;
@@ -632,20 +631,19 @@
             const savedRole = localStorage.getItem('kzRole');
             const savedToken = localStorage.getItem('kzToken');
             
+            // 1. ถ้าพนักงานสแกน QR Code เข้ามา ให้โชว์หน้าแจ้งงาน (แต่ไม่ต้องจำค่าลงเครื่อง)
             if (isEmployeeQR) {
                 currentRole = 'employee';
-                localStorage.setItem('kzRole', 'employee');
                 showMainApp();
             } 
-            else if (savedRole && savedRole === 'employee') {
-                currentRole = 'employee';
-                showMainApp();
-            } 
-            else if (savedRole && savedToken) {
+            // 2. ถ้าเป็น Manager หรือ Shop ที่เคยล็อกอินด้วยรหัส PIN ค้างไว้ ให้เข้าสู่ระบบอัตโนมัติ
+            else if (savedRole && savedToken && savedRole !== 'employee') {
                 currentRole = savedRole;
                 showMainApp();
             } 
+            // 3. กรณีอื่นๆ (เข้าลิงก์หลักปกติ) ให้เคลียร์ค่าพนักงานที่ค้างอยู่ทิ้ง แล้วโชว์หน้า Login เสมอ
             else {
+                localStorage.removeItem('kzRole'); 
                 selectRole('manager'); 
             }
         });
@@ -1466,7 +1464,6 @@
             let roleName = currentRole === 'employee' ? 'ผู้แจ้งงาน' : currentRole === 'manager' ? 'หัวหน้าแผนก' : 'ผู้ปฏิบัติงาน';
             document.getElementById('displayRole').innerText = roleName;
 
-            // เช็คว่าพนักงานสแกน QR Code เข้ามาหรือไม่
             const urlParams = new URLSearchParams(window.location.search);
             const isEmployeeQR = urlParams.get('role') === 'employee';
 
