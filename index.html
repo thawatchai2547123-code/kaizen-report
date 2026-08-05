@@ -40,7 +40,6 @@
             transition: background-color 0.5s ease;
         }
 
-        /* ------------------ DARK MODE OVERRIDES ------------------ */
         html.dark body {
             background-color: #0f172a;
             background-image: 
@@ -80,7 +79,6 @@
         .input-3d { background: rgba(255, 255, 255, 0.9); box-shadow: inset 0 2px 5px rgba(15, 23, 42, 0.04), inset 0 0 0 1px rgba(226, 232, 240, 0.8); border: none; transition: all 0.3s ease; }
         .input-3d:focus { background: #ffffff; box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.02), 0 0 0 4px rgba(59, 130, 246, 0.15), inset 0 0 0 1px #3b82f6; outline: none; }
         
-        /* ------------------ FIX THAI FONT RENDERING ------------------ */
         input, textarea, .input-3d {
             letter-spacing: normal !important;
             text-rendering: optimizeLegibility !important;
@@ -88,7 +86,6 @@
             -webkit-font-smoothing: antialiased !important;
             -moz-osx-font-smoothing: grayscale !important;
         }
-        /* ------------------------------------------------------------- */
 
         .btn-3d-blue { background: linear-gradient(135deg, #2563eb, #3b82f6); box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3); border: 1px solid rgba(37, 99, 235, 0.5); transition: all 0.3s ease; }
         .btn-3d-blue:hover { transform: translateY(-2px); box-shadow: 0 15px 25px -5px rgba(37, 99, 235, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4); }
@@ -106,7 +103,6 @@
         @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes slideInUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         
-        /* Mobile-first animation logic for toasts */
         .toast-enter { animation: slideInUp 0.4s cubic-bezier(0.25, 1, 0.3, 1) forwards; }
         @media (min-width: 640px) {
             .toast-enter { animation: slideInRight 0.4s cubic-bezier(0.25, 1, 0.3, 1) forwards; }
@@ -114,7 +110,6 @@
 
         .drag-over { border-color: #3b82f6 !important; background-color: rgba(59, 130, 246, 0.1) !important; transform: scale(1.02); }
 
-        /* การสั่นเวลาใส่ PIN ผิด */
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
             20%, 60% { transform: translateX(-6px); }
@@ -133,7 +128,6 @@
 
     <div id="printArea" class="hidden print:block bg-white text-black font-sans"></div>
     
-    <!-- Toast Container -->
     <div id="toastContainer" class="fixed top-4 left-4 right-4 sm:left-auto sm:top-6 sm:right-6 z-[100] flex flex-col gap-3 pointer-events-none items-center sm:items-end"></div>
 
     <div class="ambient-orb bg-blue-300 w-96 h-96 top-0 left-0 mix-blend-multiply"></div>
@@ -620,8 +614,8 @@
 
     <!-- ================= SCRIPT การทำงานทั้งหมด ================= -->
     <script>
-        // ใส่ URL ที่ได้จาก Deploy รอบล่าสุดตรงนี้ครับ
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwYcjquzVAqYm1U6BjsF-LmLVP9Rd50bXEQSGvWO8GInTW1-OD5aqGmt3XknD6_JCU/exec'; 
+        // เปลี่ยนเป็น URL ของตัวเองหลังจาก Deploy แบบใหม่
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbytyxEfiq6_62Aap76t7ZUHnPjqYSDojaOOOiQO0bRhA_AYYouXXDreOI4_KG_LiCq0/exec'; 
 
         let currentPage = 1;
         const itemsPerPage = 10;
@@ -670,7 +664,6 @@
             fetchTasksFromServer();
         }
 
-        // ================= 📅 ระบบปฏิทิน =================
         function openCalendarModal() {
             document.getElementById('calendarModal').classList.remove('hidden');
             renderCalendar(currentCalMonth, currentCalYear);
@@ -859,13 +852,14 @@
                 }
             })
             .catch(err => {
-                showToast('error', 'การเชื่อมต่อขัดข้อง', 'โปรดลองใหม่อีกครั้ง');
+                showToast('error', 'การเชื่อมต่อขัดข้อง', 'โปรดลองตรวจสอบการ Deploy โค้ดของท่านอีกครั้ง');
             })
             .finally(() => {
                 btn.innerHTML = '<i class="fa-solid fa-bolt"></i> เริ่มจัดเก็บและลบข้อมูล';
                 btn.disabled = false;
             });
         }
+
         // =========================================================
 
         function openPrintSummaryModal() {
@@ -1085,7 +1079,7 @@
             toast.className = `toast-enter flex items-start p-3 sm:p-4 mb-2 rounded-xl sm:rounded-2xl shadow-lg border ${colors} backdrop-blur-md w-full sm:max-w-sm transition-all duration-300`;
             toast.innerHTML = `${icon}<div class="ml-3"><h4 class="font-extrabold text-xs sm:text-sm">${title}</h4><p class="text-[10px] sm:text-xs mt-0.5 opacity-80 font-bold">${message}</p></div>`;
             container.appendChild(toast);
-            setTimeout(() => { toast.classList.add('opacity-0', 'translate-x-full'); setTimeout(() => toast.remove(), 300); }, 3500);
+            setTimeout(() => { toast.classList.add('opacity-0', 'translate-x-full'); setTimeout(() => toast.remove(), 400); }, 5000); // ให้นานขึ้นเพื่ออ่าน Error
         }
 
         function setupDragAndDrop(containerId, inputId, uploadUI, previewUI, nameDisplayId) {
@@ -1472,7 +1466,6 @@
             }, 300);
         }
 
-        // ================= SHOW MAIN APP (UPDATED) =================
         function showMainApp() {
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
@@ -1480,7 +1473,6 @@
             let roleName = currentRole === 'employee' ? 'ผู้แจ้งงาน' : currentRole === 'manager' ? 'หัวหน้าแผนก' : 'ผู้ปฏิบัติงาน';
             document.getElementById('displayRole').innerText = roleName;
 
-            // ตรวจสอบ Role ว่าจะแสดงปุ่ม Archive หรือไม่
             if (currentRole === 'manager') {
                 document.getElementById('managerChartBtn').classList.remove('hidden');
                 document.getElementById('exportBtn').classList.remove('hidden');
