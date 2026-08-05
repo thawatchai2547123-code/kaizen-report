@@ -40,6 +40,7 @@
             transition: background-color 0.5s ease;
         }
 
+        /* ------------------ DARK MODE OVERRIDES ------------------ */
         html.dark body {
             background-color: #0f172a;
             background-image: 
@@ -615,7 +616,7 @@
     <!-- ================= SCRIPT การทำงานทั้งหมด ================= -->
     <script>
         // เปลี่ยนเป็น URL ของตัวเองหลังจาก Deploy แบบใหม่
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxpDpjwPRz3NoNXO27DXI3JBozsJYBF07BE0ypKszJE4cUr5cjwtefZGqxWprZJVcMl/exec'; 
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwPjzghORTMS2VjGqRA214OnVZs3k6DLv2YKT2Ba-rHpgcFZSeo2FkYzHRceGdk-1tJ/exec'; 
 
         let currentPage = 1;
         const itemsPerPage = 10;
@@ -788,7 +789,6 @@
             const months = new Set();
             if (!Array.isArray(requests)) return;
 
-            // หาเดือนปัจจุบันเป็น String แบบ YYYY-MM
             const now = new Date();
             const currentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
             
@@ -799,7 +799,6 @@
                     let d = new Date(dateStr); 
                     if (!isNaN(d)) { 
                         let ym = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
-                        // อนุญาตเฉพาะเดือนที่น้อยกว่าเดือนปัจจุบันเท่านั้น
                         if (ym < currentMonthStr) {
                             months.add(ym); 
                         }
@@ -859,7 +858,6 @@
                 btn.disabled = false;
             });
         }
-
         // =========================================================
 
         function openPrintSummaryModal() {
@@ -1079,7 +1077,7 @@
             toast.className = `toast-enter flex items-start p-3 sm:p-4 mb-2 rounded-xl sm:rounded-2xl shadow-lg border ${colors} backdrop-blur-md w-full sm:max-w-sm transition-all duration-300`;
             toast.innerHTML = `${icon}<div class="ml-3"><h4 class="font-extrabold text-xs sm:text-sm">${title}</h4><p class="text-[10px] sm:text-xs mt-0.5 opacity-80 font-bold">${message}</p></div>`;
             container.appendChild(toast);
-            setTimeout(() => { toast.classList.add('opacity-0', 'translate-x-full'); setTimeout(() => toast.remove(), 400); }, 5000); // ให้นานขึ้นเพื่ออ่าน Error
+            setTimeout(() => { toast.classList.add('opacity-0', 'translate-x-full'); setTimeout(() => toast.remove(), 400); }, 5000); 
         }
 
         function setupDragAndDrop(containerId, inputId, uploadUI, previewUI, nameDisplayId) {
